@@ -35,7 +35,11 @@ export const signUp = async (userData: UserData): Promise<LoginResponse> => {
   return response.data;
 };
 
-export const googleLogin = async (tokenId: string): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/auth/google', { tokenId });
-  return response.data;
+// export const googleLogin = async (tokenId: string): Promise<LoginResponse> => {
+//   const response = await api.post<LoginResponse>('/auth/google', { tokenId });
+//   return response.data;
+// };
+export const googleLogin = async (credential: string): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/google', { credential });
+    return response.data;
 };
