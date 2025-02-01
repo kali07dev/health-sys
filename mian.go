@@ -41,12 +41,12 @@ func main() {
 	log.Println("Database migration completed successfully!")
 
 	// Initialize services
-	userRepo := user.NewRepository(dbConn)
+	// userRepo := user.NewRepository(dbConn)
 	IncidentRepo := incident.NewRepository(dbConn)
 	NotiRepo := notification.NewRepository(dbConn)
 	DashRepo := dashboard.NewRepository(dbConn)
 
-	userService := user.NewService(userRepo)
+	userService := user.NewUserService(dbConn)
 	NewIncidentHandler := incident.NewService(IncidentRepo)
 	NewNotificationHandler := notification.NewService(NotiRepo)
 	NewDashboardHandler := dashboard.NewService(DashRepo)

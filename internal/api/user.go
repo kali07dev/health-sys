@@ -3,47 +3,59 @@ package api
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/hopkali04/health-sys/internal/models"
+	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services/user"
 )
 
 type UserHandler struct {
-	service user.Service
+	userService *user.UserService
 }
 
-func NewUserHandler(service user.Service) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(userService *user.UserService) *UserHandler {
+	return &UserHandler{userService: userService}
 }
 
-func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
-	var user models.User
-	if err := c.BodyParser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
+	var user schema.UserRequest
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	if err := h.service.RegisterUser(&user); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	emailExists, err := app.userService.CheckEmailExists(user.Email)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err,
+		})
+	}
+
+	if emailExists {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Email ALready In Use By another User",
+		})
+	}
+
+	if err := app.userService.CreateUser(&user); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return ctx.Status(fiber.StatusCreated).JSON(user)
 }
 
-func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := c.BodyParser(&req); err != nil {
+func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
+	var RequestData schema.UserLoginRequest
+
+	if err := c.BodyParser(&RequestData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	user, err := h.service.LoginUser(req.Email, req.Password)
+	user, err := app.userService.Login(&RequestData)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
@@ -53,9 +65,9 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-func (h *UserHandler) GetUser(c *fiber.Ctx) error {
+func (app *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	user, err := h.service.GetUserByID(uuid.MustParse(id))
+	user, err := app.userService.GetUserByID(uuid.MustParse(id))
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
@@ -64,28 +76,42 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var user models.User
-	if err := c.BodyParser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+func (app *UserHandler) UpdateUserPassword(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	var user schema.ChangePasswordReq
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	user.ID = uuid.MustParse(id)
-	if err := h.service.UpdateUser(&user); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	UserID := uuid.MustParse(id)
+	emailExists, err := app.userService.CheckEmailExists(user.Email)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err,
+		})
+	}
+
+	if !emailExists {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Email Does not exist",
+		})
+	}
+	err = app.userService.ChangePassword(UserID, user.ConfirmPassword)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	return c.JSON(user)
+	return ctx.JSON(user)
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	if err := h.service.DeleteUser(uuid.MustParse(id)); err != nil {
+	if err := h.userService.DeleteUser(uuid.MustParse(id)); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})

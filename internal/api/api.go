@@ -9,12 +9,12 @@ import (
 	"github.com/hopkali04/health-sys/internal/services/user"
 )
 
-func SetupRoutes(app *fiber.App, userService user.Service, incidentService incident.Service, notificationService notification.Service, dashboardService dashboard.Service) {
+func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService incident.Service, notificationService notification.Service, dashboardService dashboard.Service) {
 	// User routes
 	app.Post("/api/users", middleware.LoggingMiddleware(), NewUserHandler(userService).RegisterUser)
 	app.Post("/api/login", middleware.LoggingMiddleware(), NewUserHandler(userService).LoginUser)
 	app.Get("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), NewUserHandler(userService).GetUser)
-	app.Put("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).UpdateUser)
+	app.Post("/api/users/:id/modify", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).UpdateUserPassword)
 	app.Delete("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).DeleteUser)
 
 	// Incident routes
@@ -28,8 +28,9 @@ func SetupRoutes(app *fiber.App, userService user.Service, incidentService incid
 		NewIncidentHandler(incidentService).DeleteIncident)
 
 	// Notification routes
-	app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
-		NewNotificationHandler(notificationService).GetNotifications)
+
+	// app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
+		// NewNotificationHandler(notificationService).GetNotifications)
 
 	// Dashboard routes
 	app.Get("/api/dashboard", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
