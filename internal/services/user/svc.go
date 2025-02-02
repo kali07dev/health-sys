@@ -31,8 +31,14 @@ func (svc *UserService) CreateUser(user *schema.UserRequest) error {
 	UserDatabase := models.User{
 		Email:        user.Email,
 		PasswordHash: string(hashedPassword), // Store the hashed password
-		GoogleID:     user.GoogleID,
-		MicrosoftID:  user.MicrosoftID,
+		GoogleID:     &user.GoogleID,
+		MicrosoftID:  &user.MicrosoftID,
+	}
+	if user.GoogleID == "" {
+		UserDatabase.GoogleID = nil
+	}
+	if user.MicrosoftID == "" {
+		UserDatabase.MicrosoftID = nil
 	}
 
 	// Save the user to the database
@@ -63,11 +69,17 @@ func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmp
 		ID:           uuid.New(),
 		Email:        request.Email,
 		PasswordHash: string(hashedPassword),
-		GoogleID:     request.GoogleID,
-		MicrosoftID:  request.MicrosoftID,
+		GoogleID:     &request.GoogleID,
+		MicrosoftID:  &request.MicrosoftID,
 		IsActive:     true, // Default to active
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
+	}
+	if request.GoogleID == "" {
+		user.GoogleID = nil
+	}
+	if request.MicrosoftID == "" {
+		user.MicrosoftID = nil
 	}
 
 	if err := tx.Create(&user).Error; err != nil {
