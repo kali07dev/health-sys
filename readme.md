@@ -4,3 +4,9 @@
 
 ## To Run
 - >go run main.go
+
+## Database Config:
+- Make sure to run the cmd  
+    -> CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+    to fix migration error if it arises

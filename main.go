@@ -29,12 +29,16 @@ func main() {
 
 	// Connect to database
 	dbConn, err := db.ConnectDB(cfg)
+	utils.LogInfo("Application started", map[string]interface{}{
+		"version": "1.0.0",
+		"env":     "development",
+	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	// Auto-migrate models
-	if err := dbConn.AutoMigrate(dbConn); err != nil {
+	if err := db.AutoMigrate(dbConn); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
