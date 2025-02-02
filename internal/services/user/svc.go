@@ -43,11 +43,79 @@ func (svc *UserService) CreateUser(user *schema.UserRequest) error {
 	return nil
 }
 
+// CreateUserWithEmployee creates a user and an employee record in a single transaction
+func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmployeeRequest) error {
+	// Start a database transaction
+	tx := svc.db.Begin()
+	if tx.Error != nil {
+		return errors.New("failed to start transaction")
+	}
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	if err != nil {
+		tx.Rollback()
+		return errors.New("failed to hash password")
+	}
+
+	// Create the User record
+	user := models.User{
+		ID:           uuid.New(),
+		Email:        request.Email,
+		PasswordHash: string(hashedPassword),
+		GoogleID:     request.GoogleID,
+		MicrosoftID:  request.MicrosoftID,
+		IsActive:     true, // Default to active
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
+		return errors.New("failed to create user")
+	}
+
+	// Create the Employee record
+	employee := models.Employee{
+		ID:                 uuid.New(),
+		UserID:             user.ID, // Link to the created user
+		EmployeeNumber:     request.EmployeeNumber,
+		FirstName:          request.FirstName,
+		LastName:           request.LastName,
+		Department:         request.Department,
+		Position:           request.Position,
+		Role:               request.Role,
+		ReportingManagerID: request.ReportingManagerID,
+		StartDate:          request.StartDate,
+		EndDate:            request.EndDate,
+		// EmergencyContact:   models.JSONB([]byte(request.EmergencyContact)),
+		ContactNumber:   request.ContactNumber,
+		OfficeLocation:  request.OfficeLocation,
+		IsSafetyOfficer: request.IsSafetyOfficer,
+		IsActive:        true, // Default to active
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	if err := tx.Create(&employee).Error; err != nil {
+		tx.Rollback()
+		return errors.New("failed to create employee")
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return errors.New("failed to commit transaction")
+	}
+
+	return nil
+}
+
 // Login verifies the user's credentials and returns the user if successful
 func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*schema.UserResponse, error) {
 	// Fetch the user from the database using the email
 	var user models.User
-	err := svc.db.Where("email = ?", credentials.Email).First(&user).Error 
+	err := svc.db.Where("email = ?", credentials.Email).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
@@ -83,12 +151,12 @@ func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*schema.Use
 
 	// map Response for abstraction
 	Response := schema.UserResponse{
-		Email: user.Email,
-		ID: user.ID.String(),
-		LastLoginAt: user.LastLoginAt,
+		Email:             user.Email,
+		ID:                user.ID.String(),
+		LastLoginAt:       user.LastLoginAt,
 		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
 	}
 
 	return &Response, nil
@@ -127,7 +195,7 @@ func (svc *UserService) ChangePassword(userID uuid.UUID, newPassword string) err
 
 	// Update the user's password hash and set the password changed timestamp
 	result := svc.db.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
-		"password_hash":      string(hashedPassword),
+		"password_hash":       string(hashedPassword),
 		"password_changed_at": time.Now(),
 	})
 
