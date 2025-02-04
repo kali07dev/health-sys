@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 
 	"github.com/getsentry/sentry-go"
@@ -43,6 +44,7 @@ func InitLogger(logLevel string, logFormat string, logFile string, sentryDSN str
 
 	// Set log output
 	if logFile != "" {
+		log.Println("reading log file!", logFile)
 		// Use lumberjack for log rotation
 		Logger.SetOutput(&lumberjack.Logger{
 			Filename:   logFile, // Log file path
@@ -51,6 +53,7 @@ func InitLogger(logLevel string, logFormat string, logFile string, sentryDSN str
 			MaxAge:     28,      // Max number of days to retain log files
 			Compress:   true,    // Compress rotated log files
 		})
+		log.Println("done log file!")
 	} else {
 		// Default to stdout
 		Logger.SetOutput(os.Stdout)
@@ -58,12 +61,17 @@ func InitLogger(logLevel string, logFormat string, logFile string, sentryDSN str
 
 	// Initialize Sentry
 	if sentryDSN != "" {
+		log.Println("Sentry!", sentryDSN)
+
 		err := sentry.Init(sentry.ClientOptions{
 			Dsn: sentryDSN,
 		})
+		log.Println("senetery 2222!", err)
+
 		if err != nil {
 			Logger.Fatalf("Failed to initialize Sentry: %v", err)
 		}
+		log.Println("done 2222!")
 	}
 }
 
@@ -96,4 +104,24 @@ func LogFatal(message string, fields map[string]interface{}) {
 		})
 	}
 	os.Exit(1)
+}
+
+// LogDebug logs a debug message
+func LogDebug(message string, fields map[string]interface{}) {
+	Logger.WithFields(fields).Debug(message)
+}
+
+// LogInfo logs an info message
+func LogInfo(message string, fields map[string]interface{}) {
+	Logger.WithFields(fields).Info(message)
+}
+
+// LogWarn logs a warning message
+func LogWarn(message string, fields map[string]interface{}) {
+	Logger.WithFields(fields).Warn(message)
+}
+
+// LogPanic logs a panic message and panics
+func LogPanic(message string, fields map[string]interface{}) {
+	Logger.WithFields(fields).Panic(message)
 }

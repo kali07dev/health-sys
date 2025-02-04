@@ -12,6 +12,7 @@ import (
 func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService incident.Service, notificationService notification.Service, dashboardService dashboard.Service) {
 	// User routes
 	app.Post("/api/auth/signup", NewUserHandler(userService).RegisterUser)
+	app.Get("/api/user", NewUserHandler(userService).Getall)
 	app.Post("/api/auth/login", middleware.LoggingMiddleware(), NewUserHandler(userService).LoginUser)
 	app.Get("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), NewUserHandler(userService).GetUser)
 	app.Post("/api/users/:id/modify", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).UpdateUserPassword)

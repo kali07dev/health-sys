@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/hopkali04/health-sys/internal/api"
 	"github.com/hopkali04/health-sys/internal/config"
 	"github.com/hopkali04/health-sys/internal/db"
@@ -25,7 +26,8 @@ func main() {
 	}
 
 	// Initialize logger
-	utils.InitLogger(cfg.Logging.Level, cfg.Logging.Format)
+	// utils.InitLogger(cfg.Logging.Level, cfg.Logging.Format)
+	utils.InitLogger(cfg.Logging.Level, cfg.Logging.Format, cfg.Logging.File, cfg.Sentry.DSN)
 
 	// Connect to database
 	dbConn, err := db.ConnectDB(cfg)
@@ -38,9 +40,9 @@ func main() {
 	}
 
 	// Auto-migrate models
-	if err := db.AutoMigrate(dbConn); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
+	// if err := db.AutoMigrate(dbConn); err != nil {
+	// 	log.Fatalf("Failed to migrate database: %v", err)
+	// }
 
 	log.Println("Database migration completed successfully!")
 
@@ -64,6 +66,12 @@ func main() {
 
 	// Create Fiber app
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000",
+		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowMethods: "GET, POST, PUT, DELETE",
+	}))
+	app.Use(middleware.LoggingMiddleware())
 
 	// Start reminder job
 	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password)
@@ -73,14 +81,14 @@ func main() {
 	// Setup routes
 	api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler)
 	// Middleware
-	app.Use(middleware.LoggingMiddleware())
-
-	// Start server
-	log.Fatal(app.Listen(":3000"))
 
 	// Log messages with fields
 	utils.LogInfo("Application started", map[string]interface{}{
 		"version": "1.0.0",
 		"env":     "development",
 	})
+
+	// Start server
+	log.Fatal(app.Listen(":8000"))
+
 }

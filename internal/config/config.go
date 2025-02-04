@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -18,6 +19,7 @@ type Config struct {
 	Logging struct {
 		Level  string `yaml:"level"`
 		Format string `yaml:"format"`
+		File   string `yaml:"file"`
 	} `yaml:"logging"`
 	SMTP struct {
 		Host     string `yaml:"host"`
@@ -25,18 +27,21 @@ type Config struct {
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
 	} `yaml:"smtp"`
+	Sentry struct {
+		DSN string `yaml:"dsn"`
+	} `yaml:"sentry"`
 }
 
 func LoadConfig(path string) (*Config, error) {
 	config := &Config{}
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading path: %w", err)
 	}
 	defer file.Close()
 
 	if err := yaml.NewDecoder(file).Decode(config); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error decoding path: %w", err)
 	}
 
 	return config, nil

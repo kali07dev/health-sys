@@ -15,6 +15,15 @@ func NewUserHandler(userService *user.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+func (app *UserHandler) Getall(ctx *fiber.Ctx) error{
+	data, err := app.userService.GetallUsers()
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Users not found",
+		})
+	}
+	return ctx.JSON(data)
+}
 func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
 	var user schema.UserRequest
 	err := ctx.BodyParser(&user)
