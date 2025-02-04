@@ -19,6 +19,15 @@ func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{db: db}
 }
 
+func (svc *UserService) GetallUsers() ([]models.User, error) {
+	var Users []models.User
+	err := svc.db.Find(&Users).Error
+	if err != nil {
+		return nil, err
+	}
+	return Users, nil
+}
+
 func (svc *UserService) CreateUser(user *schema.UserRequest) error {
 
 	// Hash the password using bcrypt
