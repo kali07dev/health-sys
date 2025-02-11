@@ -25,8 +25,14 @@ type NotificationService struct {
 	emailService *EmailService
 }
 
-func NewNotificationService(db *gorm.DB, emailService *EmailService) *NotificationService {
-	return &NotificationService{db: db, emailService: emailService}
+func NewNotificationService(db *gorm.DB, emailService *EmailService) (*NotificationService, error) {
+	if db == nil {
+		return nil, fmt.Errorf("database connection cannot be nil")
+	}
+	if emailService == nil {
+		return nil, fmt.Errorf("email service cannot be nil")
+	}
+	return &NotificationService{db: db, emailService: emailService}, nil
 }
 
 // SendNotification sends a notification to a user and optionally sends an email
@@ -41,13 +47,13 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID uuid.
 		ReferenceType: referenceType,
 	}
 
-	if err := s.db.WithContext(ctx).Create(&notification).Error; err != nil {
+	if err := s.db.Create(&notification).Error; err != nil {
 		return err
 	}
 
 	// Fetch the user's email address
 	var user models.User
-	if err := s.db.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+	if err := s.db.First(&user, "id = ?", userID).Error; err != nil {
 		return err
 	}
 
@@ -162,4 +168,28 @@ func (s *NotificationService) NotifyActionAssignment(action *models.CorrectiveAc
 
 	log.Printf("Notification sent to user %s: %s", fmt.Sprintf("%s %s", assignee.FirstName, assignee.LastName), notification.Title)
 	return nil
+}
+
+func (s *NotificationService) NotifyActionDueSoon(action *models.CorrectiveAction) error {
+	notification := &models.Notification{
+		UserID:  action.AssignedTo,
+		Type:    string(ActionDueSoon),
+		Title:   "Corrective Action Due Soon",
+		Message: fmt.Sprintf("Action '%s' is due in 48 hours", action.Description),
+	}
+
+	return s.db.Create(notification).Error
+}
+
+func (s *NotificationService) NotifyInterviewScheduled(interview *models.InvestigationInterview) error {
+	notification := &models.Notification{
+		UserID: interview.IntervieweeID,
+		Type:   string(InterviewScheduled),
+		Title:  "Investigation Interview Scheduled",
+		Message: fmt.Sprintf("You have been scheduled for an interview on %s at %s",
+			interview.ScheduledFor.Format("2006-01-02"),
+			interview.ScheduledFor.Format("15:04")),
+	}
+
+	return s.db.Create(notification).Error
 }
