@@ -2,12 +2,22 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
 	"gorm.io/gorm"
+)
+
+type NotificationType string
+
+const (
+	ActionAssigned     NotificationType = "action_assigned"
+	ActionDueSoon      NotificationType = "action_due_soon"
+	ActionOverdue      NotificationType = "action_overdue"
+	InterviewScheduled NotificationType = "interview_scheduled"
 )
 
 type NotificationService struct {
@@ -18,7 +28,6 @@ type NotificationService struct {
 func NewNotificationService(db *gorm.DB, emailService *EmailService) *NotificationService {
 	return &NotificationService{db: db, emailService: emailService}
 }
-
 
 // SendNotification sends a notification to a user and optionally sends an email
 func (s *NotificationService) SendNotification(ctx context.Context, userID uuid.UUID, notificationType, title, message string, referenceID uuid.UUID, referenceType string) error {
@@ -55,6 +64,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID uuid.
 	log.Printf("Notification sent to user %s: %s", userID, title)
 	return nil
 }
+
 // CheckAndSendReminders checks for unresolved issues, overdue corrective actions, and upcoming audits, and sends reminders
 func (s *NotificationService) CheckAndSendReminders(ctx context.Context) error {
 	// Check for unresolved incidents
@@ -88,5 +98,68 @@ func (s *NotificationService) CheckAndSendReminders(ctx context.Context) error {
 	// Check for upcoming audits (if applicable)
 	// This part can be customized based on your audit system.
 
+	return nil
+}
+
+// Background task to check for overdue actions
+func (s *NotificationService) CheckOverdueActions() error {
+	var overdueActions []models.CorrectiveAction
+	now := time.Now()
+
+	err := s.db.Where("due_date < ? AND status NOT IN ('completed', 'verified')", now).Find(&overdueActions).Error
+	if err != nil {
+		return err
+	}
+
+	for _, action := range overdueActions {
+		notification := &models.Notification{
+			UserID: action.AssignedTo,
+			Type:   string(ActionOverdue),
+			Title:  "Corrective Action Overdue",
+			Message: fmt.Sprintf("Action '%s' is overdue. Due date was %s",
+				action.Description,
+				action.DueDate.Format("2006-01-02")),
+		}
+
+		if err := s.db.Create(notification).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *NotificationService) NotifyActionAssignment(action *models.CorrectiveAction, assignee *models.Employee) error {
+	notification := &models.Notification{
+		UserID: assignee.ID,
+		Type:   string(ActionAssigned),
+		Title:  "New Corrective Action Assigned",
+		Message: fmt.Sprintf("You have been assigned a new corrective action: %s. Due date: %s",
+			action.Description,
+			action.DueDate.Format("2006-01-02")),
+	}
+
+	err := s.db.Create(notification).Error
+	if err != nil {
+		return err
+	}
+
+	// Fetch the user's email address
+	var user models.User
+	if err := s.db.First(&user, "id = ?", assignee.UserID).Error; err != nil {
+		return err
+	}
+
+	// Send an email if the user has an email address
+	if user.Email != "" {
+		emailSubject := notification.Title
+		emailBody := notification.Message
+
+		if err := s.emailService.SendEmail([]string{user.Email}, emailSubject, emailBody); err != nil {
+			log.Printf("Failed to send email to %s: %v", user.Email, err)
+		}
+	}
+
+	log.Printf("Notification sent to user %s: %s", fmt.Sprintf("%s %s", assignee.FirstName, assignee.LastName), notification.Title)
 	return nil
 }
