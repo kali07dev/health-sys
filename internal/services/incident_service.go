@@ -258,6 +258,82 @@ func (s *IncidentService) GetIncidentSummary(startDate, endDate time.Time) (*mod
 	return &summary, nil
 }
 
+// CloseIncident closes an incident by setting its status to "closed" and updating the ClosedAt field
+func (s *IncidentService) CloseIncident(id uuid.UUID) (*models.Incident, error) {
+	var incident models.Incident
+	err := s.db.First(&incident, "id = ?", id).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find incident: %w", err)
+	}
+
+	incident.Status = "closed"
+	incident.ClosedAt = time.Now()
+
+	err = s.db.Save(&incident).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to close incident: %w", err)
+	}
+
+	return &incident, nil
+}
+
+// AssignIncidentToUser assigns an incident to a user by updating the AssignedTo field
+func (s *IncidentService) AssignIncidentToUser(id uuid.UUID, userID uuid.UUID) (*models.Incident, error) {
+	var incident models.Incident
+	err := s.db.First(&incident, "id = ?", id).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find incident: %w", err)
+	}
+
+	incident.AssignedTo = &userID
+
+	err = s.db.Save(&incident).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign incident: %w", err)
+	}
+
+	return &incident, nil
+}
+
+func (s *IncidentService) FilterListIncidents(
+	page, pageSize int,
+	filters map[string]interface{},
+) ([]models.Incident, int64, error) {
+	var incidents []models.Incident
+	var total int64
+
+	query := s.db.Model(&models.Incident{})
+
+	// Apply filters
+	for key, value := range filters {
+		switch key {
+		case "start_date":
+			query = query.Where("occurred_at >= ?", value)
+		case "end_date":
+			query = query.Where("occurred_at <= ?", value)
+		default:
+			query = query.Where(fmt.Sprintf("%s = ?", key), value)
+		}
+	}
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count incidents: %w", err)
+	}
+
+	// Paginate and fetch results
+	err := query.Preload("Reporter").Preload("Assignee").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Order("created_at DESC").
+		Find(&incidents).Error
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list incidents: %w", err)
+	}
+
+	return incidents, total, nil
+}
 // Helper function to generate a unique reference number
 func generateReferenceNumber() string {
 	timestamp := time.Now().Format("20060102")

@@ -4,6 +4,8 @@ package api
 import (
 	"encoding/json"
 	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -83,7 +85,7 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to parse form"})
 	}
 
-	files := form.File["attachments"] 
+	files := form.File["attachments"]
 	if len(files) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no files uploaded", "files": form})
 	}
@@ -115,6 +117,174 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(incident)
+}
+
+// ListIncidentsHandler handles the request to list incidents
+func (h *IncidentsHandler) ListIncidentsHandler(c *fiber.Ctx) error {
+	// Parse query parameters
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid page number",
+		})
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("pageSize", "10"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid page size",
+		})
+	}
+
+	// Parse filters from query parameters
+	filters := make(map[string]interface{})
+	for key, value := range c.Queries() {
+		if key != "page" && key != "pageSize" {
+			filters[key] = value
+		}
+	}
+
+	// Call the service method
+	incidents, total, err := h.service.ListIncidents(page, pageSize, filters)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return the response
+	return c.JSON(fiber.Map{
+		"data":  incidents,
+		"total": total,
+	})
+}
+
+// GetIncidentHandler retrieves a single incident by ID
+func (h *IncidentsHandler) GetIncidentHandler(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid incident ID",
+		})
+	}
+
+	incident, err := h.service.GetIncident(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Incident not found",
+		})
+	}
+
+	return c.JSON(incident)
+}
+
+// CloseIncidentHandler closes an incident by ID
+func (h *IncidentsHandler) CloseIncidentHandler(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid incident ID",
+		})
+	}
+
+	incident, err := h.service.CloseIncident(id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(incident)
+}
+
+// AssignIncidentToUserHandler assigns an incident to a user
+func (h *IncidentsHandler) AssignIncidentToUserHandler(c *fiber.Ctx) error {
+	incidentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid incident ID",
+		})
+	}
+
+	var request struct {
+		UserID uuid.UUID `json:"user_id"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	incident, err := h.service.AssignIncidentToUser(incidentID, request.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(incident)
+}
+
+func (h *IncidentsHandler) ListIncidentsHandlerFiltered(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(c.Query("pageSize", "10"))
+
+	// Parse filters
+	filters := make(map[string]interface{})
+
+	// Add type, status, severity_level, assigned_to
+	for _, key := range []string{"type", "status", "severity_level"} {
+		if value := c.Query(key); value != "" {
+			filters[key] = value
+		}
+	}
+
+	// Parse assigned_to (UUID)
+	if assignedTo := c.Query("assigned_to"); assignedTo != "" {
+		userID, err := uuid.Parse(assignedTo)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid assigned_to UUID",
+			})
+		}
+		filters["assigned_to"] = userID
+	}
+
+	// Parse date range (start_date and end_date)
+	if startDate := c.Query("start_date"); startDate != "" {
+		parsedStart, err := time.Parse(time.RFC3339, startDate)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid start_date (use RFC3339 format)",
+			})
+		}
+		filters["start_date"] = parsedStart
+	}
+
+	if endDate := c.Query("end_date"); endDate != "" {
+		parsedEnd, err := time.Parse(time.RFC3339, endDate)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid end_date (use RFC3339 format)",
+			})
+		}
+		filters["end_date"] = parsedEnd
+	}
+
+	// Call service method
+	incidents, total, err := h.service.ListIncidents(page, pageSize, filters)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return response
+	return c.JSON(fiber.Map{
+		"data":  incidents,
+		"total": total,
+	})
 }
 
 // Helper function to validate file types

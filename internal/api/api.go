@@ -11,7 +11,7 @@ import (
 )
 
 func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService, notificationService notification.Service, dashboardService dashboard.Service) {
-	
+	incidentImpl := NewIncidentsHandler(incidentService)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"user": fiber.Map{
@@ -45,6 +45,7 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 
 	app.Post("/api/v1/incidents/with-attachments", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
 		NewIncidentsHandler(incidentService).CreateIncidentWithAttachments)
+	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
 
 	// Notification routes
 
