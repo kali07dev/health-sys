@@ -1,26 +1,21 @@
+// components/IncidentForm.tsx
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import type { ChangeEvent, FormEvent } from "react"
+import { submitIncident, IncidentApiError } from "@/lib/api/incidents"
+import type { IncidentFormData } from "@/interfaces/incidents"
 
-interface IncidentFormData {
-  type: string
-  severityLevel: string
-  title: string
-  description: string
-  location: string
-  occurredAt: string
-  immediateActionsTaken: string
-  reportedBy: string // This would typically come from auth context
-  witnesses?: { name: string; contact: string }[]
-  environmentalConditions?: Record<string, unknown>
-  equipmentInvolved?: Record<string, unknown>
+interface ValidationError {
+  field: string
+  message: string
 }
 
 const IncidentForm = () => {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [formData, setFormData] = useState<IncidentFormData>({
     type: "injury",
     severityLevel: "low",
@@ -29,12 +24,22 @@ const IncidentForm = () => {
     location: "",
     occurredAt: "",
     immediateActionsTaken: "",
-    reportedBy: "user-uuid", // This should come from your auth context
+    reportedBy: session?.user?.id || "",
   })
   
-  const [files, setFiles] = useState<FileList | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{
+    message: string;
+    validationErrors?: ValidationError[];
+    fileErrors?: string[];
+  } | null>(null)
+
+  // Redirect to login if not authenticated
+  if (status === "unauthenticated") {
+    router.push('/login')
+    return null
+  }
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -45,8 +50,14 @@ const IncidentForm = () => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(e.target.files)
+      // Convert FileList to Array for easier manipulation
+      const fileArray = Array.from(e.target.files)
+      setFiles(fileArray)
     }
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -55,30 +66,42 @@ const IncidentForm = () => {
     setError(null)
 
     try {
-      const formDataToSend = new FormData()
-
-      // Add incident data as JSON string
-      formDataToSend.append('incidentData', JSON.stringify(formData))
-
-      // Add files if any
-      if (files) {
-        Array.from(files).forEach(file => {
-          formDataToSend.append('attachments', file)
-        })
-      }
-
-      const response = await fetch('/api/incidents', {
-        method: 'POST',
-        body: formDataToSend,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit incident')
-      }
-
+      await submitIncident(formData, files)
       router.push("/incidents")
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      if (err instanceof IncidentApiError) {
+        switch (err.code) {
+          case 'AUTH_REQUIRED':
+          case 'AUTH_EXPIRED':
+            router.push('/login')
+            break
+          case 'VALIDATION_ERROR':
+            setError({
+              message: 'Please correct the following errors:',
+              validationErrors: err.details
+            })
+            break
+          case 'INVALID_FILES':
+            setError({
+              message: 'File upload errors:',
+              fileErrors: err.details
+            })
+            break
+          case 'NETWORK_ERROR':
+            setError({
+              message: 'Network error. Please check your connection and try again.'
+            })
+            break
+          default:
+            setError({
+              message: err.message || 'An unexpected error occurred'
+            })
+        }
+      } else {
+        setError({
+          message: 'An unexpected error occurred'
+        })
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -86,16 +109,8 @@ const IncidentForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 divide-y divide-gray-200">
-      <div className="space-y-8 divide-y divide-gray-200">
-        <div>
-          <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Report New Incident</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Please provide all the necessary details about the incident.
-            </p>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+      {/* ... existing form fields ... */}
+      <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             {/* Existing form fields */}
             <div className="sm:col-span-3">
               <label htmlFor="type" className="block text-sm font-medium text-gray-700">
@@ -207,44 +222,81 @@ const IncidentForm = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
               />
             </div>
-
-            {/* New file upload field */}
-            <div className="sm:col-span-6">
-              <label htmlFor="attachments" className="block text-sm font-medium text-gray-700">
-                Attachments
-              </label>
-              <input
-                type="file"
-                id="attachments"
-                name="attachments"
-                multiple
-                onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-indigo-50 file:text-indigo-700
-                  hover:file:bg-indigo-100"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Upload any relevant photos, documents, or files
-              </p>
-            </div>
           </div>
-        </div>
+
+      {/* Enhanced file upload section */}
+      <div className="sm:col-span-6">
+        <label htmlFor="attachments" className="block text-sm font-medium text-gray-700">
+          Attachments
+        </label>
+        <input
+          type="file"
+          id="attachments"
+          name="attachments"
+          multiple
+          accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
+          onChange={handleFileChange}
+          className="mt-1 block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-indigo-50 file:text-indigo-700
+            hover:file:bg-indigo-100"
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, PDF, DOC, DOCX
+        </p>
+
+        {/* File list */}
+        {files.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {files.map((file, index) => (
+              <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                <span className="text-sm text-gray-600">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Enhanced error display */}
       {error && (
-        <div className="mt-2 text-sm text-red-600">
-          {error}
+        <div className="mt-4 p-4 bg-red-50 rounded-md">
+          <p className="text-sm font-medium text-red-800">{error.message}</p>
+          {error.validationErrors && (
+            <ul className="mt-2 list-disc pl-5 space-y-1">
+              {error.validationErrors.map((err, index) => (
+                <li key={index} className="text-sm text-red-700">
+                  {err.field}: {err.message}
+                </li>
+              ))}
+            </ul>
+          )}
+          {error.fileErrors && (
+            <ul className="mt-2 list-disc pl-5 space-y-1">
+              {error.fileErrors.map((err, index) => (
+                <li key={index} className="text-sm text-red-700">
+                  {err}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
+      {/* ... submit buttons ... */}
       <div className="pt-5">
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => router.push("/incidents")}
+            // onClick={() => router.push("/incidents")}
             disabled={isSubmitting}
             className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
@@ -264,4 +316,3 @@ const IncidentForm = () => {
 }
 
 export default IncidentForm
-

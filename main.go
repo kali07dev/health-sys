@@ -12,7 +12,6 @@ import (
 	"github.com/hopkali04/health-sys/internal/middleware"
 	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/hopkali04/health-sys/internal/services/dashboard"
-	"github.com/hopkali04/health-sys/internal/services/incident"
 	"github.com/hopkali04/health-sys/internal/services/notification"
 	"github.com/hopkali04/health-sys/internal/services/user"
 	"github.com/hopkali04/health-sys/internal/utils"
@@ -48,12 +47,13 @@ func main() {
 
 	// Initialize services
 	// userRepo := user.NewRepository(dbConn)
-	IncidentRepo := incident.NewRepository(dbConn)
+	// IncidentRepo := incident.NewRepository(dbConn)
 	NotiRepo := notification.NewRepository(dbConn)
 	DashRepo := dashboard.NewRepository(dbConn)
 
 	userService := user.NewUserService(dbConn)
-	NewIncidentHandler := incident.NewService(IncidentRepo)
+	// NewIncidentHandler := incident.NewService(IncidentRepo)
+	NewIncidentHandler := services.NewIncidentService(dbConn)
 	NewNotificationHandler := notification.NewService(NotiRepo)
 	NewDashboardHandler := dashboard.NewService(DashRepo)
 
@@ -67,9 +67,10 @@ func main() {
 	// Create Fiber app
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowMethods: "GET, POST, PUT, DELETE",
+		AllowOrigins:     "http://localhost:3000",
+		AllowCredentials: true, // This is crucial for cookies
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 	app.Use(middleware.LoggingMiddleware())
 

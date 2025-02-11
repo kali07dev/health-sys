@@ -17,7 +17,7 @@ type Incident struct {
 	Location                string    `gorm:"size:255;not null"`
 	OccurredAt              time.Time `gorm:"not null"`
 	ReportedBy              uuid.UUID `gorm:"type:uuid;not null"`
-	AssignedTo              uuid.UUID `gorm:"type:uuid"`
+	AssignedTo              *uuid.UUID `gorm:"type:uuid"`
 	ImmediateActionsTaken   string    `gorm:"type:text"`
 	Witnesses               JSONB     `gorm:"type:jsonb"`
 	EnvironmentalConditions JSONB     `gorm:"type:jsonb"`

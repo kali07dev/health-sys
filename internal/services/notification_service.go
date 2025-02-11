@@ -66,7 +66,7 @@ func (s *NotificationService) CheckAndSendReminders(ctx context.Context) error {
 	for _, incident := range unresolvedIncidents {
 		notificationTitle := "Unresolved Incident Reminder"
 		notificationMessage := "There is an unresolved incident that requires your attention."
-		if err := s.SendNotification(ctx, incident.AssignedTo, "reminder", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
+		if err := s.SendNotification(ctx, *incident.AssignedTo, "reminder", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
 			log.Printf("Failed to send notification for unresolved incident %s: %v", incident.ID, err)
 		}
 	}

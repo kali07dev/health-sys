@@ -1,7 +1,10 @@
 package api
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services/user"
@@ -15,7 +18,7 @@ func NewUserHandler(userService *user.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-func (app *UserHandler) Getall(ctx *fiber.Ctx) error{
+func (app *UserHandler) Getall(ctx *fiber.Ctx) error {
 	data, err := app.userService.GetallUsers()
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -70,8 +73,36 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 			"error": "Invalid credentials",
 		})
 	}
+	// Generate JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userID": user.ID,
+		"role":   "employee",
+		"exp":    time.Now().Add(24 * time.Hour).Unix(),
+	})
+	tokenString, err := token.SignedString([]byte("your-secret-key"))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
+	}
 
-	return c.JSON(user)
+	// Set HTTP-only cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "auth-token",
+		Value:    tokenString,
+		HTTPOnly: true,
+		Secure:   false, // Use 'true' in production (requires HTTPS)
+		SameSite: "Lax",
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+
+	// Return user data (without sensitive fields)
+    return c.JSON(fiber.Map{
+        "user": fiber.Map{
+            "id":    user.ID,
+            "email": user.Email,
+            "role":  "employee",
+        },
+		"token": tokenString,
+    })
 }
 
 func (app *UserHandler) GetUser(c *fiber.Ctx) error {

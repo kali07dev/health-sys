@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useState } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { login } from "../../utils/authApi"
-import { setToken } from "../../utils/auth"
-import Input from "../Input"
-import Button from "../Button"
+import Input from "../Input"  // Make sure you have this component
+import Button from "../Button"  // Make sure you have this component
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -20,11 +19,21 @@ const LoginForm: React.FC = () => {
     setError('')
 
     try {
-      const { token } = await login(email, password)
-      setToken(token)
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Invalid email or password')
+        return
+      }
+
       router.push('/')
+      router.refresh()
     } catch (err) {
-      setError('Invalid email or password')
+      setError('An error occurred during sign in')
     } finally {
       setIsLoading(false)
     }
