@@ -5,6 +5,7 @@ import (
 	"github.com/hopkali04/health-sys/internal/middleware"
 	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/hopkali04/health-sys/internal/services/dashboard"
+
 	// "github.com/hopkali04/health-sys/internal/services/incident"
 	"github.com/hopkali04/health-sys/internal/services/notification"
 	"github.com/hopkali04/health-sys/internal/services/user"
@@ -24,7 +25,7 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 		c.ClearCookie("auth-token")
 		return c.JSON(fiber.Map{"message": "Logged out"})
 	})
-	
+
 	// User routes
 	app.Post("/api/auth/signup", NewUserHandler(userService).RegisterUser)
 	app.Get("/api/user", middleware.AuthMiddleware(), NewUserHandler(userService).Getall)
@@ -46,11 +47,12 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	app.Post("/api/v1/incidents/with-attachments", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
 		NewIncidentsHandler(incidentService).CreateIncidentWithAttachments)
 	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
+	app.Post("/api/v1/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
 
 	// Notification routes
 
 	// app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
-		// NewNotificationHandler(notificationService).GetNotifications)
+	// NewNotificationHandler(notificationService).GetNotifications)
 
 	// Dashboard routes
 	app.Get("/api/dashboard", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),

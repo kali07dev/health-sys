@@ -286,6 +286,32 @@ func (h *IncidentsHandler) ListIncidentsHandlerFiltered(c *fiber.Ctx) error {
 		"total": total,
 	})
 }
+func (h *IncidentsHandler) UpdateIncidentStatusHandler(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid incident ID",
+		})
+	}
+
+	var request struct {
+		Status string `json:"status"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	incident, err := h.service.UpdateIncidentStatus(id, request.Status)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(incident)
+}
 
 // Helper function to validate file types
 func isAllowedFileType(filename string) bool {

@@ -334,6 +334,26 @@ func (s *IncidentService) FilterListIncidents(
 
 	return incidents, total, nil
 }
+
+func (s *IncidentService) UpdateIncidentStatus(id uuid.UUID, status string) (*models.Incident, error) {
+	var incident models.Incident
+	err := s.db.First(&incident, "id = ?", id).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find incident: %w", err)
+	}
+
+	incident.Status = status
+	if status == "closed" {
+		incident.ClosedAt = time.Now()
+	}
+
+	err = s.db.Save(&incident).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to update incident status: %w", err)
+	}
+
+	return &incident, nil
+}
 // Helper function to generate a unique reference number
 func generateReferenceNumber() string {
 	timestamp := time.Now().Format("20060102")
