@@ -75,9 +75,12 @@ func main() {
 	app.Use(middleware.LoggingMiddleware())
 
 	// Start reminder job
-	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password)
-	notificationService := services.NewNotificationService(dbConn, emailService)
-	go jobs.StartReminderJob(notificationService)
+	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.UseTLS)
+	notificationService, err := services.NewNotificationService(dbConn, emailService)
+	if err != nil {
+		log.Fatalf("Failed to initialize notification service: %v", err)
+	}
+	go jobs.StartReminderJob(notificationService, emailService)
 
 	// Setup routes
 	api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler)

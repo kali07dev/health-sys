@@ -1,7 +1,7 @@
 package services
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -35,9 +35,16 @@ func NewNotificationService(db *gorm.DB, emailService *EmailService) (*Notificat
 	return &NotificationService{db: db, emailService: emailService}, nil
 }
 
+func (s *NotificationService) TestMe() error{
+	fmt.Println("Running........")
+	return nil
+}
+
 // SendNotification sends a notification to a user and optionally sends an email
-func (s *NotificationService) SendNotification(ctx context.Context, userID uuid.UUID, notificationType, title, message string, referenceID uuid.UUID, referenceType string) error {
+func (s *NotificationService) SendNotification(userID uuid.UUID, notificationType, title, message string, referenceID uuid.UUID, referenceType string) error {
 	// Store the notification in the database
+	log.Println(" notification meth start")
+
 	notification := models.Notification{
 		UserID:        userID,
 		Type:          notificationType,
@@ -48,61 +55,81 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID uuid.
 	}
 
 	if err := s.db.Create(&notification).Error; err != nil {
+		log.Println("error created notification ")
 		return err
 	}
+	log.Println("created notification ")
 
 	// Fetch the user's email address
 	var user models.User
 	if err := s.db.First(&user, "id = ?", userID).Error; err != nil {
 		return err
 	}
+	log.Println("Fetched user ")
 
 	// Send an email if the user has an email address
 	if user.Email != "" {
+		log.Println("email found notification ")
+
 		emailSubject := title
 		emailBody := message
 
 		if err := s.emailService.SendEmail([]string{user.Email}, emailSubject, emailBody); err != nil {
-			log.Printf("Failed to send email to %s: %v", user.Email, err)
+			log.Println("Failed to send email to %s: %v", user.Email, err)
 		}
 	}
 
-	log.Printf("Notification sent to user %s: %s", userID, title)
+	// log.Println("Notification sent to user %s: %s", userID, title)
+	log.Println("Notification sent to user ")
 	return nil
 }
 
 // CheckAndSendReminders checks for unresolved issues, overdue corrective actions, and upcoming audits, and sends reminders
-func (s *NotificationService) CheckAndSendReminders(ctx context.Context) error {
+func (s *NotificationService) CheckAndSendReminders() error {
 	// Check for unresolved incidents
 	var unresolvedIncidents []models.Incident
-	if err := s.db.WithContext(ctx).Where("status IN ?", []string{"new", "investigating", "action_required"}).Find(&unresolvedIncidents).Error; err != nil {
+	if err := s.db.Where("status IN ? AND assigned_to IS NOT NULL", []string{"new", "investigating", "action_required"}).Find(&unresolvedIncidents).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("no investigations found")
+		}
 		return err
 	}
+	// log.Println("Records found: %v", unresolvedIncidents)
 
 	for _, incident := range unresolvedIncidents {
+		log.Println("we found sht ")
+
+		// Skip if no user is assigned
+		if incident.AssignedTo == nil {
+			log.Printf("Skipping notification for incident %s: no user assigned", incident.ID)
+			continue
+		}
+
 		notificationTitle := "Unresolved Incident Reminder"
 		notificationMessage := "There is an unresolved incident that requires your attention."
-		if err := s.SendNotification(ctx, *incident.AssignedTo, "reminder", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
+		if err := s.SendNotification(*incident.AssignedTo, "reminder", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
 			log.Printf("Failed to send notification for unresolved incident %s: %v", incident.ID, err)
 		}
 	}
+	log.Println("Done func sent to user ")
+
 
 	// Check for overdue corrective actions
 	var overdueActions []models.CorrectiveAction
-	if err := s.db.WithContext(ctx).Where("status = ? AND due_date < ?", "pending", time.Now()).Find(&overdueActions).Error; err != nil {
+	if err := s.db.Where("status = ? AND due_date < ?", "pending", time.Now()).Find(&overdueActions).Error; err != nil {
 		return err
 	}
 
 	for _, action := range overdueActions {
 		notificationTitle := "Overdue Corrective Action Reminder"
 		notificationMessage := "There is an overdue corrective action that requires your attention."
-		if err := s.SendNotification(ctx, action.AssignedTo, "reminder", notificationTitle, notificationMessage, action.ID, "corrective_action"); err != nil {
+		if err := s.SendNotification(action.AssignedTo, "reminder", notificationTitle, notificationMessage, action.ID, "corrective_action"); err != nil {
 			log.Printf("Failed to send notification for overdue corrective action %s: %v", action.ID, err)
 		}
 	}
 
 	// Check for upcoming audits (if applicable)
-	// This part can be customized based on your audit system.
+	// This part can be customized based on audit system.
 
 	return nil
 }

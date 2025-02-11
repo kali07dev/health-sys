@@ -30,7 +30,7 @@ func (h *NotificationHandler) SendNotification(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
 	}
 
-	if err := h.notificationService.SendNotification(c.Context(), request.UserID, request.Type, request.Title, request.Message, request.ReferenceID, request.ReferenceType); err != nil {
+	if err := h.notificationService.SendNotification(request.UserID, request.Type, request.Title, request.Message, request.ReferenceID, request.ReferenceType); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 

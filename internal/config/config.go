@@ -26,6 +26,7 @@ type Config struct {
 		Port     int    `yaml:"port"`
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
+		UseTLS bool `yaml:"use_tls"`
 	} `yaml:"smtp"`
 	Sentry struct {
 		DSN string `yaml:"dsn"`
