@@ -20,6 +20,14 @@ func NewCorrectiveActionService(db *gorm.DB) *CorrectiveActionService {
 	return &CorrectiveActionService{db: db}
 }
 
+func (s *CorrectiveActionService) GetByIncidentID(incidentID uuid.UUID) ([]models.CorrectiveAction, error) {
+    var actions []models.CorrectiveAction
+    if err := s.db.Where("incident_id = ?", incidentID).Find(&actions).Error; err != nil {
+        return nil, err
+    }
+    return actions, nil
+}
+
 // Create a new corrective action
 func (s *CorrectiveActionService) Create(ctx context.Context, req schema.CorrectiveActionRequest) (*models.CorrectiveAction, error) {
 	validate := validator.New()
@@ -61,7 +69,7 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 
 	if req.VerifiedBy != "" {
 		if verifiedBy, err := uuid.Parse(req.VerifiedBy); err == nil {
-			correctiveAction.VerifiedBy = verifiedBy
+			correctiveAction.VerifiedBy = &verifiedBy
 		}
 	}
 
@@ -159,7 +167,7 @@ func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req 
 
 	if req.VerifiedBy != "" {
 		if verifiedBy, err := uuid.Parse(req.VerifiedBy); err == nil {
-			action.VerifiedBy = verifiedBy
+			action.VerifiedBy = &verifiedBy
 		}
 	}
 

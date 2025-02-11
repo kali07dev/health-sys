@@ -4,8 +4,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 type EmailService struct {
@@ -14,9 +16,10 @@ type EmailService struct {
 	smtpUsername string
 	smtpPassword string
 	useTLS       bool
+	timeout      time.Duration
 }
 
-// NewEmailService creates a new EmailService instance
+// NewEmailService creates a new EmailService instance with timeout
 func NewEmailService(host string, port int, username, password string, useTLS bool) *EmailService {
 	return &EmailService{
 		smtpHost:     host,
@@ -24,20 +27,68 @@ func NewEmailService(host string, port int, username, password string, useTLS bo
 		smtpUsername: username,
 		smtpPassword: password,
 		useTLS:       useTLS,
+		timeout:      30 * time.Second, // Default timeout
 	}
+}
+
+// SetTimeout allows customizing the connection timeout
+func (s *EmailService) SetTimeout(timeout time.Duration) {
+	s.timeout = timeout
+}
+
+// TestConnection tests the SMTP connection without sending an email
+func (s *EmailService) TestConnection() error {
+	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
+
+	// First test basic TCP connection
+	conn, err := net.DialTimeout("tcp", addr, s.timeout)
+	if err != nil {
+		return fmt.Errorf("TCP connection failed: %v", err)
+	}
+	conn.Close()
+
+	// Test SMTP connection with STARTTLS
+	client, err := smtp.Dial(addr)
+	if err != nil {
+		return fmt.Errorf("SMTP connection failed: %v", err)
+	}
+	defer client.Close()
+
+	// Try EHLO
+	if err := client.Hello("localhost"); err != nil {
+		return fmt.Errorf("EHLO failed: %v", err)
+	}
+
+	// Check if server supports STARTTLS
+	if ok, _ := client.Extension("STARTTLS"); !ok {
+		return fmt.Errorf("server doesn't support STARTTLS")
+	}
+
+	// Try STARTTLS
+	tlsConfig := &tls.Config{
+		ServerName: s.smtpHost,
+		MinVersion: tls.VersionTLS12,
+	}
+	if err := client.StartTLS(tlsConfig); err != nil {
+		return fmt.Errorf("STARTTLS failed: %v", err)
+	}
+
+	// Try authentication
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
+	if err := client.Auth(auth); err != nil {
+		return fmt.Errorf("authentication failed: %v", err)
+	}
+
+	return nil
 }
 
 // SendEmail sends an email to a list of recipients
 func (s *EmailService) SendEmail(to []string, subject, body string) error {
-	// Validate inputs
 	if len(to) == 0 {
 		return fmt.Errorf("recipient list cannot be empty")
 	}
 
-	// Create authentication
-	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
-
-	// Prepare email content
+	// Create email content
 	headers := make([]string, 0)
 	headers = append(headers, fmt.Sprintf("From: %s", s.smtpUsername))
 	headers = append(headers, fmt.Sprintf("To: %s", strings.Join(to, ", ")))
@@ -47,62 +98,60 @@ func (s *EmailService) SendEmail(to []string, subject, body string) error {
 	
 	emailContent := strings.Join(headers, "\r\n") + "\r\n\r\n" + body
 
-	// Choose sending method based on TLS configuration
-	s.useTLS = true
+	// Set up dialer with timeout
+	dialer := &net.Dialer{
+		Timeout: s.timeout,
+	}
+
+	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
+
+	var client *smtp.Client
+	var err error
 
 	if s.useTLS {
-		return s.sendWithTLS(auth, to, []byte(emailContent))
-	}
-	return s.sendWithStartTLS(auth, to, []byte(emailContent))
-}
+		// Direct TLS connection
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{
+			ServerName: s.smtpHost,
+			MinVersion: tls.VersionTLS12,
+		})
+		if err != nil {
+			return fmt.Errorf("TLS connection failed: %v", err)
+		}
+		defer conn.Close()
 
-// sendWithTLS sends email using TLS connection
-func (s *EmailService) sendWithTLS(auth smtp.Auth, to []string, message []byte) error {
-	// Set up TLS config
-	tlsConfig := &tls.Config{
-		ServerName: s.smtpHost,
-		MinVersion: tls.VersionTLS12,
-	}
+		client, err = smtp.NewClient(conn, s.smtpHost)
+	} else {
+		// Plain connection first, then STARTTLS
+		conn, err := dialer.Dial("tcp", addr)
+		if err != nil {
+			return fmt.Errorf("TCP connection failed: %v", err)
+		}
 
-	// Connect to the server
-	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort), tlsConfig)
-	if err != nil {
-		return fmt.Errorf("failed to establish TLS connection: %v", err)
-	}
-	defer conn.Close()
+		client, err = smtp.NewClient(conn, s.smtpHost)
+		if err != nil {
+			conn.Close()
+			return fmt.Errorf("SMTP client creation failed: %v", err)
+		}
 
-	client, err := smtp.NewClient(conn, s.smtpHost)
-	if err != nil {
-		return fmt.Errorf("failed to create SMTP client: %v", err)
+		// Send EHLO
+		if err := client.Hello("localhost"); err != nil {
+			client.Close()
+			return fmt.Errorf("EHLO failed: %v", err)
+		}
+
+		// Start TLS
+		if err := client.StartTLS(&tls.Config{
+			ServerName: s.smtpHost,
+			MinVersion: tls.VersionTLS12,
+		}); err != nil {
+			client.Close()
+			return fmt.Errorf("STARTTLS failed: %v", err)
+		}
 	}
 	defer client.Close()
 
-	return s.sendMail(client, auth, to, message)
-}
-
-// sendWithStartTLS sends email using STARTTLS
-func (s *EmailService) sendWithStartTLS(auth smtp.Auth, to []string, message []byte) error {
-	// Connect to the server
-	client, err := smtp.Dial(fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort))
-	if err != nil {
-		return fmt.Errorf("failed to connect to SMTP server: %v", err)
-	}
-	defer client.Close()
-
-	// Start TLS
-	if err := client.StartTLS(&tls.Config{
-		ServerName: s.smtpHost,
-		MinVersion: tls.VersionTLS12,
-	}); err != nil {
-		return fmt.Errorf("failed to start TLS: %v", err)
-	}
-
-	return s.sendMail(client, auth, to, message)
-}
-
-// sendMail handles the common SMTP sending logic
-func (s *EmailService) sendMail(client *smtp.Client, auth smtp.Auth, to []string, message []byte) error {
 	// Authenticate
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
 	if err := client.Auth(auth); err != nil {
 		return fmt.Errorf("authentication failed: %v", err)
 	}
@@ -126,7 +175,7 @@ func (s *EmailService) sendMail(client *smtp.Client, auth smtp.Auth, to []string
 	}
 	defer writer.Close()
 
-	if _, err := writer.Write(message); err != nil {
+	if _, err := writer.Write([]byte(emailContent)); err != nil {
 		return fmt.Errorf("failed to write message: %v", err)
 	}
 

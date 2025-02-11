@@ -19,7 +19,7 @@ type CorrectiveAction struct {
 	CompletedAt          time.Time
 	CompletionNotes      string    `gorm:"type:text"`
 	VerificationRequired bool      `gorm:"default:false"`
-	VerifiedBy           uuid.UUID `gorm:"type:uuid"`
+	VerifiedBy           *uuid.UUID `gorm:"type:uuid"`
 	VerifiedAt           time.Time
 	CreatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`

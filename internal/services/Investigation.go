@@ -44,6 +44,14 @@ func (s *InvestigationService) GetAll(status string, limit, offset int) ([]model
 	return investigations, nil
 }
 
+func (s *InvestigationService) GetByIncidentID(incidentID uuid.UUID) (*models.Investigation, error) {
+    investigation := &models.Investigation{}
+    if err := s.DB.Where("incident_id = ?", incidentID).First(investigation).Error; err != nil {
+        return nil, err
+    }
+    return investigation, nil
+}
+
 // Create a new investigation
 func (s *InvestigationService) Create(form *schema.InvestigationForm) (*models.Investigation, error) {
 	investigation := models.Investigation{
@@ -68,15 +76,22 @@ func (s *InvestigationService) Create(form *schema.InvestigationForm) (*models.I
 }
 
 // Get an investigation by ID
+// func (s *InvestigationService) GetByID(id uuid.UUID) (*models.Investigation, error) {
+// 	var investigation models.Investigation
+// 	if err := s.DB.First(&investigation, "id = ?", id).Error; err != nil {
+// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+// 			return nil, errors.New("investigation not found")
+// 		}
+// 		return nil, err
+// 	}
+// 	return &investigation, nil
+// }
 func (s *InvestigationService) GetByID(id uuid.UUID) (*models.Investigation, error) {
-	var investigation models.Investigation
-	if err := s.DB.First(&investigation, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("investigation not found")
-		}
-		return nil, err
-	}
-	return &investigation, nil
+    investigation := &models.Investigation{}
+    if err := s.DB.Preload("Incident").Preload("LeadInvestigator").First(investigation, id).Error; err != nil {
+        return nil, err
+    }
+    return investigation, nil
 }
 
 // Update an investigation

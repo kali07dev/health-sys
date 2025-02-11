@@ -48,6 +48,7 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 		NewIncidentsHandler(incidentService).CreateIncidentWithAttachments)
 	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
 	app.Post("/api/v1/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
+	app.Post("/api/v1/incidents/:id/assign", incidentImpl.AssignIncidentToUserHandler)
 
 	// Notification routes
 

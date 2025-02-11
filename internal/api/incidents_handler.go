@@ -207,7 +207,7 @@ func (h *IncidentsHandler) AssignIncidentToUserHandler(c *fiber.Ctx) error {
 	}
 
 	var request struct {
-		UserID uuid.UUID `json:"user_id"`
+		UserID uuid.UUID `json:"userId"`
 	}
 	if err := c.BodyParser(&request); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

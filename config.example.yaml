@@ -1,0 +1,25 @@
+database:
+  host: localhost
+  port: 5432
+  user: username
+  password: password
+  dbname: database
+  sslmode: disable
+
+logging:
+  level: info
+  format: json
+  file: logs/app.log
+  max_size: 100  # Max size in MB
+  max_backups: 3 # Max number of old log files
+  max_age: 28    # Max age in days
+  compress: true # Compress rotated logs
+
+sentry:
+  dsn: 
+
+smtp:
+  host: smtp.example.com
+  port: 587
+  username: your-email@example.com
+  password: your-email-password

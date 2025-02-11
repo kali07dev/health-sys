@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -95,19 +96,28 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	})
 
 	// Return user data (without sensitive fields)
-    return c.JSON(fiber.Map{
-        "user": fiber.Map{
-            "id":    user.ID,
-            "email": user.Email,
-            "role":  "employee",
-        },
+	return c.JSON(fiber.Map{
+		"user": fiber.Map{
+			"id":    user.ID,
+			"email": user.Email,
+			"role":  "employee",
+		},
 		"token": tokenString,
-    })
+	})
 }
 
 func (app *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	user, err := app.userService.GetUserByID(uuid.MustParse(id))
+	parsedUUID, err := uuid.Parse(id)
+	if err != nil {
+		log.Printf("Invalid UUID format received: %s - Error: %v", id, err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Invalid user ID format",
+			"details": "The provided ID is not a valid UUID",
+		})
+	}
+	// user, err := app.userService.GetUserByID(uuid.MustParse(id))
+	user, err := app.userService.GetUserByID(parsedUUID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
