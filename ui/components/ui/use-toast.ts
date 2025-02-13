@@ -1,30 +1,24 @@
 // components/ui/use-toast.ts
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 type ToastType = 'success' | 'error' | 'info'
 
 interface ToastState {
-  message: string
+  title?: string
+  description: string
   type: ToastType
-  duration?: number
+}
+
+interface ToastFunction {
+  (props: { title?: string; description: string; type?: ToastType }): void
 }
 
 export function useToast() {
-  const [toast, setToast] = useState<ToastState | null>(null)
+  const [toastState, setToastState] = useState<ToastState | null>(null)
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 3000) => {
-    setToast({ message, type, duration })
+  const toast: ToastFunction = useCallback(({ title, description, type = 'info' }) => {
+    setToastState({ title, description, type })
   }, [])
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => {
-        setToast(null)
-      }, toast.duration)
-
-      return () => clearTimeout(timer)
-    }
-  }, [toast])
-
-  return { toast, showToast }
+  return { toast, toastState }
 }
