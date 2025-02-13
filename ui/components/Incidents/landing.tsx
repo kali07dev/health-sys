@@ -31,6 +31,7 @@ export const IncidentsTable = ({ incidents }: IncidentsTableProps) => {
     toast({
       title: "Success",
       description: "Incident has been created successfully.",
+      type: "success"
     })
   }
 

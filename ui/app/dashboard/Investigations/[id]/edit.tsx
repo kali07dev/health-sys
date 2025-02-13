@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Investigation } from '../../../../interfaces/investigation';
 import { fetchInvestigationById, updateInvestigation } from '../../../../api/investigation';
-import InvestigationForm from '../../../../components/Investigations/InvestigationForm';
+import InvestigationForm from '../../../../components/Investigations/create-investigation-form';
 
 
 const EditInvestigationPage = ({ id }: { id: string }) => {

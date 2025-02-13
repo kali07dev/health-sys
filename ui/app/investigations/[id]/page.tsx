@@ -1,10 +1,11 @@
-// pages/investigations/[id].tsx
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { ViewInvestigation } from '@/components/Investigations/view-investigation'
-import { EditInvestigationForm } from '@/components/Investigations/edit-investigation-form'
-import { Button } from '@/components/ui/button'
-import { Investigation } from '@/interfaces/investigation'
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/router"
+import { ViewInvestigation } from "@/components/Investigations/view-investigation"
+import { EditInvestigationForm } from "@/components/Investigations/edit-investigation-form"
+import { Button } from "@/components/ui/button"
+import type { Investigation } from "@/interfaces/investigation"
 
 export default function InvestigationDetailPage() {
   const router = useRouter()
@@ -23,7 +24,7 @@ export default function InvestigationDetailPage() {
         const data = await response.json()
         setInvestigation(data)
       } catch (error) {
-        console.error('Failed to fetch investigation:', error)
+        console.error("Failed to fetch investigation:", error)
       } finally {
         setLoading(false)
       }
@@ -32,7 +33,7 @@ export default function InvestigationDetailPage() {
     fetchInvestigation()
   }, [id])
 
-  const handleEditSuccess = async (updatedInvestigation: Investigation) => {
+  const handleEditSuccess = (updatedInvestigation: Investigation) => {
     setInvestigation(updatedInvestigation)
     setIsEditing(false)
   }
@@ -50,9 +51,8 @@ export default function InvestigationDetailPage() {
       <h1 className="text-2xl font-bold mb-6">Investigation Details</h1>
       {isEditing ? (
         <EditInvestigationForm 
-          investigation={investigation} 
-          onSuccess={handleEditSuccess} 
-        />
+            investigation={investigation} 
+            onSuccess={handleEditSuccess} />
       ) : (
         <>
           <ViewInvestigation investigation={investigation} />
@@ -61,9 +61,10 @@ export default function InvestigationDetailPage() {
           </Button>
         </>
       )}
-      <Button onClick={() => router.push('/investigations')} className="mt-4 ml-4">
+      <Button onClick={() => router.push("/investigations")} className="mt-4 ml-4">
         Back to Investigations
       </Button>
     </div>
   )
 }
+

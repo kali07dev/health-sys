@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAllInvestigations, deleteInvestigation } from '../../../api/investigation';
 import { Investigation } from '../../../interfaces/investigation';
-import InvestigationList from '../../../components/Investigations/InvestigationList';
+import InvestigationList from '../../../components/Investigations/investigations-table';
 
 const InvestigationsPage = () => {
   const [investigations, setInvestigations] = useState<Investigation[]>([]);

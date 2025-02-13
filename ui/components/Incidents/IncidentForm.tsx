@@ -13,7 +13,11 @@ interface ValidationError {
   message: string
 }
 
-const IncidentForm = () => {
+interface IncidentFormProps {
+  onSuccess?: () => void; // Add this line
+}
+
+const IncidentForm = ({ onSuccess }: IncidentFormProps) => { // Update this line
   const router = useRouter()
   const { data: session, status } = useSession()
   const [formData, setFormData] = useState<IncidentFormData>({
@@ -67,7 +71,10 @@ const IncidentForm = () => {
 
     try {
       await submitIncident(formData, files)
-      router.push("/incidents")
+      if (onSuccess) {
+        onSuccess(); // Call the onSuccess callback if it exists
+      }
+      // router.push("/incidents")
     } catch (err) {
       if (err instanceof IncidentApiError) {
         switch (err.code) {

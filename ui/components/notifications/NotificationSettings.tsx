@@ -1,38 +1,46 @@
-import type React from "react"
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateNotificationSettings } from "@/api/notifications"
-import { Button } from "../ui/button"
-import { Switch } from "../ui/switch"
-import { useToast } from "../ui/use-toast"
-import { Loader2 } from "../ui/loader" // Import Loader2
+import React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateNotificationSettings } from "@/api/notifications";
+import { Button } from "../ui/button";
+import { Switch } from "../ui/switch";
+import { useToast } from "../ui/use-toast";
+import { Loader2 } from "../ui/loader"; // Import Loader2
 
 export const NotificationSettings: React.FC = () => {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const mutation = useMutation(updateNotificationSettings, {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: updateNotificationSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries("notificationSettings")
+        queryClient.invalidateQueries({ 
+            queryKey: ["notificationSettings"] 
+          });
       toast({
         title: "Success",
         description: "Notification settings updated",
         variant: "success",
-      })
+      });
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to update notification settings",
         variant: "error",
-      })
+      });
     },
-  })
+  });
 
   const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-    const formData = new FormData(event.target as HTMLFormElement)
-    const settings = Object.fromEntries(formData)
-    mutation.mutate(settings)
-  }
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    const settings = {
+      emailNotifications: formData.get("emailNotifications") === "on",
+      pushNotifications: formData.get("pushNotifications") === "on",
+      reminderFrequency: Number(formData.get("reminderFrequency")),
+    };
+    mutation.mutate(settings);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,10 +70,9 @@ export const NotificationSettings: React.FC = () => {
         />
       </div>
       <Button type="submit" className="bg-green-500 hover:bg-green-600 text-white">
-        {mutation.isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+        {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
         Save Settings
       </Button>
     </form>
-  )
-}
-
+  );
+};
