@@ -29,15 +29,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className="h-full">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
         <Providers>
           <SidebarProvider>
-            <div className="flex h-screen bg-gray-100">
+            <div className="flex h-full bg-gray-50">
               <AppSidebar />
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col sm:pl-64">
                 <AppHeader />
-                <main className="flex-1 overflow-y-auto">{children}</main>
+                <main className="flex-1">{children}</main>
               </div>
             </div>
           </SidebarProvider>
