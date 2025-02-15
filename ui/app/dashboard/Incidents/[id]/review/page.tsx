@@ -1,55 +1,54 @@
-import React from "react"
-import { notFound } from "next/navigation"
-import IncidentReview from "../../../../../components/Incidents/IncidentReview"
-import { generateDummyIncidents, type Incident } from "../../../../../utils/dummyData"
-import { getUserRole } from "../../../../../utils/auth"
+// app/incidents/[id]/review/page.tsx
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { Toaster } from 'react-hot-toast';
 
-const fetchIncident = async (id: string): Promise<Incident | undefined> => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  const incidents = generateDummyIncidents(10)
-  return incidents.find((incident) => incident.id === id)
+import IncidentReviewPage from '@/components/Incidents/IncidentReview';
+import { incidentAPI } from '@/utils/api';
+import type { Incident } from '@/interfaces/incidents';
+
+interface PageProps {
+  params: {
+    id: string;
+  };
 }
 
-interface IncidentReviewPageProps {
-  params: { id: string }
+async function getIncident(id: string): Promise<Incident> {
+  try {
+    const response = await incidentAPI.getIncident(id);
+    return response;
+  } catch (error) {
+    throw new Error('Failed to fetch incident');
+  }
 }
 
-const IncidentReviewPage: React.FC<IncidentReviewPageProps> = ({ params }) => {
-  const [incident, setIncident] = React.useState<Incident | undefined>(undefined);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const fetchedIncident = await fetchIncident(params.id);
-      setIncident(fetchedIncident);
-      setLoading(false);
-
-      if (!fetchedIncident) {
-        notFound();
-      }
-
-      const userRole = getUserRole();
-      if (userRole === "employee") {
-        window.location.href = `/incidents/${params.id}`;
-      }
-    };
-
-    fetchData();
-  }, [params.id]);
-
-  if (loading) {
-    return <div>Loading...</div>;
+export default async function Page({ params }: PageProps) {
+  const session = await getServerSession();
+  
+  // Redirect if not authenticated
+  if (!session) {
+    redirect('/auth/signin');
   }
 
-  return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="px-4 py-6 sm:px-0">
-        {incident && <IncidentReview incident={incident} />}
-      </div>
-    </div>
-  );
-};
+  // Only allow admin and safety officer to access review page
+  if (!['employee', 'safety_officer'].includes(session.role ?? '')) {
+    // redirect('/incidents');
+    console.log("UnAuthenticated")
+  }
 
-export default IncidentReviewPage
+  try {
+    const incident = await getIncident(params.id);
+
+    return (
+      <>
+        <Toaster position="top-right" />
+        <IncidentReviewPage incident={incident} />
+      </>
+    );
+  } catch (error) {
+    // redirect('/incidents');
+    console.log(error)
+
+  }
+}
 
