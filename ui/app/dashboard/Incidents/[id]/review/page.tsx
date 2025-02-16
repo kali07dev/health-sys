@@ -31,9 +31,10 @@ export default async function Page({ params }: PageProps) {
   }
 
   // Only allow admin and safety officer to access review page
-  if (!['employee', 'safety_officer'].includes(session.role ?? '')) {
+  if (!['admin', 'safety_officer'].includes(session.role ?? '')) {
     // redirect('/incidents');
     console.log("UnAuthenticated")
+    console.log(session.role)
   }
 
   try {
