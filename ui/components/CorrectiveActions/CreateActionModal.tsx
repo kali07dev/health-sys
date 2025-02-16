@@ -2,15 +2,18 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { SearchEmployee } from '@/components/SearchEmployee'; // Import the SearchEmployee component
 
 interface CreateActionModalProps {
   incidentId: string;
+  userID: string;
   onClose: () => void;
   onSubmit: (formData: any) => void;
 }
 
 export const CreateActionModal: React.FC<CreateActionModalProps> = ({
   incidentId,
+  userID,
   onClose,
   onSubmit,
 }) => {
@@ -18,11 +21,18 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
     description: '',
     actionType: '',
     priority: 'low',
-    assignedTo: '',
+    assignedTo: '', // This will store the selected employee's ID
     dueDate: '',
   });
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null); // State for selected employee details
   const [loading, setLoading] = useState(false);
 
+  const handleEmployeeSelect = (employee: any) => {
+    console.log("Full employee data:", employee); // Add this
+    setSelectedEmployee(employee);
+    setFormData({ ...formData, assignedTo: employee.ID });
+    console.log("Updated formData:", formData); // Add this
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -33,8 +43,8 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
         action_type: formData.actionType,
         priority: formData.priority,
         status: 'pending',
-        assigned_to: formData.assignedTo,
-        assigned_by: 'currentUserId', // Replace with actual user ID
+        assigned_to: formData.assignedTo, // Use the selected employee's ID
+        assigned_by: userID, // Replace with actual user ID
         due_date: formData.dueDate,
         verification_required: false,
       };
@@ -100,15 +110,13 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
             <label className="block text-sm font-medium text-gray-700">
               Assigned To
             </label>
-            <input
-              type="text"
-              value={formData.assignedTo}
-              onChange={(e) =>
-                setFormData({ ...formData, assignedTo: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
+            {/* Integrate the SearchEmployee component */}
+            <SearchEmployee onSelect={handleEmployeeSelect} />
+            {selectedEmployee && (
+              <div className="mt-2 text-sm text-gray-500">
+                Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -134,7 +142,7 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !formData.assignedTo} // Disable if no employee is selected
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

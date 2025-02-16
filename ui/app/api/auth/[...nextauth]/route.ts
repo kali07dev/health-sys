@@ -17,14 +17,15 @@ const authOptions = {
         });
 
         if (!res.ok) {
-            const errorData = await res.text(); // Use text() instead of json() for debugging
-            console.error('Login failed:', errorData);
-            throw new Error(errorData);
-          }
+          const errorData = await res.text();
+          console.error('Login failed:', errorData);
+          throw new Error(errorData);
+        }
 
         const data = await res.json();
         
         if (res.ok && data.user && data.token) {
+          // Include all necessary user data here
           return {
             id: data.user.id,
             email: data.user.email,
@@ -39,12 +40,23 @@ const authOptions = {
   callbacks: {
     async jwt({ token, user }: { token: any, user: any }) {
       if (user) {
+        // Pass all relevant user data to the token
+        token.id = user.id;
+        token.email = user.email;
         token.token = user.token;
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }: { session: any, token: any }) {
+      // Ensure user object exists in session
+      if (!session.user) {
+        session.user = {};
+      }
+      
+      // Pass all relevant token data to the session
+      session.user.id = token.id;
+      session.user.email = token.email;
       session.token = token.token;
       session.role = token.role;
       return session;
