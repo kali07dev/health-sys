@@ -6,7 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
-	"github.com/hopkali04/health-sys/internal/services/employees"
+	"github.com/hopkali04/health-sys/internal/schema"
+	"github.com/hopkali04/health-sys/internal/services"
 )
 
 type EmployeeHandler struct {
@@ -15,6 +16,27 @@ type EmployeeHandler struct {
 
 func NewEmployeeHandler(employeeService *services.EmployeeService) *EmployeeHandler {
 	return &EmployeeHandler{employeeService: employeeService}
+}
+
+// SearchEmployees handles the search request for employees
+func (h *EmployeeHandler) SearchEmployees(c *fiber.Ctx) error {
+	query := c.Query("query") // Get the search query from the URL query parameter
+	if query == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "search query is required",
+		})
+	}
+
+	// Call the service to search for employees
+	employees, err := h.employeeService.SearchEmployees(c.Context(), query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return the list of employees
+	return c.Status(fiber.StatusOK).JSON(schema.EmployeeToResponseArray(employees))
 }
 
 // CreateEmployee handles the creation of a new employee

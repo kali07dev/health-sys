@@ -11,8 +11,19 @@ import (
 	"github.com/hopkali04/health-sys/internal/services/user"
 )
 
-func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService, notificationService notification.Service, dashboardService dashboard.Service) {
+type SvcImpl struct {
+	userService         *user.UserService
+	incidentService     *services.IncidentService
+	notificationService notification.Service
+	dashboardService    dashboard.Service
+	correctiveSVC 		*services.CorrectiveActionService
+}
+
+func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService, 
+	notificationService notification.Service, dashboardService dashboard.Service,
+	correctiveSVC 		*services.CorrectiveActionService) {
 	incidentImpl := NewIncidentsHandler(incidentService)
+	correctiveActionHandler := NewCorrectiveActionHandler(correctiveSVC)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"user": fiber.Map{
@@ -48,8 +59,18 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 		NewIncidentsHandler(incidentService).CreateIncidentWithAttachments)
 	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
 	app.Post("/api/v1/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
+	app.Get("/api/v1/incidents/:id/view", incidentImpl.GetIncidentHandler)
 	app.Post("/api/v1/incidents/:id/assign", incidentImpl.AssignIncidentToUserHandler)
 
+	// Corrective action routes
+	// Define routes
+	app.Get("/api/v1/incidents/:incidentID/actions", correctiveActionHandler.GetCorrectiveActionsByIncidentID)
+	app.Post("/api/v1/actions", correctiveActionHandler.CreateCorrectiveAction)
+	app.Get("/api/v1/actions/:id", correctiveActionHandler.GetCorrectiveActionByID)
+	app.Put("/api/v1/actions/:id", correctiveActionHandler.UpdateCorrectiveAction)
+	app.Delete("/api/v1/actions/:id", correctiveActionHandler.DeleteCorrectiveAction)
+
+	
 	// Notification routes
 
 	// app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
@@ -73,10 +94,22 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 
 func SetupEmployeeRoutes(app *fiber.App, employeeHandler *EmployeeHandler) {
 	app.Post("/employees", employeeHandler.CreateEmployee)
+	app.Get("/api/v1/employees/search", employeeHandler.SearchEmployees)
 	app.Get("/employees/:id", employeeHandler.GetEmployee)
 	app.Put("/employees/:id", employeeHandler.UpdateEmployee)
 	app.Delete("/employees/:id", employeeHandler.DeleteEmployee)
 	app.Get("/employees", employeeHandler.ListEmployees)
+}
+func SetupInvestigationRoutes(app *fiber.App, handler *InvestigationHandler) {
+
+    api := app.Group("/api/v1/investigations")
+
+    api.Get("/", handler.GetAll)
+    api.Get("/:id", handler.GetByID)
+    api.Get("/incident/:incidentId", handler.GetByIncidentID)
+    api.Post("/", handler.Create)
+    api.Put("/:id", handler.Update)
+    api.Delete("/:id", handler.Delete)
 }
 func SetupRoleRoutes(app *fiber.App, roleHandler *RoleHandler) {
 	app.Post("/employees/:id/assign-role", roleHandler.AssignRole)

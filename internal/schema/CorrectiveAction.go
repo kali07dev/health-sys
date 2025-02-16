@@ -1,5 +1,11 @@
 package schema
 
+import (
+	"time"
+
+	"github.com/hopkali04/health-sys/internal/models"
+)
+
 type CorrectiveActionRequest struct {
 	IncidentID           string `json:"incident_id" validate:"required,uuid4"`
 	Description          string `json:"description" validate:"required"`
@@ -14,4 +20,66 @@ type CorrectiveActionRequest struct {
 	VerificationRequired bool   `json:"verification_required"`
 	VerifiedBy           string `json:"verified_by" validate:"omitempty,uuid4"`
 	VerifiedAt           string `json:"verified_at" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+}
+
+type CorrectiveActionResponse struct {
+	ID                   string  `json:"id"`
+	IncidentID           string  `json:"incidentId"`
+	Description          string  `json:"description"`
+	ActionType           string  `json:"actionType"`
+	Priority             string  `json:"priority"`
+	Status               string  `json:"status"`
+	AssignedTo           string  `json:"assignedTo"`
+	AssignedBy           string  `json:"assignedBy"`
+	DueDate              string  `json:"dueDate"`
+	CompletedAt          *string `json:"completedAt,omitempty"`
+	CompletionNotes      *string `json:"completionNotes,omitempty"`
+	VerificationRequired bool    `json:"verificationRequired"`
+	VerifiedBy           *string `json:"verifiedBy,omitempty"`
+	VerifiedAt           *string `json:"verifiedAt,omitempty"`
+}
+
+func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
+	// Convert time fields to ISO 8601 formatted strings
+	dueDate := ca.DueDate.Format(time.RFC3339)
+	var completedAt, verifiedAt *string
+	if !ca.CompletedAt.IsZero() {
+		completedAtStr := ca.CompletedAt.Format(time.RFC3339)
+		completedAt = &completedAtStr
+	}
+	if !ca.VerifiedAt.IsZero() {
+		verifiedAtStr := ca.VerifiedAt.Format(time.RFC3339)
+		verifiedAt = &verifiedAtStr
+	}
+
+	// Convert UUID fields to strings
+	verifiedBy := ""
+	if ca.VerifiedBy != nil {
+		verifiedBy = ca.VerifiedBy.String()
+	}
+
+	return CorrectiveActionResponse{
+		ID:                   ca.ID.String(),
+		IncidentID:           ca.IncidentID.String(),
+		Description:          ca.Description,
+		ActionType:           ca.ActionType,
+		Priority:             ca.Priority,
+		Status:               ca.Status,
+		AssignedTo:           ca.AssignedTo.String(),
+		AssignedBy:           ca.AssignedBy.String(),
+		DueDate:              dueDate,
+		CompletedAt:          completedAt,
+		CompletionNotes:      &ca.CompletionNotes,
+		VerificationRequired: ca.VerificationRequired,
+		VerifiedBy:           &verifiedBy,
+		VerifiedAt:           verifiedAt,
+	}
+}
+
+func ToCActionResponseArray(actions []models.CorrectiveAction) []CorrectiveActionResponse {
+	response := make([]CorrectiveActionResponse, len(actions))
+	for i, action := range actions {
+		response[i] = ToCActionResponse(&action)
+	}
+	return response
 }

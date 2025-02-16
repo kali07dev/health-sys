@@ -77,7 +77,7 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	// Generate JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": user.ID,
-		"role":   "employee",
+		"role":   "admin",
 		"exp":    time.Now().Add(24 * time.Hour).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte("your-secret-key"))
@@ -100,7 +100,7 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 		"user": fiber.Map{
 			"id":    user.ID,
 			"email": user.Email,
-			"role":  "employee",
+			"role":  "admin",
 		},
 		"token": tokenString,
 	})

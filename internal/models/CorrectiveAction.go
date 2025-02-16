@@ -17,8 +17,8 @@ type CorrectiveAction struct {
 	AssignedBy           uuid.UUID `gorm:"type:uuid;not null"`
 	DueDate              time.Time `gorm:"not null"`
 	CompletedAt          time.Time
-	CompletionNotes      string    `gorm:"type:text"`
-	VerificationRequired bool      `gorm:"default:false"`
+	CompletionNotes      string     `gorm:"type:text"`
+	VerificationRequired bool       `gorm:"default:false"`
 	VerifiedBy           *uuid.UUID `gorm:"type:uuid"`
 	VerifiedAt           time.Time
 	CreatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`

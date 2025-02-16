@@ -14,6 +14,11 @@ type InvestigationService struct {
 	DB *gorm.DB
 }
 
+func NewInvestigationService(db *gorm.DB) *InvestigationService {
+	return &InvestigationService{DB: db}
+}
+
+
 func (s *InvestigationService) GetAll(status string, limit, offset int) ([]models.Investigation, error) {
 	var investigations []models.Investigation
 

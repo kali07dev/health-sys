@@ -56,6 +56,11 @@ func main() {
 	NewIncidentHandler := services.NewIncidentService(dbConn)
 	NewNotificationHandler := notification.NewService(NotiRepo)
 	NewDashboardHandler := dashboard.NewService(DashRepo)
+	NewCorrectiveActionHandler := services.NewCorrectiveActionService(dbConn)
+	EmployeeSVC := services.NewEmployeeService(dbConn)
+	EmpHandler := api.NewEmployeeHandler(EmployeeSVC)
+	NewInvestigationHandler := services.NewInvestigationService(dbConn)
+	InvHandler := api.NewInvestigationHandler(NewInvestigationHandler)
 
 	// New Ideal services
 	// employeeService := services.NewEmployeeService(db)
@@ -83,7 +88,9 @@ func main() {
 	go jobs.StartReminderJob(notificationService, emailService)
 
 	// Setup routes
-	api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler)
+	api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler, NewCorrectiveActionHandler)
+	api.SetupEmployeeRoutes(app, EmpHandler)
+	api.SetupInvestigationRoutes(app, InvHandler)
 	// Middleware
 
 	// Log messages with fields

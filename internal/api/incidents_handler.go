@@ -154,7 +154,7 @@ func (h *IncidentsHandler) ListIncidentsHandler(c *fiber.Ctx) error {
 
 	// Return the response
 	return c.JSON(fiber.Map{
-		"data":  incidents,
+		"data":  schema.ToIncidentResponses(incidents),
 		"total": total,
 	})
 }
@@ -175,7 +175,7 @@ func (h *IncidentsHandler) GetIncidentHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(incident)
+	return c.JSON(schema.ToIncidentResponse(*incident))
 }
 
 // CloseIncidentHandler closes an incident by ID

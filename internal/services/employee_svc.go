@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -15,6 +16,22 @@ type EmployeeService struct {
 
 func NewEmployeeService(db *gorm.DB) *EmployeeService {
 	return &EmployeeService{db: db}
+}
+
+func (s *EmployeeService) SearchEmployees(ctx context.Context, query string) ([]models.Employee, error) {
+	var employees []models.Employee
+
+	// Perform a case-insensitive search on first name, last name, department, or position
+	if err := s.db.WithContext(ctx).
+		Where("LOWER(first_name) LIKE ?", "%"+query+"%").
+		Or("LOWER(last_name) LIKE ?", "%"+query+"%").
+		Or("LOWER(department) LIKE ?", "%"+query+"%").
+		Or("LOWER(position) LIKE ?", "%"+query+"%").
+		Find(&employees).Error; err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+
+	return employees, nil
 }
 
 // CreateEmployee creates a new employee
