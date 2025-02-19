@@ -1,0 +1,17 @@
+.PHONY: build run-server migrate create-admin
+
+build:
+	go build -o healthsys main.go
+
+run-server: build
+	./healthsys server
+
+migrate: build
+	./healthsys migrate
+
+create-admin: build
+	@read -p "Email: " email; \
+	read -p "Password: " password; \
+	read -p "First Name: " firstname; \
+	read -p "Last Name: " lastname; \
+	./healthsys create-admin -e $$email -p $$password -f $$firstname -l $$lastname
