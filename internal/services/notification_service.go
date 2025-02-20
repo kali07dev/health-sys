@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
+	"github.com/hopkali04/health-sys/internal/schema"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +18,7 @@ const (
 	ActionAssigned     NotificationType = "action_assigned"
 	ActionDueSoon      NotificationType = "action_due_soon"
 	ActionOverdue      NotificationType = "action_overdue"
+	UrgentIncident      NotificationType = "urgent_incident"
 	InterviewScheduled NotificationType = "interview_scheduled"
 )
 
@@ -40,48 +42,90 @@ func (s *NotificationService) TestMe() error{
 	return nil
 }
 
-// SendNotification sends a notification to a user and optionally sends an email
+// SendNotification handles both database storage and email sending
 func (s *NotificationService) SendNotification(userID uuid.UUID, notificationType, title, message string, referenceID uuid.UUID, referenceType string) error {
-	// Store the notification in the database
-	log.Println(" notification meth start")
+    // Store notification in database
+    notification := models.Notification{
+        UserID:        userID,
+        Type:          notificationType,
+        Title:         title,
+        Message:       message,
+        ReferenceID:   referenceID,
+        ReferenceType: referenceType,
+    }
 
-	notification := models.Notification{
-		UserID:        userID,
-		Type:          notificationType,
-		Title:         title,
-		Message:       message,
-		ReferenceID:   referenceID,
-		ReferenceType: referenceType,
-	}
+    if err := s.db.Create(&notification).Error; err != nil {
+        log.Printf("Failed to create notification record: %v", err)
+        return err
+    }
 
-	if err := s.db.Create(&notification).Error; err != nil {
-		log.Println("error created notification ")
-		return err
-	}
-	log.Println("created notification ")
+    // Fetch user details
+    var user models.User
+    if err := s.db.First(&user, "id = ?", userID).Error; err != nil {
+        log.Printf("Failed to fetch user: %v", err)
+        return err
+    }
 
-	// Fetch the user's email address
-	var user models.User
-	if err := s.db.First(&user, "id = ?", userID).Error; err != nil {
-		return err
-	}
-	log.Println("Fetched user ")
+    // Skip email if user has no email address
+    if user.Email == "" {
+        log.Printf("No email address found for user %s", userID)
+        return nil
+    }
 
-	// Send an email if the user has an email address
-	if user.Email != "" {
-		log.Println("email found notification ")
+    // Prepare email based on notification type
+    var emailErr error
+    switch NotificationType(notificationType) {
+    case ActionAssigned:
+        var action models.CorrectiveAction
+        if err := s.db.First(&action, "id = ?", referenceID).Error; err != nil {
+            log.Printf("Failed to fetch action: %v", err)
+            break
+        }
+        emailErr = s.emailService.sendActionAssignedEmail([]string{user.Email}, &action)
 
-		emailSubject := title
-		emailBody := message
+    case ActionDueSoon:
+        var action models.CorrectiveAction
+        if err := s.db.First(&action, "id = ?", referenceID).Error; err != nil {
+            log.Printf("Failed to fetch action: %v", err)
+            break
+        }
+        emailErr = s.emailService.sendActionDueSoonEmail([]string{user.Email}, &action)
 
-		if err := s.emailService.SendEmail([]string{user.Email}, emailSubject, emailBody); err != nil {
-			log.Println("Failed to send email to %s: %v", user.Email, err)
-		}
-	}
+    case ActionOverdue:
+        var action models.CorrectiveAction
+        if err := s.db.First(&action, "id = ?", referenceID).Error; err != nil {
+            log.Printf("Failed to fetch action: %v", err)
+            break
+        }
+        emailErr = s.emailService.sendActionOverdueEmail([]string{user.Email}, &action)
 
-	// log.Println("Notification sent to user %s: %s", userID, title)
-	log.Println("Notification sent to user ")
-	return nil
+    case UrgentIncident:
+        var incident schema.CreateIncidentRequest
+        // if err := s.db.First(&incident, "id = ?", referenceID).Error; err != nil {
+        //     log.Printf("Failed to fetch incident: %v", err)
+        //     break
+        // }
+        emailErr = s.emailService.sendUrgentIncidentEmail([]string{user.Email}, &incident)
+
+    case InterviewScheduled:
+        var interview models.InvestigationInterview
+        if err := s.db.First(&interview, "id = ?", referenceID).Error; err != nil {
+            log.Printf("Failed to fetch interview: %v", err)
+            break
+        }
+        emailErr = s.emailService.sendInterviewScheduledEmail([]string{user.Email}, &interview)
+
+    default:
+        // For unknown types, send generic email
+        emailErr = s.emailService.SendEmail([]string{user.Email}, title, message)
+    }
+
+    if emailErr != nil {
+        log.Printf("Failed to send email notification: %v", emailErr)
+        // Don't return error as notification is already stored in DB
+    }
+
+    return nil
 }
 
 // CheckAndSendReminders checks for unresolved issues, overdue corrective actions, and upcoming audits, and sends reminders
@@ -107,7 +151,7 @@ func (s *NotificationService) CheckAndSendReminders() error {
 
 		notificationTitle := "Unresolved Incident Reminder"
 		notificationMessage := "There is an unresolved incident that requires your attention."
-		if err := s.SendNotification(*incident.AssignedTo, "reminder", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
+		if err := s.SendNotification(*incident.AssignedTo, "action_assigned", notificationTitle, notificationMessage, incident.ID, "incident"); err != nil {
 			log.Printf("Failed to send notification for unresolved incident %s: %v", incident.ID, err)
 		}
 	}
@@ -162,39 +206,27 @@ func (s *NotificationService) CheckOverdueActions() error {
 	return nil
 }
 
+// NotifyActionAssignment updated to use templated email
 func (s *NotificationService) NotifyActionAssignment(action *models.CorrectiveAction, assignee *models.Employee) error {
-	notification := &models.Notification{
-		UserID: assignee.ID,
-		Type:   string(ActionAssigned),
-		Title:  "New Corrective Action Assigned",
-		Message: fmt.Sprintf("You have been assigned a new corrective action: %s. Due date: %s",
-			action.Description,
-			action.DueDate.Format("2006-01-02")),
-	}
+    notification := &models.Notification{
+        UserID: assignee.UserID,
+        Type:   string(ActionAssigned),
+        Title:  "New Corrective Action Assigned",
+        Message: fmt.Sprintf("You have been assigned a new corrective action: %s. Due date: %s",
+            action.Description,
+            action.DueDate.Format("2006-01-02")),
+        ReferenceID:   action.ID,
+        ReferenceType: "corrective_action",
+    }
 
-	err := s.db.Create(notification).Error
-	if err != nil {
-		return err
-	}
-
-	// Fetch the user's email address
-	var user models.User
-	if err := s.db.First(&user, "id = ?", assignee.UserID).Error; err != nil {
-		return err
-	}
-
-	// Send an email if the user has an email address
-	if user.Email != "" {
-		emailSubject := notification.Title
-		emailBody := notification.Message
-
-		if err := s.emailService.SendEmail([]string{user.Email}, emailSubject, emailBody); err != nil {
-			log.Printf("Failed to send email to %s: %v", user.Email, err)
-		}
-	}
-
-	log.Printf("Notification sent to user %s: %s", fmt.Sprintf("%s %s", assignee.FirstName, assignee.LastName), notification.Title)
-	return nil
+    return s.SendNotification(
+        notification.UserID,
+        notification.Type,
+        notification.Title,
+        notification.Message,
+        notification.ReferenceID,
+        notification.ReferenceType,
+    )
 }
 
 func (s *NotificationService) NotifyActionDueSoon(action *models.CorrectiveAction) error {

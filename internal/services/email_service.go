@@ -427,5 +427,120 @@ func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.Cre
 
     return s.SendEmail(to, template.Subject, template.Message)
 }
+// SendNotification handles different types of notifications
+func (s *EmailService) SendNotification(notificationType NotificationType, data *NotificationData) error {
+    var err error
 
+    switch notificationType {
+    case ActionAssigned:
+        err = s.sendActionAssignedEmail(data.To, data.Action)
+    case ActionDueSoon:
+        err = s.sendActionDueSoonEmail(data.To, data.Action)
+    case ActionOverdue:
+        err = s.sendActionOverdueEmail(data.To, data.Action)
+    case InterviewScheduled:
+        err = s.sendInterviewScheduledEmail(data.To, data.Interview)
+    case UrgentIncident:
+        err = s.sendUrgentIncidentEmail(data.To, data.Incident)
+    default:
+        return fmt.Errorf("unknown notification type: %s", notificationType)
+    }
 
+    if err != nil {
+        log.Printf("Failed to send %s notification: %v", notificationType, err)
+        return err
+    }
+
+    return nil
+}
+
+// sendActionAssignedEmail sends a notification for a newly assigned action
+func (s *EmailService) sendActionAssignedEmail(to []string, action *models.CorrectiveAction) error {
+    template := &EmailTemplate{
+        Subject: "New Action Item Assigned",
+        Title:   "Action Item Assignment",
+        Message: fmt.Sprintf(`
+            <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #1976d2; margin-bottom: 15px;">New Action Item</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>Priority:</strong> <span style="color: %s">%s</span></p>
+                    <p><strong>Description:</strong> %s</p>
+                    <p><strong>Due Date:</strong> %s</p>
+                    <p><strong>Status:</strong> %s</p>
+                    %s
+                </div>
+                <div style="margin-top: 15px; color: #1976d2;">
+                    <p>Please review and begin working on this action item at your earliest convenience.</p>
+                    <p><strong>Next Steps:</strong></p>
+                    <ul style="margin-top: 5px;">
+                        <li>Review the action details</li>
+                        <li>Update the status as you progress</li>
+                        <li>Complete before the due date</li>
+                    </ul>
+                </div>
+            </div>`,
+            getPriorityColor(action.Priority),
+            action.Priority,
+            action.Description,
+            action.DueDate.Format("Monday, January 2, 2006"),
+            action.Status,
+            getAdditionalContext(action)),
+        ActionLink: fmt.Sprintf("/actions/%s", action.ID),
+        ActionText: "View Action Details",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}
+
+// sendActionOverdueEmail sends a notification for an overdue action
+func (s *EmailService) sendActionOverdueEmail(to []string, action *models.CorrectiveAction) error {
+    template := &EmailTemplate{
+        Subject: "⚠️ OVERDUE: Action Item Requires Immediate Attention",
+        Title:   "Overdue Action Item",
+        Message: fmt.Sprintf(`
+            <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Action Item Overdue</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>Description:</strong> %s</p>
+                    <p><strong>Due Date:</strong> %s</p>
+                    <p><strong>Days Overdue:</strong> %d</p>
+                    <p><strong>Current Status:</strong> %s</p>
+                </div>
+                <p style="color: #b71c1c; margin-top: 15px; font-weight: bold;">
+                    This action item requires your immediate attention.
+                </p>
+            </div>`,
+            action.Description,
+            action.DueDate.Format("January 2, 2006"),
+            int(time.Since(action.DueDate).Hours()/24),
+            action.Status),
+        ActionLink: fmt.Sprintf("/actions/%s", action.ID),
+        ActionText: "Update Action Item",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}
+
+// Helper functions for email templates
+func getPriorityColor(priority string) string {
+    switch strings.ToLower(priority) {
+    case "high":
+        return "#c62828"
+    case "medium":
+        return "#f57c00"
+    default:
+        return "#2e7d32"
+    }
+}
+
+func getAdditionalContext(action *models.CorrectiveAction) string {
+    if action.Description == "" {
+        return ""
+    }
+    return fmt.Sprintf(`
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Additional Context:</strong></p>
+            <p>%s</p>
+        </div>`,
+        action.Description)
+}
