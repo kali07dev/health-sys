@@ -535,7 +535,7 @@ func (s *ReportService) exportIncidentTrends(f *excelize.File, data *IncidentTre
 }
 
 func (s *ReportService) ExportToPDF(data interface{}, reportType ReportType) (*bytes.Buffer, error) {
-	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 
@@ -549,14 +549,14 @@ func (s *ReportService) ExportToPDF(data interface{}, reportType ReportType) (*b
 	}
 }
 
-func (s *ReportService) exportSafetyPerformancePDF(pdf *gofpdf.Pdf, data *SafetyPerformanceData) (*bytes.Buffer, error) {
+func (s *ReportService) exportSafetyPerformancePDF(pdf *fpdf.Fpdf, data *SafetyPerformanceData) (*bytes.Buffer, error) {
 	// Header
-	pdf.Cell(190, 10, "Safety Performance Report")
+	pdf.CellFormat(190, 10, "Safety Performance Report", "", 1, "L", false, 0, "")
 	pdf.Ln(15)
 
 	// Summary Section
 	pdf.SetFont("Arial", "B", 12)
-	pdf.Cell(190, 10, "Summary Metrics")
+	pdf.CellFormat(190, 10, "Summary Metrics", "", 1, "L", false, 0, "")
 	pdf.Ln(10)
 
 	pdf.SetFont("Arial", "", 10)
@@ -571,9 +571,8 @@ func (s *ReportService) exportSafetyPerformancePDF(pdf *gofpdf.Pdf, data *Safety
 	}
 
 	for _, m := range metrics {
-		pdf.Cell(95, 8, m.label)
-		pdf.Cell(95, 8, m.value)
-		pdf.Ln(8)
+		pdf.CellFormat(95, 8, m.label, "", 0, "L", false, 0, "")
+		pdf.CellFormat(95, 8, m.value, "", 1, "L", false, 0, "")
 	}
 
 	// Create buffer and write PDF
@@ -585,100 +584,93 @@ func (s *ReportService) exportSafetyPerformancePDF(pdf *gofpdf.Pdf, data *Safety
 
 	return &buf, nil
 }
-func (s *ReportService) exportIncidentTrendsPDF(pdf *gofpdf.Pdf, data *IncidentTrendsData) (*bytes.Buffer, error) {
-    // Header
-    pdf.SetFont("Arial", "B", 16)
-    pdf.Cell(190, 10, "Incident Trends Report")
-    pdf.Ln(15)
 
-    // Common Hazards Section
-    pdf.SetFont("Arial", "B", 12)
-    pdf.Cell(190, 10, "Common Hazards")
-    pdf.Ln(10)
+func (s *ReportService) exportIncidentTrendsPDF(pdf *fpdf.Fpdf, data *IncidentTrendsData) (*bytes.Buffer, error) {
+	// Header
+	pdf.SetFont("Arial", "B", 16)
+	pdf.CellFormat(190, 10, "Incident Trends Report", "", 1, "L", false, 0, "")
+	pdf.Ln(15)
 
-    pdf.SetFont("Arial", "", 10)
-    hazardHeaders := []string{"Type", "Frequency", "Risk Score"}
-    // Set up table header
-    for _, header := range hazardHeaders {
-        pdf.Cell(63, 8, header)
-    }
-    pdf.Ln(8)
+	// Common Hazards Section
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Common Hazards", "", 1, "L", false, 0, "")
+	pdf.Ln(10)
 
-    // Add hazard data
-    for _, hazard := range data.CommonHazards {
-        pdf.Cell(63, 8, hazard.Type)
-        pdf.Cell(63, 8, fmt.Sprintf("%d", hazard.Frequency))
-        pdf.Cell(63, 8, fmt.Sprintf("%.2f", hazard.RiskScore))
-        pdf.Ln(8)
-    }
-    pdf.Ln(10)
+	pdf.SetFont("Arial", "", 10)
+	hazardHeaders := []string{"Type", "Frequency", "Risk Score"}
+	// Set up table header
+	for _, header := range hazardHeaders {
+		pdf.CellFormat(63, 8, header, "", 0, "L", false, 0, "")
+	}
+	pdf.Ln(8)
 
-    // Monthly Trends Section
-    pdf.SetFont("Arial", "B", 12)
-    pdf.Cell(190, 10, "Monthly Trends")
-    pdf.Ln(10)
+	// Add hazard data
+	for _, hazard := range data.CommonHazards {
+		pdf.CellFormat(63, 8, hazard.Type, "", 0, "L", false, 0, "")
+		pdf.CellFormat(63, 8, fmt.Sprintf("%d", hazard.Frequency), "", 0, "L", false, 0, "")
+		pdf.CellFormat(63, 8, fmt.Sprintf("%.2f", hazard.RiskScore), "", 1, "L", false, 0, "")
+	}
+	pdf.Ln(10)
 
-    pdf.SetFont("Arial", "", 10)
-    trendHeaders := []string{"Month", "Incidents", "Severity", "Resolved", "New Hazards"}
-    // Set up table header
-    for _, header := range trendHeaders {
-        pdf.Cell(38, 8, header)
-    }
-    pdf.Ln(8)
+	// Monthly Trends Section
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Monthly Trends", "", 1, "L", false, 0, "")
+	pdf.Ln(10)
 
-    // Add monthly trend data
-    for _, trend := range data.TrendsByMonth {
-        pdf.Cell(38, 8, trend.Month.Format("Jan 2006"))
-        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.IncidentCount))
-        pdf.Cell(38, 8, fmt.Sprintf("%.2f", trend.SeverityScore))
-        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.ResolvedCount))
-        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.NewHazards))
-        pdf.Ln(8)
-    }
-    pdf.Ln(10)
+	pdf.SetFont("Arial", "", 10)
+	trendHeaders := []string{"Month", "Incidents", "Severity", "Resolved", "New Hazards"}
+	// Set up table header
+	for _, header := range trendHeaders {
+		pdf.CellFormat(38, 8, header, "", 0, "L", false, 0, "")
+	}
+	pdf.Ln(8)
 
-    // Risk Patterns Section
-    pdf.SetFont("Arial", "B", 12)
-    pdf.Cell(190, 10, "Risk Patterns")
-    pdf.Ln(10)
+	// Add monthly trend data
+	for _, trend := range data.TrendsByMonth {
+		pdf.CellFormat(38, 8, trend.Month.Format("Jan 2006"), "", 0, "L", false, 0, "")
+		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.IncidentCount), "", 0, "L", false, 0, "")
+		pdf.CellFormat(38, 8, fmt.Sprintf("%.2f", trend.SeverityScore), "", 0, "L", false, 0, "")
+		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.ResolvedCount), "", 0, "L", false, 0, "")
+		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.NewHazards), "", 1, "L", false, 0, "")
+	}
+	pdf.Ln(10)
 
-    pdf.SetFont("Arial", "", 10)
-    for _, pattern := range data.RiskPatterns {
-        pdf.Cell(190, 8, fmt.Sprintf("Category: %s", pattern.Category))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Frequency: %d | Severity: %s", pattern.Frequency, pattern.Severity))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Departments: %s", strings.Join(pattern.Departments, ", ")))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Root Causes: %s", strings.Join(pattern.RootCauses, ", ")))
-        pdf.Ln(12)
-    }
+	// Risk Patterns Section
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Risk Patterns", "", 1, "L", false, 0, "")
+	pdf.Ln(10)
 
-    // Recurring Issues Section
-    pdf.SetFont("Arial", "B", 12)
-    pdf.Cell(190, 10, "Recurring Issues")
-    pdf.Ln(10)
+	pdf.SetFont("Arial", "", 10)
+	for _, pattern := range data.RiskPatterns {
+		pdf.CellFormat(190, 8, fmt.Sprintf("Category: %s", pattern.Category), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Frequency: %d | Severity: %s", pattern.Frequency, pattern.Severity), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Departments: %s", strings.Join(pattern.Departments, ", ")), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Root Causes: %s", strings.Join(pattern.RootCauses, ", ")), "", 1, "L", false, 0, "")
+		pdf.Ln(4)
+	}
 
-    pdf.SetFont("Arial", "", 10)
-    for _, issue := range data.RecurringIssues {
-        pdf.Cell(190, 8, fmt.Sprintf("Description: %s", issue.Description))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Frequency: %d | Last Occurred: %s", 
-            issue.Frequency, 
-            issue.LastOccurred.Format("2006-01-02")))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Status: %s | Priority: %s", issue.Status, issue.Priority))
-        pdf.Ln(8)
-        pdf.Cell(190, 8, fmt.Sprintf("Locations: %s", strings.Join(issue.Locations, ", ")))
-        pdf.Ln(12)
-    }
+	// Recurring Issues Section
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Recurring Issues", "", 1, "L", false, 0, "")
+	pdf.Ln(10)
 
-    // Create buffer and write PDF
-    var buf bytes.Buffer
-    err := pdf.Output(&buf)
-    if err != nil {
-        return nil, err
-    }
+	pdf.SetFont("Arial", "", 10)
+	for _, issue := range data.RecurringIssues {
+		pdf.CellFormat(190, 8, fmt.Sprintf("Description: %s", issue.Description), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Frequency: %d | Last Occurred: %s",
+			issue.Frequency,
+			issue.LastOccurred.Format("2006-01-02")), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Status: %s | Priority: %s", issue.Status, issue.Priority), "", 1, "L", false, 0, "")
+		pdf.CellFormat(190, 8, fmt.Sprintf("Locations: %s", strings.Join(issue.Locations, ", ")), "", 1, "L", false, 0, "")
+		pdf.Ln(4)
+	}
 
-    return &buf, nil
+	// Create buffer and write PDF
+	var buf bytes.Buffer
+	err := pdf.Output(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &buf, nil
 }
