@@ -3,22 +3,29 @@ package api
 
 import (
 	"encoding/json"
+	"mime/multipart"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/google/uuid"
+	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services"
 )
 
 type IncidentsHandler struct {
-	service *services.IncidentService
+	service       *services.IncidentService
+	attachmentSVC *services.AttachmentService
 }
 
-func NewIncidentsHandler(service *services.IncidentService) *IncidentsHandler {
-	return &IncidentsHandler{service: service}
+func NewIncidentsHandler(service *services.IncidentService, attSvc *services.AttachmentService) *IncidentsHandler {
+	return &IncidentsHandler{
+		service:       service,
+		attachmentSVC: attSvc,
+	}
 }
 
 // func (h *IncidentsHandler) RegisterRoutes(r *fiber.App) {
@@ -89,14 +96,25 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 	if len(files) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no files uploaded", "files": form})
 	}
-
-	// Process the first file
-	file := files[0]
-
-	// Validate file type
-	if !isAllowedFileType(file.Filename) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid file type"})
+	// Process all files
+	var uploadedFiles []*multipart.FileHeader
+	for _, file := range files {
+		// Validate file type
+		if !isAllowedFileType(file.Filename) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "invalid file type",
+				"file":  file.Filename,
+			})
+		}
+		uploadedFiles = append(uploadedFiles, file)
 	}
+
+	if len(uploadedFiles) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no valid files uploaded"})
+	}
+
+	// Use first file for now (service method needs to be updated to handle multiple files)
+	file := uploadedFiles[0]
 
 	// Type assertion for userID
 	userIDStr, ok := userID.(string)
@@ -174,8 +192,17 @@ func (h *IncidentsHandler) GetIncidentHandler(c *fiber.Ctx) error {
 			"error": "Incident not found",
 		})
 	}
+	attachments, err := h.attachmentSVC.ListAttachments(id)
+	if err != nil {
+		log.Info("Failed to get attachments for incident %s: %v", id, err)
+		attachments = nil
+	}
 
-	return c.JSON(schema.ToIncidentResponse(*incident))
+	return c.JSON(fiber.Map{
+		"incident":    schema.ToIncidentResponse(*incident),
+		"attachments": models.ToAttachmentResponses(attachments),
+	})
+
 }
 
 // CloseIncidentHandler closes an incident by ID

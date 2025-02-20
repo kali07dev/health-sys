@@ -9,10 +9,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services/user"
+	"github.com/hopkali04/health-sys/internal/validation"
 )
 
 type UserHandler struct {
 	userService *user.UserService
+
 }
 
 func NewUserHandler(userService *user.UserService) *UserHandler {
@@ -36,6 +38,9 @@ func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
+	if err := validation.ParseAndValidate(ctx, &user); err != nil {
+		return err // Error response is already handled
+	}
 
 	emailExists, err := app.userService.CheckEmailExists(user.Email)
 	if err != nil {
@@ -57,6 +62,111 @@ func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(user)
+}
+func (app *UserHandler) RegisterUserWithEmployeeAcc(ctx *fiber.Ctx) error {
+    var user schema.CreateUserWithEmployeeRequest
+    
+    // This will now return immediately if validation fails
+    if err := validation.ParseAndValidate(ctx, &user); err != nil {
+        // The error response is already handled by ParseAndValidate
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": err,
+        })
+    }
+
+    // Only proceed if validation passes
+    emailExists, err := app.userService.CheckEmailExists(user.Email)
+    if err != nil {
+        return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": err.Error(),
+        })
+    }
+
+    if emailExists {
+        return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Email Already In Use By Another User",
+        })
+    }
+
+    // if err := app.userService.CreateUserWithEmployee(&user); err != nil {
+    //     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+    //         "error": err.Error(),
+    //     })
+    // }
+
+    return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+        "message": "User Created Successfully!",
+    })
+}
+
+func (app *UserHandler) BulkRegisterUsers(ctx *fiber.Ctx) error {
+	var user []schema.UserRequest
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	for _, userDetails := range user {
+		emailExists, err := app.userService.CheckEmailExists(userDetails.Email)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err,
+			})
+		}
+		if emailExists {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Email ALready In Use By another User",
+				"email": userDetails.Email,
+			})
+		}
+		if err := validation.ParseAndValidate(ctx, &user); err != nil {
+			return err // Error response is already handled
+		}
+
+	}
+
+	if err := app.userService.BulkCreateUsers(user); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(user)
+}
+func (app *UserHandler) BulkRegisterUsersWithEmployeeAcc(ctx *fiber.Ctx) error {
+	var user []schema.CreateUserWithEmployeeRequest
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	for _, userDetails := range user {
+		emailExists, err := app.userService.CheckEmailExists(userDetails.Email)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err,
+			})
+		}
+		if emailExists {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Email ALready In Use By another User",
+				"email": userDetails.Email,
+			})
+		}
+
+	}
+
+	if err := app.userService.BulkCreateUsersWithEmployees(user); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON("User Created Successfully!")
 }
 
 func (app *UserHandler) LoginUser(c *fiber.Ctx) error {

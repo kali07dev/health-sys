@@ -72,7 +72,7 @@ func EmployeeToResponse(e *models.Employee) EmployeeResponse {
 
 	// Convert UUID fields to strings
 	reportingManagerID := ""
-	if e.ReportingManagerID != uuid.Nil {
+	if e.ReportingManagerID != nil && *e.ReportingManagerID != uuid.Nil {
 		reportingManagerID = e.ReportingManagerID.String()
 	}
 
@@ -81,7 +81,8 @@ func EmployeeToResponse(e *models.Employee) EmployeeResponse {
 	if e.EmergencyContact != nil {
 		// Create a new map and convert all values to strings
 		emergencyContact = make(map[string]string)
-		for k, v := range e.EmergencyContact {
+		jsonMap := *e.EmergencyContact
+		for k, v := range jsonMap {
 			emergencyContact[k] = fmt.Sprintf("%v", v)
 		}
 	}

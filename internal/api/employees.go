@@ -109,5 +109,5 @@ func (h *EmployeeHandler) ListEmployees(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.Status(http.StatusOK).JSON(employees)
+	return c.Status(http.StatusOK).JSON(schema.ToEmployeeWithUserResponseArray(employees))
 }

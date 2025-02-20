@@ -52,6 +52,11 @@ func RunServer() {
     NewDepartmentHandler := services.NewDepartmentService(dbConn)
     DepHandler := api.NewDepartmentHandler(NewDepartmentHandler)
 
+    AttachmentSVC := services.NewAttachmentService(dbConn)
+
+    dashboardService := services.NewSafetyDashboardService(dbConn)
+    NewSafetyDashboardHandler := api.NewSafetyDashboardHandler(dashboardService)
+
     // Create Fiber app
     app := fiber.New()
     app.Use(cors.New(cors.Config{
@@ -72,10 +77,11 @@ func RunServer() {
     go jobs.StartReminderJob(notificationService, emailService)
 
     // Setup routes
-    api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler, NewCorrectiveActionHandler)
+    api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler, NewCorrectiveActionHandler, AttachmentSVC)
     api.SetupEmployeeRoutes(app, EmpHandler)
     api.SetupInvestigationRoutes(app, InvHandler)
     api.SetupDepartmentRoutes(app, DepHandler)
+    api.SetupDashboardRoutes(app, NewSafetyDashboardHandler)
 
     // Log startup
     utils.LogInfo("Application started", map[string]interface{}{

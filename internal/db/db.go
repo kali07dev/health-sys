@@ -36,6 +36,7 @@ func AutoMigrate(db *gorm.DB) error {
 	err := db.AutoMigrate(
 		&models.AuditLog{},
 		&models.User{},
+		&models.Department{},
 		&models.Employee{},
 		&models.UserSession{},
 		&models.Incident{},

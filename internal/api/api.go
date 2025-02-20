@@ -16,14 +16,16 @@ type SvcImpl struct {
 	incidentService     *services.IncidentService
 	notificationService notification.Service
 	dashboardService    dashboard.Service
-	correctiveSVC 		*services.CorrectiveActionService
+	correctiveSVC       *services.CorrectiveActionService
 }
 
-func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService, 
+func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService,
 	notificationService notification.Service, dashboardService dashboard.Service,
-	correctiveSVC 		*services.CorrectiveActionService) {
-	incidentImpl := NewIncidentsHandler(incidentService)
+	correctiveSVC *services.CorrectiveActionService, attachSVC *services.AttachmentService) {
+
+	incidentImpl := NewIncidentsHandler(incidentService, attachSVC)
 	correctiveActionHandler := NewCorrectiveActionHandler(correctiveSVC)
+	userSVC := NewUserHandler(userService)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"user": fiber.Map{
@@ -38,12 +40,17 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	})
 
 	// User routes
-	app.Post("/api/auth/signup", NewUserHandler(userService).RegisterUser)
-	app.Get("/api/user", middleware.AuthMiddleware(), NewUserHandler(userService).Getall)
-	app.Post("/api/auth/login", middleware.LoggingMiddleware(), NewUserHandler(userService).LoginUser)
-	app.Get("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), NewUserHandler(userService).GetUser)
-	app.Post("/api/users/:id/modify", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).UpdateUserPassword)
-	app.Delete("/api/users/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), NewUserHandler(userService).DeleteUser)
+	app.Post("/api/auth/signup", userSVC.RegisterUser)
+	app.Post("/api/auth/signup/bulk", userSVC.BulkRegisterUsers)
+
+	app.Post("/api/auth/signup/employees", userSVC.RegisterUserWithEmployeeAcc)
+	app.Post("/api/auth/signup/employees/bulk", userSVC.BulkRegisterUsersWithEmployeeAcc)
+
+	app.Get("/api/users", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.Getall)
+	app.Post("/api/auth/login", userSVC.LoginUser)
+	app.Get("/api/users/:id/details", middleware.AuthMiddleware(), userSVC.GetUser)
+	app.Post("/api/users/:id/modify", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserPassword)
+	app.Delete("/api/users/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.DeleteUser)
 
 	// Incident routes
 	// app.Post("/api/incidents", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
@@ -56,7 +63,7 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	// 	NewIncidentHandler(incidentService).DeleteIncident)
 
 	app.Post("/api/v1/incidents/with-attachments", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
-		NewIncidentsHandler(incidentService).CreateIncidentWithAttachments)
+		incidentImpl.CreateIncidentWithAttachments)
 	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
 	app.Post("/api/v1/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
 	app.Get("/api/v1/incidents/:id/view", incidentImpl.GetIncidentHandler)
@@ -70,15 +77,14 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	app.Put("/api/v1/actions/:id", correctiveActionHandler.UpdateCorrectiveAction)
 	app.Delete("/api/v1/actions/:id", correctiveActionHandler.DeleteCorrectiveAction)
 
-	
 	// Notification routes
 
 	// app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
 	// NewNotificationHandler(notificationService).GetNotifications)
 
 	// Dashboard routes
-	app.Get("/api/dashboard", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
-		NewDashboardHandler(dashboardService).GetSummary)
+	// app.Get("/api/dashboard", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
+	// 	NewDashboardHandler(dashboardService).GetSummary)
 
 	/////////
 	// Admin-only route
@@ -99,18 +105,38 @@ func SetupEmployeeRoutes(app *fiber.App, employeeHandler *EmployeeHandler) {
 	app.Put("/employees/:id", employeeHandler.UpdateEmployee)
 	app.Delete("/employees/:id", employeeHandler.DeleteEmployee)
 	app.Get("/employees", employeeHandler.ListEmployees)
+	app.Get("/api/v1/users/employees", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), employeeHandler.ListEmployees)
+
 }
 func SetupInvestigationRoutes(app *fiber.App, handler *InvestigationHandler) {
 
-    api := app.Group("/api/v1/investigations")
+	api := app.Group("/api/v1/investigations")
 
-    api.Get("/", handler.GetAll)
-    api.Get("/:id", handler.GetByID)
-    api.Get("/incident/:incidentId", handler.GetByIncidentID)
-    api.Post("/", handler.Create)
-    api.Put("/:id", handler.Update)
-    api.Delete("/:id", handler.Delete)
+	api.Get("/", handler.GetAll)
+	api.Get("/:id", handler.GetByID)
+	api.Get("/incident/:incidentId", handler.GetByIncidentID)
+	api.Post("/", handler.Create)
+	api.Put("/:id", handler.Update)
+	api.Delete("/:id", handler.Delete)
 }
 func SetupRoleRoutes(app *fiber.App, roleHandler *RoleHandler) {
 	app.Post("/employees/:id/assign-role", roleHandler.AssignRole)
+}
+func SetupDepartmentRoutes(app *fiber.App, handler *DepartmentHandler) {
+	api := app.Group("/api/v1/departments")
+
+	api.Post("/", handler.Create)
+	api.Post("/update", handler.Update)
+	api.Get("/", handler.GetAll)
+}
+
+// Setup routes for the dashboard
+func SetupDashboardRoutes(app *fiber.App, handler *SafetyDashboardHandler) {
+	api := app.Group("/api/v1")
+
+	// Employee dashboard routes
+	api.Get("/dashboard/employee/:employeeID", handler.GetEmployeeDashboard)
+
+	// Admin dashboard routes
+	api.Get("/dashboard/admin", handler.GetAdminDashboard)
 }

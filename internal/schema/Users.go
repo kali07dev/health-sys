@@ -57,11 +57,20 @@ type CreateUserWithEmployeeRequest struct {
 	Department         string    `json:"department" validate:"required"`
 	Position           string    `json:"position" validate:"required"`
 	Role               string    `json:"role" validate:"required,oneof=admin safety_officer manager employee"`
-	ReportingManagerID uuid.UUID `json:"reporting_manager_id"`
+	ReportingManagerID *uuid.UUID `json:"reporting_manager_id"`
 	StartDate          time.Time `json:"start_date" validate:"required"`
 	EndDate            time.Time `json:"end_date"`
 	EmergencyContact   string    `json:"emergency_contact"` // JSONB is a custom type for JSON data
 	ContactNumber      string    `json:"contact_number" validate:"required"`
 	OfficeLocation     string    `json:"office_location" validate:"required"`
 	IsSafetyOfficer    bool      `json:"is_safety_officer"`
+}
+
+// Add these methods to your CreateUserWithEmployeeRequest struct
+func (c CreateUserWithEmployeeRequest) GetPassword() string {
+    return c.Password
+}
+
+func (c CreateUserWithEmployeeRequest) GetConfirmPassword() string {
+    return c.ConfirmPassword
 }
