@@ -21,9 +21,9 @@ type SvcImpl struct {
 
 func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService,
 	notificationService notification.Service, dashboardService dashboard.Service,
-	correctiveSVC *services.CorrectiveActionService, attachSVC *services.AttachmentService) {
+	correctiveSVC *services.CorrectiveActionService, attachSVC *services.AttachmentService, empSVC *services.EmployeeService) {
 
-	incidentImpl := NewIncidentsHandler(incidentService, attachSVC)
+	incidentImpl := NewIncidentsHandler(incidentService, attachSVC, empSVC)
 	correctiveActionHandler := NewCorrectiveActionHandler(correctiveSVC)
 	userSVC := NewUserHandler(userService)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {

@@ -44,8 +44,7 @@ func RunServer() {
     NewNotificationHandler := notification.NewService(NotiRepo)
     NewDashboardHandler := dashboard.NewService(DashRepo)
     NewCorrectiveActionHandler := services.NewCorrectiveActionService(dbConn)
-    EmployeeSVC := services.NewEmployeeService(dbConn)
-    EmpHandler := api.NewEmployeeHandler(EmployeeSVC)
+
     NewInvestigationHandler := services.NewInvestigationService(dbConn)
     InvHandler := api.NewInvestigationHandler(NewInvestigationHandler)
 
@@ -74,10 +73,15 @@ func RunServer() {
     if err != nil {
         log.Fatalf("Failed to initialize notification service: %v", err)
     }
+
+
+    EmployeeSVC := services.NewEmployeeService(dbConn, emailService)
+    EmpHandler := api.NewEmployeeHandler(EmployeeSVC)
+
     go jobs.StartReminderJob(notificationService, emailService)
 
     // Setup routes
-    api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler, NewCorrectiveActionHandler, AttachmentSVC)
+    api.SetupRoutes(app, userService, NewIncidentHandler, NewNotificationHandler, NewDashboardHandler, NewCorrectiveActionHandler, AttachmentSVC,EmployeeSVC)
     api.SetupEmployeeRoutes(app, EmpHandler)
     api.SetupInvestigationRoutes(app, InvHandler)
     api.SetupDepartmentRoutes(app, DepHandler)

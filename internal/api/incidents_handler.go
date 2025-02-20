@@ -19,12 +19,14 @@ import (
 type IncidentsHandler struct {
 	service       *services.IncidentService
 	attachmentSVC *services.AttachmentService
+	employeeSVC		*services.EmployeeService
 }
 
-func NewIncidentsHandler(service *services.IncidentService, attSvc *services.AttachmentService) *IncidentsHandler {
+func NewIncidentsHandler(service *services.IncidentService, attSvc *services.AttachmentService, employeeSVC *services.EmployeeService) *IncidentsHandler {
 	return &IncidentsHandler{
 		service:       service,
 		attachmentSVC: attSvc,
+		employeeSVC:  employeeSVC,
 	}
 }
 
@@ -63,6 +65,7 @@ func (h *IncidentsHandler) CreateIncident(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+	h.employeeSVC.HandleSevereIncidentNotification(&req)
 
 	return c.Status(fiber.StatusCreated).JSON(incident)
 }

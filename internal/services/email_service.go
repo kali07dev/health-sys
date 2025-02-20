@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hopkali04/health-sys/internal/models"
+	"github.com/hopkali04/health-sys/internal/schema"
 )
 
 type EmailService struct {
@@ -386,3 +387,37 @@ func (s *EmailService) sendInterviewScheduledEmail(to []string, interview *model
 
 	return s.SendEmail(to, template.Subject, template.Message)
 }
+// NotifyUrgentIncident sends urgent notifications to all managers for severe incidents
+func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.CreateIncidentRequest) error {
+    template := &EmailTemplate{
+        Subject: "🚨 URGENT: Critical Incident Reported",
+        Title:   "Critical Incident Alert",
+        Message: fmt.Sprintf(`
+            <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Critical Incident Reported</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>Type:</strong> %s</p>
+                    <p><strong>Severity:</strong> %s</p>
+                    <p><strong>Location:</strong> %s</p>
+                    <p><strong>Time of Incident:</strong> %s</p>
+                    <p><strong>Description:</strong> %s</p>
+                    <p><strong>Immediate Actions Taken:</strong> %s</p>
+                </div>
+                <p style="color: #b71c1c; margin-top: 15px; font-weight: bold;">
+                    This incident requires immediate attention and review.
+                </p>
+            </div>`,
+            incident.Type,
+            incident.SeverityLevel,
+            incident.Location,
+            incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
+            incident.Description,
+            incident.ImmediateActionsTaken),
+        ActionLink: "/incidents/urgent",
+        ActionText: "Review Incident",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}
+
+

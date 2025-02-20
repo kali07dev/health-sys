@@ -7,15 +7,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
+	"github.com/hopkali04/health-sys/internal/schema"
 	"gorm.io/gorm"
 )
 
 type EmployeeService struct {
-	db *gorm.DB
+	db          *gorm.DB
+	mailService *EmailService
 }
 
-func NewEmployeeService(db *gorm.DB) *EmployeeService {
-	return &EmployeeService{db: db}
+func NewEmployeeService(db *gorm.DB, emailSvc *EmailService) *EmployeeService {
+	return &EmployeeService{
+		db:          db,
+		mailService: emailSvc,
+	}
 }
 
 func (s *EmployeeService) SearchEmployees(ctx context.Context, query string) ([]models.Employee, error) {
@@ -66,4 +71,62 @@ func (s *EmployeeService) ListEmployees(ctx context.Context) ([]models.Employee,
 	log.Printf("Listing all employees")
 	err := s.db.WithContext(ctx).Preload("User").Preload("ReportingManager").Find(&employees).Error
 	return employees, err
+}
+
+// getManagerEmails retrieves all active manager email addresses
+func (s *EmployeeService) getManagerEmails() ([]string, error) {
+	var employees []models.Employee
+	err := s.db.Where("role = ? AND is_active = ?", "manager", true).
+		Joins("Users").
+		Select("Users.email").
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query managers: %v", err)
+	}
+
+	emails := make([]string, 0, len(employees))
+	for _, emp := range employees {
+		if emp.User.Email != "" {
+			emails = append(emails, emp.User.Email)
+		}
+	}
+
+	return emails, nil
+}
+
+// HandleSevereIncidentNotification manages the process of notifying managers for severe incidents
+func (s *EmployeeService) HandleSevereIncidentNotification(incident *schema.CreateIncidentRequest) {
+	// Check if incident is severe
+	if !s.isIncidentSevere(incident) {
+		return
+	}
+
+	// Get manager emails
+	managerEmails, err := s.getManagerEmails()
+	if err != nil {
+		log.Printf("Failed to retrieve manager emails for incident notification: %v", err)
+		return
+	}
+
+	// Send notification
+	if err := s.mailService.sendUrgentIncidentEmail(managerEmails, incident); err != nil {
+		log.Printf("Failed to send urgent incident notification: %v", err)
+		return
+	}
+}
+
+// isIncidentSevere determines if an incident requires urgent notification
+func (s *EmployeeService) isIncidentSevere(incident *schema.CreateIncidentRequest) bool {
+	// Check severity level
+	if incident.SeverityLevel == "critical" || incident.SeverityLevel == "high" {
+		return true
+	}
+
+	// Check if it's an injury type incident with high severity
+	if incident.Type == "injury" && incident.SeverityLevel != "low" {
+		return true
+	}
+
+	return false
 }
