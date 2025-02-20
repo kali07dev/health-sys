@@ -45,7 +45,7 @@ func (h *ReportHandler) GenerateReport(c *fiber.Ctx) error {
 	// Generate report
 	data, err := h.reportService.GenerateReport(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to generate report")
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
 	return c.JSON(data)
@@ -59,7 +59,7 @@ func (h *ReportHandler) DownloadReport(c *fiber.Ctx) error {
 
 	var req services.ReportRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Invalid request body")
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	// Validate request
 	if err := validateReportRequest(req); err != nil {
@@ -76,7 +76,7 @@ func (h *ReportHandler) DownloadReport(c *fiber.Ctx) error {
 	// Generate report data
 	data, err := h.reportService.GenerateReport(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to generate report")
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
 	// Generate file name
@@ -87,7 +87,7 @@ func (h *ReportHandler) DownloadReport(c *fiber.Ctx) error {
 	case "pdf":
 		buffer, err := h.reportService.ExportToPDF(data, req.ReportType)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString("Failed to export PDF")
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 		}
 		c.Response().Header.Set("Content-Type", "application/pdf")
 		c.Response().Header.Set("Content-Disposition", "attachment; filename=report.pdf")
@@ -96,7 +96,7 @@ func (h *ReportHandler) DownloadReport(c *fiber.Ctx) error {
 	case "excel":
 		file, err := h.reportService.ExportToExcel(data, req.ReportType)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString("Failed to export Excel")
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 		}
 		// c.Response().Header.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 		// c.Response().Header.Set("Content-Disposition", "attachment; filename=report.xlsx")

@@ -31,6 +31,14 @@ type EmailTemplate struct {
 	ActionText  string
 	CompanyName string
 }
+type NotificationData struct {
+    To       []string
+    Title    string
+    Message  string
+    Action   *models.CorrectiveAction
+    Incident *schema.CreateIncidentRequest
+    Interview *models.InvestigationInterview
+}
 
 // NewEmailService creates a new EmailService instance with timeout
 func NewEmailService(host string, port int, username, password string, useTLS bool) *EmailService {

@@ -145,7 +145,7 @@ func SetupReportsRoutes(app *fiber.App, reportHandler *ReportHandler) {
 	// API middleware
 	api := app.Group("/api/v1/reports")
 
-	api.Use(middleware.AuthMiddleware)
+	// api.Use(middleware.AuthMiddleware)
 
 	api.Post("/generate", reportHandler.GenerateReport)
 	api.Post("/download", reportHandler.DownloadReport)

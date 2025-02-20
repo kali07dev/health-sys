@@ -78,6 +78,8 @@ func RunServer() {
     EmployeeSVC := services.NewEmployeeService(dbConn, emailService)
     EmpHandler := api.NewEmployeeHandler(EmployeeSVC)
 
+    reportH := api.NewReportHandler(services.NewReportService(dbConn))
+
     go jobs.StartReminderJob(notificationService, emailService)
 
     // Setup routes
@@ -87,6 +89,7 @@ func RunServer() {
     api.SetupDepartmentRoutes(app, DepHandler)
     api.SetupDashboardRoutes(app, NewSafetyDashboardHandler)
 
+    api.SetupReportsRoutes(app, reportH)
     // Log startup
     utils.LogInfo("Application started", map[string]interface{}{
         "version": "1.0.0",
