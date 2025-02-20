@@ -14,7 +14,6 @@ import (
 
 type UserHandler struct {
 	userService *user.UserService
-
 }
 
 func NewUserHandler(userService *user.UserService) *UserHandler {
@@ -64,39 +63,39 @@ func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(user)
 }
 func (app *UserHandler) RegisterUserWithEmployeeAcc(ctx *fiber.Ctx) error {
-    var user schema.CreateUserWithEmployeeRequest
-    
-    // This will now return immediately if validation fails
-    if err := validation.ParseAndValidate(ctx, &user); err != nil {
-        // The error response is already handled by ParseAndValidate
+	var user schema.CreateUserWithEmployeeRequest
+
+	// This will now return immediately if validation fails
+	if err := validation.ParseAndValidate(ctx, &user); err != nil {
+		// The error response is already handled by ParseAndValidate
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": err,
-        })
-    }
+			"error": err,
+		})
+	}
 
-    // Only proceed if validation passes
-    emailExists, err := app.userService.CheckEmailExists(user.Email)
-    if err != nil {
-        return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": err.Error(),
-        })
-    }
+	// Only proceed if validation passes
+	emailExists, err := app.userService.CheckEmailExists(user.Email)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-    if emailExists {
-        return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "Email Already In Use By Another User",
-        })
-    }
+	if emailExists {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Email Already In Use By Another User",
+		})
+	}
 
-    // if err := app.userService.CreateUserWithEmployee(&user); err != nil {
-    //     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-    //         "error": err.Error(),
-    //     })
-    // }
+	// if err := app.userService.CreateUserWithEmployee(&user); err != nil {
+	//     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	//         "error": err.Error(),
+	//     })
+	// }
 
-    return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-        "message": "User Created Successfully!",
-    })
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "User Created Successfully!",
+	})
 }
 
 func (app *UserHandler) BulkRegisterUsers(ctx *fiber.Ctx) error {
@@ -184,10 +183,26 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 			"error": "Invalid credentials",
 		})
 	}
+	role, err := app.userService.GetUserRole(user.ID)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Employee Account Not Found, Contact System Support",
+		})
+	}
+
+	Response := schema.UserResponse{
+		Email:             user.Email,
+		ID:                user.ID.String(),
+		LastLoginAt:       user.LastLoginAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
+	}
+
 	// Generate JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID": user.ID,
-		"role":   "admin",
+		"userID": Response.ID,
+		"role":   role,
 		"exp":    time.Now().Add(24 * time.Hour).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte("your-secret-key"))
@@ -208,9 +223,9 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	// Return user data (without sensitive fields)
 	return c.JSON(fiber.Map{
 		"user": fiber.Map{
-			"id":    user.ID,
-			"email": user.Email,
-			"role":  "admin",
+			"id":    Response.ID,
+			"email": Response.Email,
+			"role":  role,
 		},
 		"token": tokenString,
 	})

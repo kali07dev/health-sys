@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,26 @@ func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{db: db}
 }
 
+// GetUserRole retrieves the role of an employee by their UserID and returns it as a string
+func (s *UserService) GetUserRole(userID uuid.UUID) (string, error) {
+	var employee models.Employee
+
+	err := s.db.
+		Select("role").
+		Where("user_id = ?", userID).
+		First(&employee).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// If no employee is found with the given UserID, return an error
+			return "", fmt.Errorf("employee not found for user ID: %s", userID)
+		}
+		// Return any other database error
+		return "", fmt.Errorf("database error: %w", err)
+	}
+
+	return employee.Role, nil
+}
 func (svc *UserService) GetallUsers() ([]models.User, error) {
 	var Users []models.User
 	err := svc.db.Find(&Users).Error
@@ -133,7 +154,7 @@ func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmp
 }
 
 // Login verifies the user's credentials and returns the user if successful
-func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*schema.UserResponse, error) {
+func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*models.User, error) {
 	// Fetch the user from the database using the email
 	var user models.User
 	err := svc.db.Where("email = ?", credentials.Email).First(&user).Error
@@ -171,16 +192,8 @@ func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*schema.Use
 	svc.db.Save(&user)            // Save the updated user record
 
 	// map Response for abstraction
-	Response := schema.UserResponse{
-		Email:             user.Email,
-		ID:                user.ID.String(),
-		LastLoginAt:       user.LastLoginAt,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-		UpdatedAt:         user.UpdatedAt,
-	}
 
-	return &Response, nil
+	return &user, nil
 }
 func (svc *UserService) GetUserByID(id uuid.UUID) (*models.User, error) {
 	var user models.User
@@ -248,116 +261,116 @@ func (svc *UserService) CheckEmailExists(email string) (bool, error) {
 }
 
 func (svc *UserService) BulkCreateUsers(users []schema.UserRequest) error {
-    // Prepare a slice to hold the hashed user models
-    var userModels []models.User
+	// Prepare a slice to hold the hashed user models
+	var userModels []models.User
 
-    // Hash passwords and prepare user models
-    for _, user := range users {
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-        if err != nil {
-            return errors.New("failed to hash password for bulk creation")
-        }
+	// Hash passwords and prepare user models
+	for _, user := range users {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return errors.New("failed to hash password for bulk creation")
+		}
 
-        userModel := models.User{
-            Email:        user.Email,
-            PasswordHash: string(hashedPassword),
-            GoogleID:     &user.GoogleID,
-            MicrosoftID:  &user.MicrosoftID,
-        }
-        if user.GoogleID == "" {
-            userModel.GoogleID = nil
-        }
-        if user.MicrosoftID == "" {
-            userModel.MicrosoftID = nil
-        }
+		userModel := models.User{
+			Email:        user.Email,
+			PasswordHash: string(hashedPassword),
+			GoogleID:     &user.GoogleID,
+			MicrosoftID:  &user.MicrosoftID,
+		}
+		if user.GoogleID == "" {
+			userModel.GoogleID = nil
+		}
+		if user.MicrosoftID == "" {
+			userModel.MicrosoftID = nil
+		}
 
-        userModels = append(userModels, userModel)
-    }
+		userModels = append(userModels, userModel)
+	}
 
-    // Bulk insert users into the database
-    if err := svc.db.Create(&userModels).Error; err != nil {
-        return errors.New("failed to bulk create users in the database")
-    }
+	// Bulk insert users into the database
+	if err := svc.db.Create(&userModels).Error; err != nil {
+		return errors.New("failed to bulk create users in the database")
+	}
 
-    return nil
+	return nil
 }
 func (svc *UserService) BulkCreateUsersWithEmployees(requests []schema.CreateUserWithEmployeeRequest) error {
-    // Start a database transaction
-    tx := svc.db.Begin()
-    if tx.Error != nil {
-        return errors.New("failed to start transaction for bulk creation")
-    }
+	// Start a database transaction
+	tx := svc.db.Begin()
+	if tx.Error != nil {
+		return errors.New("failed to start transaction for bulk creation")
+	}
 
-    defer func() {
-        if r := recover(); r != nil {
-            tx.Rollback()
-        }
-    }()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-    // Process each request in the batch
-    for _, request := range requests {
-        // Hash the password
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-        if err != nil {
-            tx.Rollback()
-            return errors.New("failed to hash password for bulk creation")
-        }
+	// Process each request in the batch
+	for _, request := range requests {
+		// Hash the password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+		if err != nil {
+			tx.Rollback()
+			return errors.New("failed to hash password for bulk creation")
+		}
 
-        // Create the User record
-        user := models.User{
-            ID:           uuid.New(),
-            Email:        request.Email,
-            PasswordHash: string(hashedPassword),
-            GoogleID:     &request.GoogleID,
-            MicrosoftID:  &request.MicrosoftID,
-            IsActive:     true,
-            CreatedAt:    time.Now(),
-            UpdatedAt:    time.Now(),
-        }
-        if request.GoogleID == "" {
-            user.GoogleID = nil
-        }
-        if request.MicrosoftID == "" {
-            user.MicrosoftID = nil
-        }
+		// Create the User record
+		user := models.User{
+			ID:           uuid.New(),
+			Email:        request.Email,
+			PasswordHash: string(hashedPassword),
+			GoogleID:     &request.GoogleID,
+			MicrosoftID:  &request.MicrosoftID,
+			IsActive:     true,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		if request.GoogleID == "" {
+			user.GoogleID = nil
+		}
+		if request.MicrosoftID == "" {
+			user.MicrosoftID = nil
+		}
 
-        if err := tx.Create(&user).Error; err != nil {
-            tx.Rollback()
-            return errors.New("failed to create user in bulk creation")
-        }
+		if err := tx.Create(&user).Error; err != nil {
+			tx.Rollback()
+			return errors.New("failed to create user in bulk creation")
+		}
 
-        // Create the Employee record
-        employee := models.Employee{
-            ID:                 uuid.New(),
-            UserID:             user.ID,
-            EmployeeNumber:     request.EmployeeNumber,
-            FirstName:          request.FirstName,
-            LastName:           request.LastName,
-            Department:         request.Department,
-            Position:           request.Position,
-            Role:               request.Role,
-            ReportingManagerID: request.ReportingManagerID,
-            StartDate:          request.StartDate,
-            EndDate:            request.EndDate,
-            ContactNumber:      request.ContactNumber,
-            OfficeLocation:     request.OfficeLocation,
-            IsSafetyOfficer:    request.IsSafetyOfficer,
-            IsActive:           true,
-            CreatedAt:          time.Now(),
-            UpdatedAt:          time.Now(),
-        }
+		// Create the Employee record
+		employee := models.Employee{
+			ID:                 uuid.New(),
+			UserID:             user.ID,
+			EmployeeNumber:     request.EmployeeNumber,
+			FirstName:          request.FirstName,
+			LastName:           request.LastName,
+			Department:         request.Department,
+			Position:           request.Position,
+			Role:               request.Role,
+			ReportingManagerID: request.ReportingManagerID,
+			StartDate:          request.StartDate,
+			EndDate:            request.EndDate,
+			ContactNumber:      request.ContactNumber,
+			OfficeLocation:     request.OfficeLocation,
+			IsSafetyOfficer:    request.IsSafetyOfficer,
+			IsActive:           true,
+			CreatedAt:          time.Now(),
+			UpdatedAt:          time.Now(),
+		}
 
-        if err := tx.Create(&employee).Error; err != nil {
-            tx.Rollback()
-            return errors.New("failed to create employee in bulk creation")
-        }
-    }
+		if err := tx.Create(&employee).Error; err != nil {
+			tx.Rollback()
+			return errors.New("failed to create employee in bulk creation")
+		}
+	}
 
-    // Commit the transaction
-    if err := tx.Commit().Error; err != nil {
-        tx.Rollback()
-        return errors.New("failed to commit transaction for bulk creation")
-    }
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return errors.New("failed to commit transaction for bulk creation")
+	}
 
-    return nil
+	return nil
 }
