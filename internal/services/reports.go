@@ -310,6 +310,10 @@ func (s *ReportService) ExportToExcel(data interface{}, reportType ReportType) (
 		return s.exportSafetyPerformance(f, data.(*SafetyPerformanceData))
 	case IncidentTrends:
 		return s.exportIncidentTrends(f, data.(*IncidentTrendsData))
+	case LocationAnalysis:
+		return s.exportLocationAnalysis(f, data.(*LocationAnalysisData))
+	case ComplianceReport:
+		return s.exportComplianceReport(f, data.(*ComplianceData))
 	default:
 		return nil, errors.New("unsupported export type")
 	}
@@ -339,13 +343,14 @@ func (s *ReportService) exportSafetyPerformance(f *excelize.File, data *SafetyPe
 
 	return f, nil
 }
+
 // Location analysis implementation
 type LocationSummary struct {
-	Location      string    `json:"location"`
-	IncidentCount int       `json:"incidentCount"`
-	RiskScore     float64   `json:"riskScore"`
-	HazardTypes   []string  `json:"hazardTypes"`
-	LastIncident  time.Time `json:"lastIncident"`
+	Location      string    `json:"location" gorm:"column:location"`
+	IncidentCount int       `json:"incidentCount" gorm:"column:incident_count"`
+	RiskScore     float64   `json:"riskScore" gorm:"column:risk_score"`
+	HazardTypes   []string  `json:"hazardTypes" gorm:"column:hazard_types;type:text[]"`
+	LastIncident  time.Time `json:"lastIncident" gorm:"column:last_incident"`
 }
 
 type LocationAnalysisData struct {
@@ -353,44 +358,81 @@ type LocationAnalysisData struct {
 }
 
 func (s *ReportService) generateLocationAnalysisReport(req ReportRequest) (*LocationAnalysisData, error) {
-    data := &LocationAnalysisData{}
+	data := &LocationAnalysisData{
+		LocationSummaries: make([]LocationSummary, 0),
+	}
 
-    // Query to get location summaries with risk scores and incident counts
-    query := `
+	// Query to get location summaries with risk scores and incident counts
+	query := `
         WITH location_metrics AS (
             SELECT 
                 location,
                 COUNT(*) as incident_count,
-                AVG(CASE 
+                ROUND(AVG(CASE 
                     WHEN severity_level = 'critical' THEN 4
                     WHEN severity_level = 'high' THEN 3
                     WHEN severity_level = 'medium' THEN 2
                     ELSE 1
-                END) as risk_score,
+                END)::numeric, 2) as risk_score,
                 array_agg(DISTINCT type) as hazard_types,
                 MAX(occurred_at) as last_incident
             FROM incidents
             WHERE occurred_at BETWEEN ? AND ?
     `
-    args := []interface{}{req.StartDate, req.EndDate}
+	args := []interface{}{req.StartDate, req.EndDate}
 
-    if req.Department != "" {
-        query += ` AND reported_by IN (SELECT id FROM employees WHERE department = ?)`
-        args = append(args, req.Department)
-    }
+	if req.Department != "" {
+		query += ` AND reported_by IN (SELECT id FROM employees WHERE department = ?)`
+		args = append(args, req.Department)
+	}
 
-    query += `
+	query += `
             GROUP BY location
             ORDER BY incident_count DESC, risk_score DESC
         )
-        SELECT * FROM location_metrics
+        SELECT location, incident_count, risk_score, hazard_types, last_incident 
+        FROM location_metrics
     `
 
-    if err := s.db.Raw(query, args...).Scan(&data.LocationSummaries).Error; err != nil {
-        return nil, err
-    }
+	rows, err := s.db.Raw(query, args...).Rows()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
 
-    return data, nil
+	for rows.Next() {
+		var summary LocationSummary
+		var hazardTypesArray []byte // for scanning array
+
+		err := rows.Scan(
+			&summary.Location,
+			&summary.IncidentCount,
+			&summary.RiskScore,
+			&hazardTypesArray,
+			&summary.LastIncident,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		// Parse the text array format into string slice
+		hazardTypesStr := string(hazardTypesArray)
+		// Remove the curly braces and split by comma
+		hazardTypesStr = strings.Trim(hazardTypesStr, "{}")
+		if hazardTypesStr != "" {
+			summary.HazardTypes = strings.Split(hazardTypesStr, ",")
+		} else {
+			summary.HazardTypes = make([]string, 0)
+		}
+
+		data.LocationSummaries = append(data.LocationSummaries, summary)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return data, nil
 }
 
 func (s *ReportService) generateComplianceReport(req ReportRequest) (*ComplianceData, error) {
@@ -398,7 +440,7 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
 		ActionsByStatus: make(map[string]int),
 	}
 
-	// Calculate overall compliance rate
+	// Calculate overall compliance rate - no changes needed here
 	if err := s.db.Raw(`
         SELECT 
             COALESCE(
@@ -413,7 +455,7 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
 		return nil, err
 	}
 
-	// Get actions by status
+	// Get actions by status - no changes needed here
 	statusQuery := `
         SELECT 
             status,
@@ -437,27 +479,29 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
 		data.ActionsByStatus[status] = count
 	}
 
-	// Get overdue actions
+	// Get overdue actions - fixed column names and added joins
 	if err := s.db.Raw(`
         SELECT 
-            id,
-            description,
-            due_date,
-            priority,
-            responsible_party,
-            EXTRACT(DAY FROM (NOW() - due_date)) as days_overdue
-        FROM corrective_actions
+            ca.id,
+            ca.description,
+            ca.due_date,
+            ca.priority,
+            e.name as assigned_to,
+            e.department,
+            EXTRACT(DAY FROM (NOW() - ca.due_date)) as days_overdue
+        FROM corrective_actions ca
+        JOIN employees e ON ca.assigned_to = e.id
         WHERE 
-            status != 'completed' 
-            AND due_date < NOW()
-            AND created_at BETWEEN ? AND ?
-        ORDER BY due_date ASC
+            ca.status != 'completed' 
+            AND ca.due_date < NOW()
+            AND ca.created_at BETWEEN ? AND ?
+        ORDER BY ca.due_date ASC
     `, req.StartDate, req.EndDate).
 		Scan(&data.OverdueActions).Error; err != nil {
 		return nil, err
 	}
 
-	// Get department compliance metrics
+	// Get department compliance metrics - fixed join condition
 	if err := s.db.Raw(`
         WITH dept_metrics AS (
             SELECT 
@@ -469,7 +513,7 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
                     ELSE NULL 
                 END) as avg_completion_days
             FROM corrective_actions ca
-            JOIN employees e ON ca.responsible_party = e.id
+            JOIN employees e ON ca.assigned_to = e.id
             WHERE ca.created_at BETWEEN ? AND ?
             GROUP BY e.department
         )
@@ -486,7 +530,7 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
 		return nil, err
 	}
 
-	// Get compliance improvement trends
+	// Get compliance improvement trends - no changes needed here
 	if err := s.db.Raw(`
         WITH monthly_compliance AS (
             SELECT 
@@ -511,7 +555,6 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
 
 	return data, nil
 }
-
 
 func (s *ReportService) exportIncidentTrends(f *excelize.File, data *IncidentTrendsData) (*excelize.File, error) {
 	// Common Hazards Sheet
@@ -561,11 +604,143 @@ func (s *ReportService) ExportToPDF(data interface{}, reportType ReportType) (*b
 		return s.exportSafetyPerformancePDF(pdf, data.(*SafetyPerformanceData))
 	case IncidentTrends:
 		return s.exportIncidentTrendsPDF(pdf, data.(*IncidentTrendsData))
+	case LocationAnalysis:
+		return s.exportLocationAnalysisPDF(pdf, data.(*LocationAnalysisData))
+	case ComplianceReport:
+		return s.exportComplianceReportPDF(pdf, data.(*ComplianceData))
 	default:
 		return nil, errors.New("unsupported export type")
 	}
 }
+func (s *ReportService) exportComplianceReportPDF(pdf *fpdf.Fpdf, data *ComplianceData) (*bytes.Buffer, error) {
+	// Title
+	pdf.CellFormat(190, 10, "Compliance Report", "", 1, "C", false, 0, "")
+	pdf.Ln(10)
 
+	// Overall Compliance
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, fmt.Sprintf("Overall Compliance Rate: %.2f%%", data.OverallCompliance), "", 1, "L", false, 0, "")
+	pdf.Ln(5)
+
+	// Status Breakdown
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Actions by Status", "", 1, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	for status, count := range data.ActionsByStatus {
+		pdf.CellFormat(95, 8, status, "", 0, "L", false, 0, "")
+		pdf.CellFormat(95, 8, fmt.Sprintf("%d", count), "", 1, "L", false, 0, "")
+	}
+	pdf.Ln(10)
+
+	// Overdue Actions
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(190, 10, "Overdue Actions", "", 1, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+
+	headers := []string{"Description", "Due Date", "Days Overdue", "Priority"}
+	widths := []float64{80, 30, 30, 30}
+
+	// Headers
+	for i, header := range headers {
+		pdf.CellFormat(widths[i], 8, header, "1", 0, "C", false, 0, "")
+	}
+	pdf.Ln(-1)
+
+	// Data
+	for _, action := range data.OverdueActions {
+		pdf.CellFormat(widths[0], 8, action.Description, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(widths[1], 8, action.DueDate.Format("2006-01-02"), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(widths[2], 8, fmt.Sprintf("%d", action.DaysOverdue), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(widths[3], 8, action.Priority, "1", 1, "C", false, 0, "")
+	}
+
+	var buf bytes.Buffer
+	err := pdf.Output(&buf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate PDF: %w", err)
+	}
+
+	return &buf, nil
+}
+func (s *ReportService) exportLocationAnalysis(f *excelize.File, data *LocationAnalysisData) (*excelize.File, error) {
+	// Rename default sheet
+	f.SetSheetName("Sheet1", "Location Analysis")
+
+	// Set headers
+	headers := []string{"Location", "Incident Count", "Risk Score", "Hazard Types", "Last Incident"}
+	for i, header := range headers {
+		cell := fmt.Sprintf("%s1", string(rune('A'+i)))
+		f.SetCellValue("Location Analysis", cell, header)
+	}
+
+	// Add data rows
+	for i, summary := range data.LocationSummaries {
+		row := i + 2
+		f.SetCellValue("Location Analysis", fmt.Sprintf("A%d", row), summary.Location)
+		f.SetCellValue("Location Analysis", fmt.Sprintf("B%d", row), summary.IncidentCount)
+		f.SetCellValue("Location Analysis", fmt.Sprintf("C%d", row), summary.RiskScore)
+		f.SetCellValue("Location Analysis", fmt.Sprintf("D%d", row), strings.Join(summary.HazardTypes, ", "))
+		f.SetCellValue("Location Analysis", fmt.Sprintf("E%d", row), summary.LastIncident.Format("2006-01-02 15:04"))
+	}
+
+	// Auto-fit columns
+	for i := range headers {
+		col := string(rune('A' + i))
+		width := 15.0 // default width
+		if i == 3 {   // Hazard Types column
+			width = 30.0
+		}
+		f.SetColWidth("Location Analysis", col, col, width)
+	}
+
+	return f, nil
+}
+func (s *ReportService) exportLocationAnalysisPDF(pdf *fpdf.Fpdf, data *LocationAnalysisData) (*bytes.Buffer, error) {
+	// Title
+	pdf.CellFormat(190, 10, "Location Analysis Report", "", 1, "C", false, 0, "")
+	pdf.Ln(10)
+
+	// Set up table headers
+	pdf.SetFont("Arial", "B", 11)
+	headers := []string{"Location", "Incidents", "Risk Score", "Last Incident"}
+	colWidths := []float64{50, 30, 30, 40}
+
+	for i, header := range headers {
+		pdf.CellFormat(colWidths[i], 10, header, "1", 0, "C", false, 0, "")
+	}
+	pdf.Ln(-1)
+
+	// Add data rows
+	pdf.SetFont("Arial", "", 10)
+	for _, summary := range data.LocationSummaries {
+		// Main row
+		pdf.CellFormat(colWidths[0], 10, summary.Location, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(colWidths[1], 10, fmt.Sprintf("%d", summary.IncidentCount), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colWidths[2], 10, fmt.Sprintf("%.2f", summary.RiskScore), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colWidths[3], 10, summary.LastIncident.Format("2006-01-02"), "1", 0, "C", false, 0, "")
+		pdf.Ln(-1)
+
+		// Hazard types (indented on next line)
+		if len(summary.HazardTypes) > 0 {
+			currentX := pdf.GetX()
+			currentY := pdf.GetY()
+			pdf.SetX(currentX + 10) // Indent
+			pdf.SetFont("Arial", "I", 9)
+			pdf.CellFormat(170, 8, "Hazard Types: "+strings.Join(summary.HazardTypes, ", "), "LR", 1, "L", false, 0, "")
+			pdf.SetFont("Arial", "", 10)
+			pdf.SetY(currentY + 8)
+		}
+	}
+
+	// Create buffer and write PDF
+	var buf bytes.Buffer
+	err := pdf.Output(&buf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate PDF: %w", err)
+	}
+
+	return &buf, nil
+}
 func (s *ReportService) exportSafetyPerformancePDF(pdf *fpdf.Fpdf, data *SafetyPerformanceData) (*bytes.Buffer, error) {
 	// Header
 	pdf.CellFormat(190, 10, "Safety Performance Report", "", 1, "L", false, 0, "")
@@ -690,4 +865,60 @@ func (s *ReportService) exportIncidentTrendsPDF(pdf *fpdf.Fpdf, data *IncidentTr
 	}
 
 	return &buf, nil
+}
+func (s *ReportService) exportComplianceReport(f *excelize.File, data *ComplianceData) (*excelize.File, error) {
+	// Overall Summary Sheet
+	f.SetSheetName("Sheet1", "Compliance Summary")
+
+	// Summary Section
+	f.SetCellValue("Compliance Summary", "A1", "Overall Compliance Rate")
+	f.SetCellValue("Compliance Summary", "B1", fmt.Sprintf("%.2f%%", data.OverallCompliance))
+
+	// Status Breakdown
+	f.SetCellValue("Compliance Summary", "A3", "Status Breakdown")
+	row := 4
+	for status, count := range data.ActionsByStatus {
+		f.SetCellValue("Compliance Summary", fmt.Sprintf("A%d", row), status)
+		f.SetCellValue("Compliance Summary", fmt.Sprintf("B%d", row), count)
+		row++
+	}
+
+	// Overdue Actions Sheet
+	f.NewSheet("Overdue Actions")
+	headers := []string{"ID", "Description", "Due Date", "Days Overdue", "Priority", "Assigned To", "Department"}
+	for i, header := range headers {
+		col := string(rune('A' + i))
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("%s1", col), header)
+	}
+
+	for i, action := range data.OverdueActions {
+		row := i + 2
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("A%d", row), action.ID.String())
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("B%d", row), action.Description)
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("C%d", row), action.DueDate.Format("2006-01-02"))
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("D%d", row), action.DaysOverdue)
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("E%d", row), action.Priority)
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("F%d", row), action.AssignedTo)
+		f.SetCellValue("Overdue Actions", fmt.Sprintf("G%d", row), action.Department)
+	}
+
+	// Department Compliance Sheet
+	f.NewSheet("Department Compliance")
+	deptHeaders := []string{"Department", "Incident Count", "Resolved Count", "Unresolved Count", "Resolution Rate", "Critical Incidents"}
+	for i, header := range deptHeaders {
+		col := string(rune('A' + i))
+		f.SetCellValue("Department Compliance", fmt.Sprintf("%s1", col), header)
+	}
+
+	for i, dept := range data.DepartmentCompliance {
+		row := i + 2
+		f.SetCellValue("Department Compliance", fmt.Sprintf("A%d", row), dept.DepartmentName)
+		f.SetCellValue("Department Compliance", fmt.Sprintf("B%d", row), dept.IncidentCount)
+		f.SetCellValue("Department Compliance", fmt.Sprintf("C%d", row), dept.ResolvedCount)
+		f.SetCellValue("Department Compliance", fmt.Sprintf("C%d", row), dept.UnresolvedCount)
+		f.SetCellValue("Department Compliance", fmt.Sprintf("D%d", row), fmt.Sprintf("%.2f%%", dept.ResolutionRate))
+		f.SetCellValue("Department Compliance", fmt.Sprintf("C%d", row), dept.CriticalIncidents)
+	}
+
+	return f, nil
 }
