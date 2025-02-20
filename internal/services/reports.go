@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/go-pdf/fpdf"
+	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
@@ -16,6 +16,10 @@ import (
 
 type ReportService struct {
 	db *gorm.DB
+}
+
+func NewReportService(db *gorm.DB) *ReportService {
+	return &ReportService{db: db}
 }
 
 // ReportType defines the available report types
@@ -91,11 +95,11 @@ func (s *ReportService) generateSafetyPerformanceReport(req ReportRequest) (*Saf
 
 	// Calculate incident types distribution
 	incidentTypes, err := s.db.Raw(`
-		SELECT type, COUNT(*) as count
-		FROM incidents
-		WHERE occurred_at BETWEEN ? AND ?
-		GROUP BY type
-	`, req.StartDate, req.EndDate).Rows()
+        SELECT type, COUNT(*) as count
+        FROM incidents
+        WHERE occurred_at BETWEEN ? AND ?
+        GROUP BY type
+    `, req.StartDate, req.EndDate).Rows()
 	if err != nil {
 		return nil, err
 	}
@@ -112,30 +116,42 @@ func (s *ReportService) generateSafetyPerformanceReport(req ReportRequest) (*Saf
 	}
 
 	// Calculate severity distribution
-	if err := s.db.Raw(`
-		SELECT 
-			severity_level,
-			COUNT(*) as count,
-			AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/3600) as avg_response
-		FROM incidents
-		WHERE occurred_at BETWEEN ? AND ?
-		GROUP BY severity_level
-	`, req.StartDate, req.EndDate).
-		Scan(&data.IncidentsBySeverity).Error; err != nil {
+	severityRows, err := s.db.Raw(`
+        SELECT 
+            severity_level,
+            COUNT(*) as count,
+            AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/3600) as avg_response
+        FROM incidents
+        WHERE occurred_at BETWEEN ? AND ?
+        GROUP BY severity_level
+    `, req.StartDate, req.EndDate).Rows()
+	if err != nil {
 		return nil, err
+	}
+	defer severityRows.Close()
+
+	data.IncidentsBySeverity = make(map[string]int)
+	for severityRows.Next() {
+		var severityLevel string
+		var count int
+		var avgResponse float64
+		if err := severityRows.Scan(&severityLevel, &count, &avgResponse); err != nil {
+			return nil, err
+		}
+		data.IncidentsBySeverity[severityLevel] = count
 	}
 
 	// Calculate compliance rate
 	if err := s.db.Raw(`
-		SELECT 
-			COALESCE(
-				(SUM(CASE WHEN status = 'completed' AND completed_at <= due_date THEN 1 ELSE 0 END)::float / 
-				NULLIF(COUNT(*), 0) * 100),
-				0
-			) as compliance_rate
-		FROM corrective_actions
-		WHERE created_at BETWEEN ? AND ?
-	`, req.StartDate, req.EndDate).
+        SELECT 
+            COALESCE(
+                (SUM(CASE WHEN status = 'completed' AND completed_at <= due_date THEN 1 ELSE 0 END)::float / 
+                NULLIF(COUNT(*), 0) * 100),
+                0
+            ) as compliance_rate
+        FROM corrective_actions
+        WHERE created_at BETWEEN ? AND ?
+    `, req.StartDate, req.EndDate).
 		Scan(&data.ComplianceRate).Error; err != nil {
 		return nil, err
 	}
@@ -148,14 +164,14 @@ func (s *ReportService) getBasicMetrics(req ReportRequest) (*SafetyPerformanceDa
 	var args []interface{}
 
 	query = `
-		WITH incident_metrics AS (
-			SELECT 
-				COUNT(*) as total_incidents,
-				SUM(CASE WHEN status IN ('resolved', 'closed') THEN 1 ELSE 0 END) as resolved_incidents,
-				AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/3600) as avg_response_time
-			FROM incidents
-			WHERE occurred_at BETWEEN ? AND ?
-	`
+        WITH incident_metrics AS (
+            SELECT 
+                COUNT(*) as total_incidents,
+                SUM(CASE WHEN status IN ('resolved', 'closed') THEN 1 ELSE 0 END) as resolved_incidents,
+                AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/3600) as avg_response_time
+            FROM incidents
+            WHERE occurred_at BETWEEN ? AND ?
+    `
 	args = append(args, req.StartDate, req.EndDate)
 
 	if req.EmployeeID != nil {
@@ -168,7 +184,10 @@ func (s *ReportService) getBasicMetrics(req ReportRequest) (*SafetyPerformanceDa
 		args = append(args, req.Department)
 	}
 
-	query += `)`
+	query += `
+        )
+        SELECT * FROM incident_metrics
+    `
 
 	var data SafetyPerformanceData
 	if err := s.db.Raw(query, args...).Scan(&data).Error; err != nil {
@@ -283,7 +302,6 @@ func (s *ReportService) getCommonHazards(req ReportRequest, data *IncidentTrends
 	return nil
 }
 
-
 func (s *ReportService) ExportToExcel(data interface{}, reportType ReportType) (*excelize.File, error) {
 	f := excelize.NewFile()
 
@@ -320,6 +338,18 @@ func (s *ReportService) exportSafetyPerformance(f *excelize.File, data *SafetyPe
 	}
 
 	return f, nil
+}
+// Location analysis implementation
+type LocationSummary struct {
+	Location      string    `json:"location"`
+	IncidentCount int       `json:"incidentCount"`
+	RiskScore     float64   `json:"riskScore"`
+	HazardTypes   []string  `json:"hazardTypes"`
+	LastIncident  time.Time `json:"lastIncident"`
+}
+
+type LocationAnalysisData struct {
+	LocationSummaries []LocationSummary `json:"locationSummaries"`
 }
 
 func (s *ReportService) generateLocationAnalysisReport(req ReportRequest) (*LocationAnalysisData, error) {
@@ -364,12 +394,12 @@ func (s *ReportService) generateLocationAnalysisReport(req ReportRequest) (*Loca
 }
 
 func (s *ReportService) generateComplianceReport(req ReportRequest) (*ComplianceData, error) {
-    data := &ComplianceData{
-        ActionsByStatus: make(map[string]int),
-    }
+	data := &ComplianceData{
+		ActionsByStatus: make(map[string]int),
+	}
 
-    // Calculate overall compliance rate
-    if err := s.db.Raw(`
+	// Calculate overall compliance rate
+	if err := s.db.Raw(`
         SELECT 
             COALESCE(
                 (SUM(CASE WHEN status = 'completed' AND completed_at <= due_date THEN 1 ELSE 0 END)::float / 
@@ -379,12 +409,12 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
         FROM corrective_actions
         WHERE created_at BETWEEN ? AND ?
     `, req.StartDate, req.EndDate).
-        Scan(&data.OverallCompliance).Error; err != nil {
-        return nil, err
-    }
+		Scan(&data.OverallCompliance).Error; err != nil {
+		return nil, err
+	}
 
-    // Get actions by status
-    statusQuery := `
+	// Get actions by status
+	statusQuery := `
         SELECT 
             status,
             COUNT(*) as count
@@ -392,23 +422,23 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
         WHERE created_at BETWEEN ? AND ?
         GROUP BY status
     `
-    rows, err := s.db.Raw(statusQuery, req.StartDate, req.EndDate).Rows()
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := s.db.Raw(statusQuery, req.StartDate, req.EndDate).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var status string
-        var count int
-        if err := rows.Scan(&status, &count); err != nil {
-            return nil, err
-        }
-        data.ActionsByStatus[status] = count
-    }
+	for rows.Next() {
+		var status string
+		var count int
+		if err := rows.Scan(&status, &count); err != nil {
+			return nil, err
+		}
+		data.ActionsByStatus[status] = count
+	}
 
-    // Get overdue actions
-    if err := s.db.Raw(`
+	// Get overdue actions
+	if err := s.db.Raw(`
         SELECT 
             id,
             description,
@@ -423,12 +453,12 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
             AND created_at BETWEEN ? AND ?
         ORDER BY due_date ASC
     `, req.StartDate, req.EndDate).
-        Scan(&data.OverdueActions).Error; err != nil {
-        return nil, err
-    }
+		Scan(&data.OverdueActions).Error; err != nil {
+		return nil, err
+	}
 
-    // Get department compliance metrics
-    if err := s.db.Raw(`
+	// Get department compliance metrics
+	if err := s.db.Raw(`
         WITH dept_metrics AS (
             SELECT 
                 e.department,
@@ -452,12 +482,12 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
         FROM dept_metrics
         ORDER BY compliance_rate DESC
     `, req.StartDate, req.EndDate).
-        Scan(&data.DepartmentCompliance).Error; err != nil {
-        return nil, err
-    }
+		Scan(&data.DepartmentCompliance).Error; err != nil {
+		return nil, err
+	}
 
-    // Get compliance improvement trends
-    if err := s.db.Raw(`
+	// Get compliance improvement trends
+	if err := s.db.Raw(`
         WITH monthly_compliance AS (
             SELECT 
                 DATE_TRUNC('month', created_at) as month,
@@ -475,26 +505,13 @@ func (s *ReportService) generateComplianceReport(req ReportRequest) (*Compliance
             COALESCE((completed_on_time::float / NULLIF(total_actions, 0) * 100), 0) as compliance_rate
         FROM monthly_compliance
     `, req.StartDate, req.EndDate).
-        Scan(&data.ImprovementTrends).Error; err != nil {
-        return nil, err
-    }
+		Scan(&data.ImprovementTrends).Error; err != nil {
+		return nil, err
+	}
 
-    return data, nil
+	return data, nil
 }
 
-
-// Location analysis implementation
-type LocationSummary struct {
-	Location      string    `json:"location"`
-	IncidentCount int       `json:"incidentCount"`
-	RiskScore     float64   `json:"riskScore"`
-	HazardTypes   []string  `json:"hazardTypes"`
-	LastIncident  time.Time `json:"lastIncident"`
-}
-
-type LocationAnalysisData struct {
-	LocationSummaries []LocationSummary `json:"locationSummaries"`
-}
 
 func (s *ReportService) exportIncidentTrends(f *excelize.File, data *IncidentTrendsData) (*excelize.File, error) {
 	// Common Hazards Sheet
