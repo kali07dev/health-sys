@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/go-pdf/fpdf"
 	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
@@ -583,4 +584,101 @@ func (s *ReportService) exportSafetyPerformancePDF(pdf *gofpdf.Pdf, data *Safety
 	}
 
 	return &buf, nil
+}
+func (s *ReportService) exportIncidentTrendsPDF(pdf *gofpdf.Pdf, data *IncidentTrendsData) (*bytes.Buffer, error) {
+    // Header
+    pdf.SetFont("Arial", "B", 16)
+    pdf.Cell(190, 10, "Incident Trends Report")
+    pdf.Ln(15)
+
+    // Common Hazards Section
+    pdf.SetFont("Arial", "B", 12)
+    pdf.Cell(190, 10, "Common Hazards")
+    pdf.Ln(10)
+
+    pdf.SetFont("Arial", "", 10)
+    hazardHeaders := []string{"Type", "Frequency", "Risk Score"}
+    // Set up table header
+    for _, header := range hazardHeaders {
+        pdf.Cell(63, 8, header)
+    }
+    pdf.Ln(8)
+
+    // Add hazard data
+    for _, hazard := range data.CommonHazards {
+        pdf.Cell(63, 8, hazard.Type)
+        pdf.Cell(63, 8, fmt.Sprintf("%d", hazard.Frequency))
+        pdf.Cell(63, 8, fmt.Sprintf("%.2f", hazard.RiskScore))
+        pdf.Ln(8)
+    }
+    pdf.Ln(10)
+
+    // Monthly Trends Section
+    pdf.SetFont("Arial", "B", 12)
+    pdf.Cell(190, 10, "Monthly Trends")
+    pdf.Ln(10)
+
+    pdf.SetFont("Arial", "", 10)
+    trendHeaders := []string{"Month", "Incidents", "Severity", "Resolved", "New Hazards"}
+    // Set up table header
+    for _, header := range trendHeaders {
+        pdf.Cell(38, 8, header)
+    }
+    pdf.Ln(8)
+
+    // Add monthly trend data
+    for _, trend := range data.TrendsByMonth {
+        pdf.Cell(38, 8, trend.Month.Format("Jan 2006"))
+        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.IncidentCount))
+        pdf.Cell(38, 8, fmt.Sprintf("%.2f", trend.SeverityScore))
+        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.ResolvedCount))
+        pdf.Cell(38, 8, fmt.Sprintf("%d", trend.NewHazards))
+        pdf.Ln(8)
+    }
+    pdf.Ln(10)
+
+    // Risk Patterns Section
+    pdf.SetFont("Arial", "B", 12)
+    pdf.Cell(190, 10, "Risk Patterns")
+    pdf.Ln(10)
+
+    pdf.SetFont("Arial", "", 10)
+    for _, pattern := range data.RiskPatterns {
+        pdf.Cell(190, 8, fmt.Sprintf("Category: %s", pattern.Category))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Frequency: %d | Severity: %s", pattern.Frequency, pattern.Severity))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Departments: %s", strings.Join(pattern.Departments, ", ")))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Root Causes: %s", strings.Join(pattern.RootCauses, ", ")))
+        pdf.Ln(12)
+    }
+
+    // Recurring Issues Section
+    pdf.SetFont("Arial", "B", 12)
+    pdf.Cell(190, 10, "Recurring Issues")
+    pdf.Ln(10)
+
+    pdf.SetFont("Arial", "", 10)
+    for _, issue := range data.RecurringIssues {
+        pdf.Cell(190, 8, fmt.Sprintf("Description: %s", issue.Description))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Frequency: %d | Last Occurred: %s", 
+            issue.Frequency, 
+            issue.LastOccurred.Format("2006-01-02")))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Status: %s | Priority: %s", issue.Status, issue.Priority))
+        pdf.Ln(8)
+        pdf.Cell(190, 8, fmt.Sprintf("Locations: %s", strings.Join(issue.Locations, ", ")))
+        pdf.Ln(12)
+    }
+
+    // Create buffer and write PDF
+    var buf bytes.Buffer
+    err := pdf.Output(&buf)
+    if err != nil {
+        return nil, err
+    }
+
+    return &buf, nil
 }
