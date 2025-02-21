@@ -168,6 +168,7 @@ func (app *UserHandler) BulkRegisterUsersWithEmployeeAcc(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON("User Created Successfully!")
 }
 
+
 func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	var RequestData schema.UserLoginRequest
 
@@ -183,6 +184,7 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 			"error": "Invalid credentials",
 		})
 	}
+
 	role, err := app.userService.GetUserRole(user.ID)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -199,28 +201,31 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 		UpdatedAt:         user.UpdatedAt,
 	}
 
-	// Generate JWT token
+	// Set backend token expiration to 12 hours (longer than frontend)
+	expirationTime := time.Now().Add(12 * time.Hour)
+	
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": Response.ID,
 		"role":   role,
-		"exp":    time.Now().Add(24 * time.Hour).Unix(),
+		"exp":    expirationTime.Unix(),
 	})
+	
 	tokenString, err := token.SignedString([]byte("your-secret-key"))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
 	}
 
-	// Set HTTP-only cookie
+	// Set HTTP-only cookie with same expiration
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth-token",
 		Value:    tokenString,
 		HTTPOnly: true,
-		Secure:   false, // Use 'true' in production (requires HTTPS)
+		Secure:   true, // Enable for production
 		SameSite: "Lax",
-		Expires:  time.Now().Add(24 * time.Hour),
+		Expires:  expirationTime,
+		Path:     "/",
 	})
 
-	// Return user data (without sensitive fields)
 	return c.JSON(fiber.Map{
 		"user": fiber.Map{
 			"id":    Response.ID,
@@ -228,9 +233,25 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 			"role":  role,
 		},
 		"token": tokenString,
+		"expiresAt": expirationTime,
 	})
 }
+func (app *UserHandler) LogoutUser(c *fiber.Ctx) error {
+	// Clear the auth cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "auth-token",
+		Value:    "",
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+		Expires:  time.Now().Add(-24 * time.Hour), // Expire immediately
+		Path:     "/",
+	})
 
+	return c.JSON(fiber.Map{
+		"message": "Logged out successfully",
+	})
+}
 func (app *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	parsedUUID, err := uuid.Parse(id)

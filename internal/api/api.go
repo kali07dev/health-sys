@@ -34,10 +34,14 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 			},
 		})
 	})
-	app.Post("/auth/logout", func(c *fiber.Ctx) error {
-		c.ClearCookie("auth-token")
-		return c.JSON(fiber.Map{"message": "Logged out"})
-	})
+
+	app.Post("/api/auth/login", userSVC.LoginUser)
+	app.Post("/api/auth/logout", userSVC.LogoutUser)
+
+	// app.Post("/auth/logout", func(c *fiber.Ctx) error {
+	// 	c.ClearCookie("auth-token")
+	// 	return c.JSON(fiber.Map{"message": "Logged out"})
+	// })
 
 	// User routes
 	app.Post("/api/auth/signup", userSVC.RegisterUser)
@@ -47,7 +51,6 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	app.Post("/api/auth/signup/employees/bulk", userSVC.BulkRegisterUsersWithEmployeeAcc)
 
 	app.Get("/api/users", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.Getall)
-	app.Post("/api/auth/login", userSVC.LoginUser)
 	app.Get("/api/users/:id/details", middleware.AuthMiddleware(), userSVC.GetUser)
 	app.Post("/api/users/:id/modify", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserPassword)
 	app.Delete("/api/users/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.DeleteUser)
