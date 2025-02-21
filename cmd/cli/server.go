@@ -80,6 +80,9 @@ func RunServer() {
 
     reportH := api.NewReportHandler(services.NewReportService(dbConn))
 
+    notificationHandler := api.NewNotificationHandler(notificationService, userService)
+
+    notifySettings := api.NewNotificationSettingsHandler(services.NewNotificationSettingsService(dbConn))
     go jobs.StartReminderJob(notificationService, emailService)
 
     // Setup routes
@@ -88,6 +91,8 @@ func RunServer() {
     api.SetupInvestigationRoutes(app, InvHandler)
     api.SetupDepartmentRoutes(app, DepHandler)
     api.SetupDashboardRoutes(app, NewSafetyDashboardHandler)
+    api.SetupNotificationRoutes(app, notificationHandler)
+    api.SetupNotificationSettingsRoutes(app, notifySettings)
 
     api.SetupReportsRoutes(app, reportH)
     // Log startup

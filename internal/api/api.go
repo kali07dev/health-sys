@@ -150,3 +150,23 @@ func SetupReportsRoutes(app *fiber.App, reportHandler *ReportHandler) {
 	api.Post("/generate", reportHandler.GenerateReport)
 	api.Post("/download", reportHandler.DownloadReport)
 }
+func SetupNotificationRoutes(app *fiber.App, handler *NotificationHandler) {
+	notifications := app.Group("/api/v1/notifications", middleware.AuthMiddleware())
+
+	// User notifications
+	notifications.Get("/user/:userId", handler.GetUserNotifications)
+	
+	// System notifications (admin/safety officer only)
+	notifications.Get("/system", middleware.RoleMiddleware("admin", "safety_officer"), 
+		handler.GetSystemNotifications)
+	
+	// Mark as read
+	notifications.Put("/:id/read", handler.MarkAsRead)
+}
+
+func SetupNotificationSettingsRoutes(app *fiber.App, handler *NotificationSettingsHandler) {
+	settings := app.Group("/api/notification-settings", middleware.AuthMiddleware())
+	
+	settings.Get("/:userId", handler.GetSettings)
+	settings.Put("/:userId", handler.UpdateSettings)
+}
