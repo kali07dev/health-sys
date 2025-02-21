@@ -6,9 +6,9 @@ import { incidentAPI } from '@/utils/api';
 import type { Incident } from '@/interfaces/incidents';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function getIncident(id: string): Promise<Incident> {
@@ -22,8 +22,8 @@ async function getIncident(id: string): Promise<Incident> {
 }
 
 export default async function Page({ params }: PageProps) {
-  // Destructure `params` and ensure it's awaited properly
-  const { id } = params;
+  // Await the params object
+  const { id } = await params;
 
   // Fetch session data
   const session = await getServerSession();
@@ -34,13 +34,14 @@ export default async function Page({ params }: PageProps) {
   }
 
   // Restrict access based on user role
-  if (!['admin', 'safety_officer'].includes(session.role ?? '')) {
-    console.log('Unauthorized access:', session.role);
-    // redirect('/dashboard'); // Redirect to a suitable page
+  if (!['admin', 'safety_officer'].includes(session?.role ?? '')) {
+    console.log('Unauthorized access:', session?.role);
+    // redirect('/dashboard'); // Uncomment to enable redirect
   }
 
   try {
-    // Fetch incident data using the awaited `id`
+    // Fetch incident data
+    // Uncomment if you need to fetch incident data
     // const incident = await getIncident(id);
 
     return (
@@ -51,6 +52,6 @@ export default async function Page({ params }: PageProps) {
     );
   } catch (error) {
     console.error('Error fetching incident:', error);
-    redirect('/incidents'); // Redirect to incidents list on failure
+    // redirect('/incidents');
   }
 }

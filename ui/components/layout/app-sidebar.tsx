@@ -1,5 +1,5 @@
 "use client"
-import { LayoutDashboard, MessageSquare, PieChart, Settings, Users } from "lucide-react"
+import { HomeIcon, LayoutDashboard, MessageSquare, PieChart, Settings, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/sidebar"
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Users, label: "Customers", href: "/customers" },
-  { icon: PieChart, label: "Analytics", href: "/analytics" },
-  { icon: MessageSquare, label: "Messages", href: "/messages" },
+  { icon: HomeIcon, label: "Dashboard", href: "/dashboard" },
+  { icon: Users, label: "Incidents", href: "/incidents" },
+  { icon: PieChart, label: "Reports", href: "/reports" },
+  { icon: MessageSquare, label: "Alerts", href: "/alerts" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 

@@ -12,15 +12,15 @@ import IncidentForm from "./IncidentForm"
 import IncidentDetails  from "./IncidentDetails"
 
 interface IncidentsTableProps {
-  incidents: Incident[]
+  incidents: Incident[],
+  userRole: string
 }
 
-export const IncidentsTable = ({ incidents }: IncidentsTableProps) => {
+export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-  const userRole = "test"
 
   const handleViewIncident = (incident: Incident) => {
     setSelectedIncident(incident)

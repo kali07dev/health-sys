@@ -1,33 +1,55 @@
+"use client"
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
+import { Incident, IncidentAttachment } from '@/interfaces/incidents'; 
+import IncidentDetails from '../Incidents/IncidentDetails';
+import { InvestigationPanel } from './InvestigationPanel';
+import { CorrectiveActionsPanel } from '../CorrectiveActions/CorrectiveActionsPanel';
+import router from 'next/router';
 
 interface IncidentReviewPageProps {
   incidentId: string;
 }
 
 const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
-  const { data: session } = useSession();
-  const [incident, setIncident] = useState(null);
+  // const { data: session } = useSession();
+  const { data: session, status } = useSession()
+  const [incident, setIncident] = useState<Incident | null>(null);
+  const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
 
+  const handleCloseModal = () => {
+    setActiveTab('details'); // Reset to the default tab
+  };
+
+  if (status === "unauthenticated") {
+    router.push("/login")
+    return
+  }
+  if (status === "authenticated") {
+    const userID = session.user?.id
+    const userRole = session.role
+  }
   const isAuthorized = ['admin', 'safety_officer'].includes(session?.role ?? '');
+  console.log('session', session);
+  console.log('isAuthorized', session?.role, session?.user?.id  );
 
   useEffect(() => {
     const fetchIncident = async () => {
       try {
         const response = await incidentAPI.getIncident(incidentId);
-        setIncident(response);
+        setIncident(response.incident);
+        setAttachments(response.attachments);
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchIncident();
   }, [incidentId]);
 
@@ -51,7 +73,6 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
           Status: <span className="font-semibold">{incident?.status}</span>
         </p>
       </div>
-
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
@@ -91,16 +112,17 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
             )}
           </nav>
         </div>
-
         <div className="p-6">
-          {activeTab === 'details' && (
-            <IncidentDetails incident={incident} isAuthorized={isAuthorized} />
+          {activeTab === 'details' && incident && (
+            <IncidentDetails incident={incident} 
+            attachments={attachments}
+            isAuthorized={isAuthorized}  />
           )}
           {activeTab === 'investigation' && isAuthorized && (
-            <Investigation incidentId={incidentId} />
+            <InvestigationPanel incidentId={incidentId} />
           )}
-          {activeTab === 'actions' && isAuthorized && (
-            <CorrectiveActions incidentId={incidentId} />
+          {activeTab === 'actions' && isAuthorized && session?.role && (
+            <CorrectiveActionsPanel incidentId={incidentId} userRole={session.role} userID= {session?.user?.id } />
           )}
         </div>
       </div>

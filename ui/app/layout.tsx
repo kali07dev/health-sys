@@ -4,6 +4,8 @@ import type React from "react"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AppHeader } from "@/components/layout/app-header"
+import PageHeader from '@/components/PageHeader';
+import PageHeaderSkeleton from '@/components/PageHeaderSkeleton';
 import Providers from "@/app/providers"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import "./globals.css"
@@ -37,7 +39,9 @@ export default function RootLayout({
               <AppSidebar />
               <div className="flex-1 flex flex-col sm:pl-64">
                 <AppHeader />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1">
+                <PageHeader />
+                  {children}</main>               
               </div>
             </div>
           </SidebarProvider>

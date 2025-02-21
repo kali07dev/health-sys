@@ -1,5 +1,4 @@
 // app/reports/page.tsx
-import { reportsApi } from '@/utils/reportsAPI';
 import ReportForm from './reportForm';
 
 const reportTypes = [
@@ -9,15 +8,14 @@ const reportTypes = [
   { id: 'compliance_report', name: 'Compliance Report', description: 'Regulatory compliance status' },
 ] as const;
 
-export default async function ReportsPage() {
+export default function ReportsPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Generate Reports</h1>
-        <p className="mt-2 text-gray-600">Select report type and parameters to generate detailed safety reports</p>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="text-4xl font-medium text-gray-900 mb-2">Reports</h1>
+        <p className="text-gray-500 mb-8">Generate detailed safety reports with just a few clicks</p>
+        <ReportForm reportTypes={reportTypes} />
       </div>
-
-      <ReportForm reportTypes={reportTypes} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Loader2, Plus, FileText, Users, Check } from 'lucide-react';
 import { AssignInvestigator } from './AssignInvestigator';
 import { ScheduleInterview } from './ScheduleInterview';
 import { InvestigationFindings } from './InvestigationFindings';
+import { CreateInvestigationModal } from './CreateInvestigationModal'; // Import the new modal
 import { incidentAPI } from '@/utils/api';
 
 interface InvestigationPanelProps {
@@ -15,6 +16,7 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
   const [investigation, setInvestigation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // State for Create Investigation Modal
 
   useEffect(() => {
     fetchInvestigation();
@@ -25,9 +27,22 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
       const response = await incidentAPI.getInvestigation(incidentId);
       setInvestigation(response);
     } catch (error) {
+      toast.error('No Investigation Exists for this Incident, Please Create One');
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateInvestigation = async (formData: any) => {
+    try {
+      await incidentAPI.createInvestigation(incidentId, formData);
+      toast.success('Investigation created successfully');
+      setIsCreateModalOpen(false); // Close the modal
+      fetchInvestigation(); // Refresh investigation data
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to create investigation');
     }
   };
 
@@ -41,27 +56,42 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ActionCard
-          title="Assign Investigator"
-          icon={<Users className="w-6 h-6" />}
-          onClick={() => setActiveModal('assign')}
-          status={investigation?.leadInvestigator ? 'completed' : 'pending'}
-        />
-        <ActionCard
-          title="Schedule Interview"
-          icon={<FileText className="w-6 h-6" />}
-          onClick={() => setActiveModal('interview')}
-          status={investigation?.interviews?.length > 0 ? 'in-progress' : 'pending'}
-        />
-        <ActionCard
-          title="Add Findings"
-          icon={<Plus className="w-6 h-6" />}
-          onClick={() => setActiveModal('findings')}
-          status={investigation?.findings ? 'completed' : 'pending'}
-        />
-      </div>
+      {/* Show empty state or investigation details */}
+      {!investigation ? (
+        <div className="flex flex-col items-center justify-center p-8 space-y-4 text-gray-500">
+          <span>No investigation has been created yet.</span>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Investigation</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ActionCard
+            title="Assign Investigator"
+            icon={<Users className="w-6 h-6" />}
+            onClick={() => setActiveModal('assign')}
+            status={investigation?.leadInvestigator ? 'completed' : 'pending'}
+          />
+          <ActionCard
+            title="Schedule Interview"
+            icon={<FileText className="w-6 h-6" />}
+            onClick={() => setActiveModal('interview')}
+            status={investigation?.interviews?.length > 0 ? 'in-progress' : 'pending'}
+          />
+          <ActionCard
+            title="Add Findings"
+            icon={<Plus className="w-6 h-6" />}
+            onClick={() => setActiveModal('findings')}
+            status={investigation?.findings ? 'completed' : 'pending'}
+          />
+        </div>
+      )}
 
+      {/* Render Modals */}
       {activeModal === 'assign' && (
         <AssignInvestigator
           incidentId={incidentId}
@@ -81,6 +111,15 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
           incidentId={incidentId}
           onClose={() => setActiveModal(null)}
           onSubmit={fetchInvestigation}
+        />
+      )}
+
+      {/* Render Create Investigation Modal */}
+      {isCreateModalOpen && (
+        <CreateInvestigationModal
+          incidentId={incidentId}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateInvestigation}
         />
       )}
     </div>

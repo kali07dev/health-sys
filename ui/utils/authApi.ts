@@ -1,5 +1,5 @@
-import { useAuthStore } from '@/stores/authStore';
-import { create } from 'zustand'
+// import { useAuthStore } from '@/stores/authStore';
+// import { create } from 'zustand'
 import axios, { AxiosInstance } from 'axios';
 
 interface LoginResponse {
@@ -18,27 +18,36 @@ interface User {
 }
 
 interface UserData {
-  email: string;
-  password: string;
-  name: string;
+  email: string,
+  password: string,
+  confirmPassword: string, // Add confirm password field
+  employeeNumber: string,
+  firstName: string,
+  lastName: string,
+  department: string,
+  position: string,
+  role: string, // Always set to "employee"
+  startDate: string,
+  contactNumber: string,
+  officeLocation: string,
 }
 
 const api: AxiosInstance = axios.create({
   baseURL: 'http://localhost:8000/api', 
   withCredentials: true 
 });
-// Add response interceptor to handle 401 errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 401) {
-      // Clear user store and redirect to login
-      useAuthStore.getState().setUser(null)
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
+// // Add response interceptor to handle 401 errors
+// api.interceptors.response.use(
+//   response => response,
+//   error => {
+//     if (error.response?.status === 401) {
+//       // Clear user store and redirect to login
+//       useAuthStore.getState().setUser(null)
+//       window.location.href = '/login'
+//     }
+//     return Promise.reject(error)
+//   }
+// )
 
 
 export const login = async (
@@ -62,7 +71,7 @@ export const Users = async (): Promise<User[]> => {
 export const logout = async (): Promise<void> => {
   await api.post('/auth/logout');
   // Access store directly without hook
-  useAuthStore.getState().setUser(null);
+  // useAuthStore.getState().setUser(null);
 };
 // export const googleLogin = async (tokenId: string): Promise<LoginResponse> => {
 //   const response = await api.post<LoginResponse>('/auth/google', { tokenId });

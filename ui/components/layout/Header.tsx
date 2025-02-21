@@ -2,10 +2,10 @@
 
 import React from 'react'
 import { BellIcon } from '@heroicons/react/24/outline'
-import { getUserRole } from '../../utils/auth'
+// import { getUserRole } from '../../utils/api'
 
 const Header: React.FC = () => {
-  const userRole = getUserRole()
+  // const userRole = getUserRole()
 
   return (
     <header className="bg-white shadow">
@@ -28,7 +28,7 @@ const Header: React.FC = () => {
               </span>
             </div>
           </div>
-          <span className="ml-3 text-sm font-medium text-gray-700">{userRole}</span>
+          <span className="ml-3 text-sm font-medium text-gray-700">User</span>
         </div>
       </div>
     </header>

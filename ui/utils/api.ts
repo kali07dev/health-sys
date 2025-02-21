@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useSession } from "next-auth/react";
 import {
   Incident,
+  IncidentAttachment,
   Investigation,
   Interview,
   CorrectiveAction,
@@ -11,6 +12,11 @@ import {
   User,
 } from '@/interfaces/incidents';
 
+
+interface IncidentResponse {
+  incident: Incident;
+  attachments: IncidentAttachment[];
+}
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -30,10 +36,13 @@ api.interceptors.response.use(
 
 export const incidentAPI = {
   getIncident: (id: string) => 
-    api.get<Incident>(`/incidents/${id}/view`).then(res => res.data),
+    api.get<IncidentResponse>(`/incidents/${id}/view`).then(res => res.data),
 
   getAllIncidents: () => 
     api.get<{ data: Incident[]; total: number }>(`/incidents`).then((res) => res.data.data),
+
+  getIncidentsByEmployee: (employeeId: string) => 
+    api.get<{ data: Incident[]; total: number }>(`/incidents/employee/${employeeId}`).then((res) => res.data.data),
 
   getCorrectiveActions: (id: string) =>
     api.get<CorrectiveAction[]>(`/incidents/${id}`).then(res => res.data),
@@ -52,10 +61,17 @@ export const incidentAPI = {
     api.post<{ message: string }>(`/incidents/${id}/findings`, findings).then(res => res.data),
 
   getInvestigation: (id: string) => 
-    api.get<Investigation>(`/incidents/${id}/investigation`).then(res => res.data),
+    api.get<Investigation>(`/investigations/incident/${id}`).then(res => res.data),
+
+  createInvestigation: (id: string, data: Partial<Investigation>) => 
+    api.post<Investigation>(`/investigations/incident/${id}`).then(res => res.data),
 
   assignPreventiveAction: (id: string, data: Partial<CorrectiveAction>) => 
     api.post<{ message: string }>(`/incidents/${id}/preventive-actions`, data).then(res => res.data),
+
+  createCorrectiveAction: ( data: Partial<CorrectiveAction>) => 
+    api.post<{ message: string }>(`/actions`, data).then(res => res.data),
+
 
   uploadCompletionProof: (actionId: string, formData: FormData) => 
     api.post<ActionEvidence>(`/corrective-actions/${actionId}/evidence`, formData, {

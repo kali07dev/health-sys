@@ -2,12 +2,20 @@
 
 import type React from "react"
 import type { Incident } from "../../utils/dummyData"
+import { IncidentAttachment } from "@/interfaces/incidents";
+import { AttachmentsList } from "./AttachmentsList";
 
 interface IncidentDetailsProps {
-  incident: Incident
+  incident: Incident;
+  attachments?: IncidentAttachment[];
+  isAuthorized: boolean;
 }
 
-const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident }) => {
+const IncidentDetails: React.FC<IncidentDetailsProps> = ({ 
+  incident, 
+  attachments, 
+  isAuthorized 
+})=> {
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:px-6">
@@ -62,11 +70,20 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident }) => {
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{incident.immediateActionsTaken}</dd>
             </div>
           )}
+          {/* Example of conditional rendering based on isAuthorized */}
+          {isAuthorized && (
+            <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Authorized Content</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                This content is only visible to authorized users.
+              </dd>
+            </div>
+          )}
         </dl>
+        <AttachmentsList attachments={attachments ?? []} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default IncidentDetails
-
+export default IncidentDetails;

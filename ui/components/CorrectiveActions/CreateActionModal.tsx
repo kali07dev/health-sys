@@ -22,21 +22,24 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
     actionType: '',
     priority: 'low',
     assignedTo: '', // This will store the selected employee's ID
-    dueDate: '',
+    dueDate: '',   // Store the raw input value
   });
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null); // State for selected employee details
   const [loading, setLoading] = useState(false);
 
   const handleEmployeeSelect = (employee: any) => {
-    console.log("Full employee data:", employee); // Add this
-    setSelectedEmployee(employee);
-    setFormData({ ...formData, assignedTo: employee.ID });
-    console.log("Updated formData:", formData); // Add this
+    setSelectedEmployee(employee); // Store the selected employee's details
+    setFormData({ ...formData, assignedTo: employee.ID }); // Update the form data with the employee's ID
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
+      // Format the dueDate field to RFC3339
+      const formattedDueDate = new Date(formData.dueDate).toISOString();
+
       const payload = {
         incident_id: incidentId,
         description: formData.description,
@@ -45,13 +48,16 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
         status: 'pending',
         assigned_to: formData.assignedTo, // Use the selected employee's ID
         assigned_by: userID, // Replace with actual user ID
-        due_date: formData.dueDate,
+        due_date: formattedDueDate, // Use the formatted date
         verification_required: false,
       };
+
       await onSubmit(payload);
     } catch (error) {
       console.error(error);
+      toast.error('Failed to create corrective action');
     } finally {
+      toast.success("Actions Have Been set successfully")
       setLoading(false);
     }
   };

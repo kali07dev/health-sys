@@ -1,7 +1,7 @@
-import React from 'react'
-import LoginForm from '../../../components/Auth/loginForm'
-import GoogleSignIn from '../../../components/Auth/GoogleSignIn'
-import { GoogleOAuthProvider } from '@react-oauth/google'
+import React from 'react';
+import LoginForm from '../../../components/Auth/loginForm';
+import GoogleSignIn from '../../../components/Auth/GoogleSignIn';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const LoginPage: React.FC = () => {
   return (
@@ -17,7 +17,6 @@ const LoginPage: React.FC = () => {
             Sign in to your account
           </h2>
         </div>
-
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <LoginForm />
@@ -27,9 +26,7 @@ const LoginPage: React.FC = () => {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Or continue with
-                  </span>
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
                 </div>
               </div>
               <div className="mt-6">
@@ -40,7 +37,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
     </GoogleOAuthProvider>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;

@@ -22,9 +22,17 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
+    startTime: '00:00',  // Start of day
+    endTime: '23:59'     // End of day
   });
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf');
   const [step, setStep] = useState(1);
+
+  // Helper function to format date and time to RFC3339
+  const formatDateTime = (date: string, time: string) => {
+      if (!date) return '';
+      return new Date(`${date}T${time}`).toISOString();
+  };
 
   const handleGenerateReport = async () => {
     if (!selectedReport || !dateRange.startDate || !dateRange.endDate) {
@@ -36,8 +44,8 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
     try {
       const request: ReportRequest = {
         reportType: selectedReport as ReportRequest['reportType'],
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
+        startDate: formatDateTime(dateRange.startDate, dateRange.startTime),
+        endDate: formatDateTime(dateRange.endDate, dateRange.endTime),
         format,
       };
 
@@ -45,7 +53,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
       toast.success('Report generated successfully');
     } catch (error) {
       toast.error('Failed to generate report');
-      console.error(error);
+      //console.error(error);
     } finally {
       setLoading(false);
     }
@@ -103,29 +111,46 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
         <div className="px-8 py-6">
           <h2 className="text-2xl font-medium text-gray-900 mb-6">Select Date Range</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Start Date
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              Start Date and Time
+            </label>
+            <div className="flex gap-2">
               <input
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="flex-1 px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+              <input
+                type="time"
+                value={dateRange.startTime}
+                onChange={(e) => setDateRange(prev => ({ ...prev, startTime: e.target.value }))}
+                className="w-32 px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                End Date
-              </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              End Date and Time
+            </label>
+            <div className="flex gap-2">
               <input
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="flex-1 px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+              <input
+                type="time"
+                value={dateRange.endTime}
+                onChange={(e) => setDateRange(prev => ({ ...prev, endTime: e.target.value }))}
+                className="w-32 px-4 py-3 rounded-xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
+         </div>
         </div>
       </div>
 

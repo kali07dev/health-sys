@@ -7,33 +7,29 @@ import { User, userService } from '@/utils/userAPI';
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
+  user: User; // User is required for editing
   onSuccess: () => void;
 }
 
 export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: user?.email || '',
-    firstName: user?.employee?.firstName || '',
-    lastName: user?.employee?.lastName || '',
-    department: user?.employee?.department || '',
-    position: user?.employee?.position || '',
-    contactNumber: user?.employee?.contactNumber || '',
+    email: user.email || '',
+    firstName: user.employee?.firstName || '',
+    lastName: user.employee?.lastName || '',
+    department: user.employee?.department || '',
+    position: user.employee?.position || '',
+    contactNumber: user.employee?.contactNumber || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (user) {
-        await userService.updateUser(user.id, formData);
-      } else {
-        await userService.createUser(formData);
-      }
+      await userService.updateUser(user.id, formData);
       onSuccess();
     } catch (error) {
-      console.error('Failed to save user:', error);
+      console.error('Failed to update user:', error);
     } finally {
       setLoading(false);
     }
@@ -42,13 +38,10 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-      
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-medium">
-              {user ? 'Edit User' : 'Create User'}
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-medium">Edit User</Dialog.Title>
             <button
               onClick={onClose}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
@@ -62,7 +55,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
@@ -73,7 +68,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 <input
                   type="text"
                   value={formData.firstName}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, firstName: e.target.value }))
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   required
                 />
@@ -83,7 +80,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 <input
                   type="text"
                   value={formData.lastName}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, lastName: e.target.value }))
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   required
                 />
@@ -94,7 +93,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
               <input
                 type="text"
                 value={formData.department}
-                onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, department: e.target.value }))
+                }
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
@@ -104,7 +105,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
               <input
                 type="text"
                 value={formData.position}
-                onChange={(e) => setFormData((prev) => ({ ...prev, position: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, position: e.target.value }))
+                }
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
@@ -114,7 +117,9 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
               <input
                 type="tel"
                 value={formData.contactNumber}
-                onChange={(e) => setFormData((prev) => ({ ...prev, contactNumber: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, contactNumber: e.target.value }))
+                }
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
