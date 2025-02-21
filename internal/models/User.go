@@ -19,8 +19,14 @@ type User struct {
 	PasswordChangedAt   time.Time
 	AccountLocked       bool `gorm:"default:false"`
 	AccountLockedUntil  time.Time
-	IsActive            bool      `gorm:"default:true"`
-	CreatedAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt           time.Time
+	IsActive            bool   `gorm:"default:true"`
+	IsVerified          bool   `gorm:"default:false"`
+	VerificationToken   string `gorm:"size:255"`
+	VerificationExpires *time.Time
+	ResetToken          string `gorm:"size:255"`
+	ResetTokenExpires   *time.Time
+
+	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	DeletedAt time.Time
 }

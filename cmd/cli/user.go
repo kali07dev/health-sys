@@ -10,7 +10,7 @@ import (
 	"github.com/hopkali04/health-sys/internal/config"
 	"github.com/hopkali04/health-sys/internal/db"
 	"github.com/hopkali04/health-sys/internal/schema"
-	"github.com/hopkali04/health-sys/internal/services/user"
+	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/spf13/cobra"
 )
 
@@ -91,7 +91,7 @@ func UserCmd() *cobra.Command {
 			// 	log.Fatalf("Failed to commit transaction: %v", err)
 			// }
 
-			err = user.NewUserService(dbConn).CreateUserWithEmployee(&requestData)
+			err = services.NewAdminService(dbConn).CreateAdminWithEmployee(&requestData)
 			if err != nil {
 				log.Fatalf("Failed to commit transaction: %v", err)
 			}

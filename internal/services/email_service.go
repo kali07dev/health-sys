@@ -544,3 +544,50 @@ func getAdditionalContext(action *models.CorrectiveAction) string {
         </div>`,
         action.Description)
 }
+
+
+func (s *EmailService) sendVerificationEmail(to []string, verificationLink string) error {
+    template := &EmailTemplate{
+        Subject: "Verify Your Account",
+        Title:   "Welcome! Please Verify Your Account",
+        Message: fmt.Sprintf(`
+            <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #1d1d1f; margin-bottom: 15px;">Welcome to Health System</h3>
+                <p>To complete your account setup, please click the button below to verify your email address and set up your password.</p>
+                <p>This link will expire in 24 hours for security purposes.</p>
+                <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+                    <a href="%s" style="background-color: #0071e3; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500;">Verify Account</a>
+                </div>
+                <p style="color: #424245; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
+            </div>`,
+            verificationLink),
+        ActionLink:  verificationLink,
+        ActionText:  "Verify Account",
+        CompanyName: "Health System",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}
+
+func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) error {
+    template := &EmailTemplate{
+        Subject: "Reset Your Password",
+        Title:   "Password Reset Request",
+        Message: fmt.Sprintf(`
+            <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #1d1d1f; margin-bottom: 15px;">Password Reset Requested</h3>
+                <p>We received a request to reset your password. Click the button below to create a new password.</p>
+                <p>This link will expire in 24 hours for security purposes.</p>
+                <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+                    <a href="%s" style="background-color: #0071e3; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500;">Reset Password</a>
+                </div>
+                <p style="color: #424245; font-size: 14px;">If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+            </div>`,
+            resetLink),
+        ActionLink:  resetLink,
+        ActionText:  "Reset Password",
+        CompanyName: "Health System",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}

@@ -13,13 +13,170 @@ import (
 )
 
 type UserHandler struct {
-	userService *user.UserService
+	userService         *user.UserService
+	verificationService *user.VerificationService
 }
 
-func NewUserHandler(userService *user.UserService) *UserHandler {
-	return &UserHandler{userService: userService}
+func NewUserHandler(userService *user.UserService, vc *user.VerificationService) *UserHandler {
+	return &UserHandler{
+		userService:         userService,
+		verificationService: vc,
+	}
 }
 
+// Request body structs
+type VerifyAccountRequest struct {
+    Token string `json:"token" validate:"required"`
+}
+
+type RequestPasswordResetRequest struct {
+    Email string `json:"email" validate:"required,email"`
+}
+
+type CompletePasswordResetRequest struct {
+    Token       string `json:"token" validate:"required"`
+    Password    string `json:"password" validate:"required,min=8"`
+    ConfirmPassword string `json:"confirmPassword" validate:"required,eqfield=Password"`
+}
+
+// VerifyAccount handles account verification via email token
+func (app *UserHandler) VerifyAccount(c *fiber.Ctx) error {
+    var req VerifyAccountRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request body",
+        })
+    }
+
+    // Validate request
+    if err := validation.ParseAndValidate(c, &req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request data",
+            "details": err.Error(),
+        })
+    }
+
+    // Verify the account
+    err := app.verificationService.VerifyAccount(req.Token)
+    if err != nil {
+        switch err.Error() {
+        case "invalid verification token":
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Invalid or expired verification token",
+            })
+        case "verification token expired":
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Verification link has expired. Please request a new one.",
+            })
+        default:
+            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                "error": "Failed to verify account",
+            })
+        }
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Account verified successfully",
+    })
+}
+// RequestPasswordReset initiates the password reset process
+func (app *UserHandler) RequestPasswordReset(c *fiber.Ctx) error {
+    var req RequestPasswordResetRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request body",
+        })
+    }
+
+    // Validate request
+    if err := validation.ParseAndValidate(c, &req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request data",
+            "details": err.Error(),
+        })
+    }
+
+    // Check if email exists
+    emailExists, err := app.userService.CheckEmailExists(req.Email)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to process request",
+        })
+    }
+
+    if !emailExists {
+        // Return success even if email doesn't exist (security best practice)
+        return c.Status(fiber.StatusOK).JSON(fiber.Map{
+            "message": "If an account exists with this email, you will receive password reset instructions.",
+        })
+    }
+
+    // Initiate password reset
+    err = app.verificationService.InitiatePasswordReset(req.Email)
+    if err != nil {
+        // Log the error but don't expose it to the client
+        log.Printf("Failed to initiate password reset for email %s: %v", req.Email, err)
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to process password reset request",
+        })
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "If an account exists with this email, you will receive password reset instructions.",
+    })
+}
+
+// CompletePasswordReset handles the password reset completion
+func (app *UserHandler) CompletePasswordReset(c *fiber.Ctx) error {
+    var req CompletePasswordResetRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request body",
+        })
+    }
+
+    // Validate request
+    if err := validation.ParseAndValidate(c, &req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request data",
+            "details": err.Error(),
+        })
+    }
+
+    // Complete the password reset
+    err := app.verificationService.CompletePasswordReset(req.Token, req.Password)
+    if err != nil {
+        switch err.Error() {
+        case "invalid reset token":
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Invalid or expired reset token",
+            })
+        case "reset token expired":
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                "error": "Password reset link has expired. Please request a new one.",
+            })
+        default:
+            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                "error": "Failed to reset password",
+            })
+        }
+    }
+
+    // Clear any existing sessions/cookies for this user
+    c.Cookie(&fiber.Cookie{
+        Name:     "auth-token",
+        Value:    "",
+        HTTPOnly: true,
+        Secure:   true,
+        SameSite: "Lax",
+        Expires:  time.Now().Add(-24 * time.Hour), // Expire immediately
+        Path:     "/",
+    })
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Password has been reset successfully. Please log in with your new password.",
+    })
+}
 func (app *UserHandler) Getall(ctx *fiber.Ctx) error {
 	data, err := app.userService.GetallUsers()
 	if err != nil {
@@ -168,7 +325,6 @@ func (app *UserHandler) BulkRegisterUsersWithEmployeeAcc(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON("User Created Successfully!")
 }
 
-
 func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	var RequestData schema.UserLoginRequest
 
@@ -178,7 +334,39 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := app.userService.Login(&RequestData)
+	user, err := app.userService.GetUserByEmail(RequestData.Email)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid Email",
+		})
+	}
+
+	// Check if account is verified
+	if !user.IsVerified {
+		// Resend verification email
+		if err := app.verificationService.SendVerificationEmail(user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to send verification email",
+			})
+		}
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "Account not verified. A new verification email has been sent.",
+		})
+	}
+
+	// Check if password needs to be set (for bulk-created accounts)
+	if user.PasswordHash == "" {
+		if err := app.verificationService.SendVerificationEmail(user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to send password setup email",
+			})
+		}
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "Please check your email to set up your password.",
+		})
+	}
+
+	user, err = app.userService.Login(&RequestData)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
@@ -203,13 +391,13 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 
 	// Set backend token expiration to 12 hours (longer than frontend)
 	expirationTime := time.Now().Add(12 * time.Hour)
-	
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": Response.ID,
 		"role":   role,
 		"exp":    expirationTime.Unix(),
 	})
-	
+
 	tokenString, err := token.SignedString([]byte("your-secret-key"))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
@@ -232,7 +420,7 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 			"email": Response.Email,
 			"role":  role,
 		},
-		"token": tokenString,
+		"token":     tokenString,
 		"expiresAt": expirationTime,
 	})
 }

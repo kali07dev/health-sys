@@ -14,10 +14,14 @@ import (
 
 type UserService struct {
 	db *gorm.DB
+	VerificationService *VerificationService
 }
 
-func NewUserService(db *gorm.DB) *UserService {
-	return &UserService{db: db}
+func NewUserService(db *gorm.DB, vc *VerificationService) *UserService {
+	return &UserService{
+		db: db,
+		VerificationService: vc,
+	}
 }
 
 // GetUserRole retrieves the role of an employee by their UserID and returns it as a string
@@ -261,38 +265,32 @@ func (svc *UserService) CheckEmailExists(email string) (bool, error) {
 }
 
 func (svc *UserService) BulkCreateUsers(users []schema.UserRequest) error {
-	// Prepare a slice to hold the hashed user models
-	var userModels []models.User
-
-	// Hash passwords and prepare user models
-	for _, user := range users {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return errors.New("failed to hash password for bulk creation")
-		}
-
-		userModel := models.User{
-			Email:        user.Email,
-			PasswordHash: string(hashedPassword),
-			GoogleID:     &user.GoogleID,
-			MicrosoftID:  &user.MicrosoftID,
-		}
-		if user.GoogleID == "" {
-			userModel.GoogleID = nil
-		}
-		if user.MicrosoftID == "" {
-			userModel.MicrosoftID = nil
-		}
-
-		userModels = append(userModels, userModel)
+	tx := svc.db.Begin()
+	if tx.Error != nil {
+		return errors.New("failed to start transaction")
 	}
 
-	// Bulk insert users into the database
-	if err := svc.db.Create(&userModels).Error; err != nil {
-		return errors.New("failed to bulk create users in the database")
+	for _, userReq := range users {
+		user := models.User{
+			Email:     userReq.Email,
+			IsActive:  true,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+
+		if err := tx.Create(&user).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Send verification email
+		if err := svc.VerificationService.SendVerificationEmail(&user); err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
-	return nil
+	return tx.Commit().Error
 }
 func (svc *UserService) BulkCreateUsersWithEmployees(requests []schema.CreateUserWithEmployeeRequest) error {
 	// Start a database transaction

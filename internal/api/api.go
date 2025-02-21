@@ -19,13 +19,12 @@ type SvcImpl struct {
 	correctiveSVC       *services.CorrectiveActionService
 }
 
-func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService *services.IncidentService,
+func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services.IncidentService,
 	notificationService notification.Service, dashboardService dashboard.Service,
 	correctiveSVC *services.CorrectiveActionService, attachSVC *services.AttachmentService, empSVC *services.EmployeeService) {
 
 	incidentImpl := NewIncidentsHandler(incidentService, attachSVC, empSVC)
 	correctiveActionHandler := NewCorrectiveActionHandler(correctiveSVC)
-	userSVC := NewUserHandler(userService)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"user": fiber.Map{
@@ -37,6 +36,9 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 
 	app.Post("/api/auth/login", userSVC.LoginUser)
 	app.Post("/api/auth/logout", userSVC.LogoutUser)
+	app.Post("/api/auth/verify", userSVC.VerifyAccount)
+	app.Post("/api/auth/reset-password/request", userSVC.RequestPasswordReset)
+	app.Post("/api/auth/reset-password/complete", userSVC.CompletePasswordReset)
 
 	// app.Post("/auth/logout", func(c *fiber.Ctx) error {
 	// 	c.ClearCookie("auth-token")
@@ -92,7 +94,7 @@ func SetupRoutes(app *fiber.App, userService *user.UserService, incidentService 
 	/////////
 	// Admin-only route
 	app.Post("/api/users", middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleAdmin),
-		NewUserHandler(userService).RegisterUser)
+		userSVC.RegisterUser)
 
 	// Manager and Admin route
 	//app.Get("/api/reports", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleManager, middleware.RoleAdmin), GetReportsHandler)
@@ -158,18 +160,18 @@ func SetupNotificationRoutes(app *fiber.App, handler *NotificationHandler) {
 
 	// User notifications
 	notifications.Get("/user/:userId", handler.GetUserNotifications)
-	
+
 	// System notifications (admin/safety officer only)
-	notifications.Get("/system", middleware.RoleMiddleware("admin", "safety_officer"), 
+	notifications.Get("/system", middleware.RoleMiddleware("admin", "safety_officer"),
 		handler.GetSystemNotifications)
-	
+
 	// Mark as read
 	notifications.Put("/:id/read", handler.MarkAsRead)
 }
 
 func SetupNotificationSettingsRoutes(app *fiber.App, handler *NotificationSettingsHandler) {
 	settings := app.Group("/api/notification-settings", middleware.AuthMiddleware())
-	
+
 	settings.Get("/:userId", handler.GetSettings)
 	settings.Put("/:userId", handler.UpdateSettings)
 }
