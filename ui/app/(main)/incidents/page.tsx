@@ -28,6 +28,7 @@ const fetchIncidents = async () => {
 };
 
 export default async function IncidentsPage() {
+  
   const session = (await getServerSession(authOptions)) as Session | null;
   
   // Handle no session case
