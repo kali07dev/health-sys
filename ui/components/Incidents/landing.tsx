@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
@@ -9,10 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { Incident } from "@/interfaces/incidents"
 import IncidentForm from "./IncidentForm"
-import IncidentDetails  from "./IncidentDetails"
+import IncidentDetails from "./IncidentDetails"
 
 interface IncidentsTableProps {
-  incidents: Incident[],
+  incidents: Incident[]
   userRole: string
 }
 
@@ -31,7 +30,7 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
     toast({
       title: "Success",
       description: "Incident has been created successfully.",
-      type: "success"
+      type: "success",
     })
   }
 
@@ -51,76 +50,86 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
         </div>
       </div>
 
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                      Reference Number
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Severity</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                    <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {incidents.map((incident) => (
-                    <tr key={incident.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {incident.referenceNumber}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{incident.type}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <Badge variant={incident.severityLevel === "high" ? "critical" : "secondary"}>
-                          {incident.severityLevel}
-                        </Badge>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <Badge
-                          variant={
-                            incident.status === "closed"
-                              ? "default"
-                              : incident.status === "investigating"
+      {/* Check if incidents array is empty */}
+      {incidents.length === 0 ? (
+        <div
+          className="mt-8 flex justify-center items-center p-6 border-2 border-dotted border-blue-500 rounded-lg bg-blue-100 text-blue-700"
+          style={{ height: "200px" }}
+        >
+          <p className="text-2xl font-bold text-center">No Incidents Are Currently Reported</p>
+        </div>
+      ) : (
+        <div className="mt-8 flow-root">
+          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-full py-2 align-middle">
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                        Reference Number
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Severity</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {incidents.map((incident) => (
+                      <tr key={incident.id}>
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                          {incident.referenceNumber}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{incident.type}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <Badge variant={incident.severityLevel === "high" ? "critical" : "secondary"}>
+                            {incident.severityLevel}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <Badge
+                            variant={
+                              incident.status === "closed"
+                                ? "default"
+                                : incident.status === "investigating"
                                 ? "warning"
                                 : "secondary"
-                          }
-                        >
-                          {incident.status}
-                        </Badge>
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        <Button
-                          variant="ghost"
-                          className="text-blue-600 hover:text-blue-900"
-                          onClick={() => handleViewIncident(incident)}
-                        >
-                          View
-                          <span className="sr-only">, {incident.referenceNumber}</span>
-                        </Button>
-                        {userRole !== "employee" && (
-                          <Link
-                            href={`/incidents/${incident.id}/review`}
-                            className="ml-4 text-red-600 hover:text-red-900"
+                            }
                           >
-                            Review
+                            {incident.status}
+                          </Badge>
+                        </td>
+                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                          <Button
+                            variant="ghost"
+                            className="text-blue-600 hover:text-blue-900"
+                            onClick={() => handleViewIncident(incident)}
+                          >
+                            View
                             <span className="sr-only">, {incident.referenceNumber}</span>
-                          </Link>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </Button>
+                          {userRole !== "employee" && (
+                            <Link
+                              href={`/incidents/${incident.id}/review`}
+                              className="ml-4 text-red-600 hover:text-red-900"
+                            >
+                              Review
+                              <span className="sr-only">, {incident.referenceNumber}</span>
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* View Incident Slide-over */}
       <Sheet open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
@@ -151,4 +160,3 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
     </div>
   )
 }
-
