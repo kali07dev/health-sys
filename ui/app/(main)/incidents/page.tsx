@@ -20,6 +20,7 @@ interface Session {
 const fetchIncidents = async () => {
   try {
     const response = await incidentAPI.getAllIncidents();
+    console.log("lofetched in")
     return response;
   } catch (error) {
     console.error("Failed to fetch incidents:", error);
@@ -28,6 +29,7 @@ const fetchIncidents = async () => {
 };
 
 export default async function IncidentsPage() {
+  
   const session = (await getServerSession(authOptions)) as Session | null;
   
   // Handle no session case
@@ -41,6 +43,7 @@ export default async function IncidentsPage() {
   }
 
   const incidents = await fetchIncidents();
+  console.log("results in", incidents)
 
   return (
     <Suspense fallback={<TableSkeleton />}>

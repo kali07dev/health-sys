@@ -1,7 +1,7 @@
-import type { Metadata } from "next"
+// app/auth/layout.tsx
 import { Geist, Azeret_Mono as Geist_Mono } from "next/font/google"
-import "./globals.css"
 import Providers from "@/app/providers"
+import "../../globals.css"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,23 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-export const metadata: Metadata = {
-  title: "Safety System",
-  description: "Report and track Incidents",
-}
-
-export default function RootLayout({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
         <Providers>
-          {children}
+          <main className="min-h-screen flex items-center justify-center bg-gray-50">
+            {children}
+          </main>
         </Providers>
-      </body>
-    </html>
   )
 }
