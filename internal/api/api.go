@@ -67,7 +67,7 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	// app.Delete("/api/incidents/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionManageIncidents),
 	// 	NewIncidentHandler(incidentService).DeleteIncident)
 
-	app.Post("/api/v1/incidents/with-attachments", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
+	app.Post("/api/v1/incidents/with-attachments",middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
 		incidentImpl.CreateIncidentWithAttachments)
 	app.Get("/api/v1/incidents", incidentImpl.ListIncidentsHandler)
 	app.Post("/api/v1/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)

@@ -22,6 +22,19 @@ func NewIncidentService(db *gorm.DB) *IncidentService {
 	return &IncidentService{db: db}
 }
 
+func (r *IncidentService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employee, error) {
+    var employee models.Employee
+
+    // Query the database for the employee with the given UserID
+    result := r.db.Where("user_id = ?", userID).First(&employee)
+    if result.Error != nil {
+        return nil, result.Error
+    }
+
+    // Return the retrieved employee
+    return &employee, nil
+}
+
 // CreateIncident creates a new incident record
 func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userID uuid.UUID) (*models.Incident, error) {
 	refNumber := generateReferenceNumber()

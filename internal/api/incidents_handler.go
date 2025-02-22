@@ -129,10 +129,15 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format", "userID": userID})
 	}
+	employee, err := h.service.GetEmployeeByUserID(uuidUserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to check user existence", "details": err.Error()})
+	}
+	
 
 	// req.ReportedBy = uuidUserID
 
-	incident, err := h.service.CreateIncidentWithAttachment(req, file, uuidUserID)
+	incident, err := h.service.CreateIncidentWithAttachment(req, file, employee.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error(), "req": req, "incidentDataStr": incidentDataStr})
 	}

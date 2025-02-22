@@ -17,7 +17,6 @@ import (
 	"github.com/hopkali04/health-sys/internal/services/token"
 	"github.com/hopkali04/health-sys/internal/services/user"
 	"github.com/hopkali04/health-sys/internal/utils"
-	"github.com/hopkali04/health-sys/internal/validation"
 )
 
 func RunServer() {
@@ -65,7 +64,22 @@ func RunServer() {
 		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 	app.Use(middleware.LoggingMiddleware())
-	app.Use(validation.CustomValidator())
+
+	// Serve static files from the "uploads" directory
+	app.Static("/uploads", "./uploads")
+
+	// Middleware to restrict access to uploads
+	app.Use("/uploads", func(c *fiber.Ctx) error {
+		// Check if the user is authenticated
+		userID := c.Locals("userID")
+		if userID == nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+		}
+
+		// Proceed to serve the file
+		return c.Next()
+	})
+	// app.Use(validation.CustomValidator())
 
 	// Start reminder job
 	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.UseTLS)
