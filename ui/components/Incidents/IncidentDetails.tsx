@@ -8,7 +8,7 @@ import { AttachmentsList } from "./AttachmentsList";
 interface IncidentDetailsProps {
   incident: Incident;
   attachments?: IncidentAttachment[];
-  isAuthorized: boolean;
+  isAuthorized?: boolean;
 }
 
 const IncidentDetails: React.FC<IncidentDetailsProps> = ({ 
