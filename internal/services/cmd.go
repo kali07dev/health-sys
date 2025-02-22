@@ -43,6 +43,7 @@ func (svc *AdminService) CreateAdminWithEmployee(request *schema.CreateUserWithE
 		GoogleID:     &request.GoogleID,
 		MicrosoftID:  &request.MicrosoftID,
 		IsActive:     true, // Default to active
+		IsVerified:   true,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
