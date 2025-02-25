@@ -225,6 +225,8 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
         <ViewActionPanel
           action={viewingAction}
           onClose={() => setViewingAction(null)}
+          userRole={userRole}
+          refreshActions={fetchActions}
         />
       )}
     </div>
