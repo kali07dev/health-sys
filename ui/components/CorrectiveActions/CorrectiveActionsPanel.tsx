@@ -1,12 +1,13 @@
 // components/CorrectiveActions/CorrectiveActionsPanel.tsx
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { CheckCircle, Loader2, Plus, Upload } from 'lucide-react';
+import { CheckCircle, Loader2, Plus, Upload, Eye } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
 import { CorrectiveAction } from '@/interfaces/incidents';
 import { ActionEvidence } from './ActionEvidence';
 import { ActionFeedback } from './ActionFeedback';
 import { CreateActionModal } from './CreateActionModal';
+import { ViewActionPanel } from './ViewActionPanel';
 
 interface CorrectiveActionsPanelProps {
   incidentId: string;
@@ -24,7 +25,8 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // State for Create Action Modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [viewingAction, setViewingAction] = useState<CorrectiveAction | null>(null);
 
   useEffect(() => {
     fetchActions();
@@ -68,6 +70,10 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
     }
   };
 
+  const handleViewAction = (action: CorrectiveAction) => {
+    setViewingAction(action);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -83,6 +89,21 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
       </div>
     );
   }
+
+  // Determine which status color to show
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+      case 'verified':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -116,38 +137,52 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
                 </div>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    action.status === 'completed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                    getStatusColor(action.status)
                   }`}
                 >
-                  {action.status}
+                  {action.status.replace('_', ' ')}
                 </span>
               </div>
-              {userRole === 'employee' && action.assignedTo === 'currentUserId' && (
+              
+              {/* Action buttons */}
+              <div className="flex space-x-4">
+                {/* View Action Button - Available to all roles */}
                 <button
-                  onClick={() => {
-                    setSelectedAction(action);
-                    setActiveModal('evidence');
-                  }}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                  onClick={() => handleViewAction(action)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
                 >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Completion Evidence</span>
+                  <Eye className="w-4 h-4" />
+                  <span>View Details</span>
                 </button>
-              )}
-              {['admin', 'safety_officer'].includes(userRole) && (
-                <button
-                  onClick={() => {
-                    setSelectedAction(action);
-                    setActiveModal('feedback');
-                  }}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Provide Feedback</span>
-                </button>
-              )}
+                
+                {/* Upload Evidence Button - Only for assigned employees */}
+                {userRole === 'employee' && action.assignedTo === userID && (
+                  <button
+                    onClick={() => {
+                      setSelectedAction(action);
+                      setActiveModal('evidence');
+                    }}
+                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Evidence</span>
+                  </button>
+                )}
+                
+                {/* Provide Feedback Button - Only for admins & safety officers */}
+                {['admin', 'safety_officer'].includes(userRole) && (
+                  <button
+                    onClick={() => {
+                      setSelectedAction(action);
+                      setActiveModal('feedback');
+                    }}
+                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Provide Feedback</span>
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -182,6 +217,14 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
           userID={userID}
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateAction}
+        />
+      )}
+
+      {/* Render View Action Panel */}
+      {viewingAction && (
+        <ViewActionPanel
+          action={viewingAction}
+          onClose={() => setViewingAction(null)}
         />
       )}
     </div>
