@@ -45,6 +45,9 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.CorrectiveAction{},
 		&models.ActionUpdate{},
 		&models.Notification{},
+		&models.InvestigationInterview{},
+		&models.InvestigationEvidence{},
+		&models.ActionEvidence{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to auto-migrate database: %w", err)
