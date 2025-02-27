@@ -1,38 +1,37 @@
-"use client"
-import { useState } from "react"
-import Link from "next/link"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import type { Incident } from "@/interfaces/incidents"
-import IncidentForm from "./IncidentForm"
-import IncidentDetails from "./IncidentDetails"
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { Incident } from "@/interfaces/incidents";
+import IncidentForm from "./IncidentForm";
+import IncidentDetails from "./IncidentDetails";
+import { toast } from "react-hot-toast";
 
 interface IncidentsTableProps {
-  incidents: Incident[]
-  userRole: string
+  incidents: Incident[];
+  userRole: string;
 }
 
-export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => {
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
+export const IncidentsTable = ({ incidents: initialIncidents, userRole }: IncidentsTableProps) => {
+  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleViewIncident = (incident: Incident) => {
-    setSelectedIncident(incident)
-  }
+    setSelectedIncident(incident);
+  };
 
-  const handleCreateSuccess = () => {
-    setIsCreateModalOpen(false)
-    toast({
-      title: "Success",
-      description: "Incident has been created successfully.",
-      type: "success",
-    })
-  }
+  const handleCreateSuccess = (newIncident: Incident) => {
+    setIncidents([...incidents, newIncident]); // Add the new incident to the list
+    setIsCreateModalOpen(false);
+    toast.success("Incident Successfully Created");
+  };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
@@ -61,7 +60,7 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
       ) : (
         <div className="mt-8 flow-root">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle">
+            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
@@ -69,9 +68,13 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
                       <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
                         Reference Number
                       </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell">
+                        Type
+                      </th>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Severity</th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell">
+                        Status
+                      </th>
                       <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                         <span className="sr-only">Actions</span>
                       </th>
@@ -79,21 +82,35 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {incidents.map((incident) => (
-                      <tr key={incident.id}>
+                      <tr key={incident.id} className="flex flex-col sm:table-row">
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                           {incident.referenceNumber}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{incident.type}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <Badge variant={incident.severityLevel === "high" ? "critical" : "secondary"}>
-                            {incident.severityLevel}
-                          </Badge>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
+                          {incident.type}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           <Badge
                             variant={
+                              incident.severityLevel === "critical"
+                                ? "critical"
+                                : incident.severityLevel === "high"
+                                ? "high"
+                                : incident.severityLevel === "medium"
+                                ? "medium"
+                                : "low"
+                            }
+                          >
+                            {incident.severityLevel}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
+                          <Badge
+                            variant={
                               incident.status === "closed"
-                                ? "default"
+                                ? "closed"
+                                : incident.status === "resolved"
+                                ? "resolved"
                                 : incident.status === "investigating"
                                 ? "warning"
                                 : "secondary"
@@ -158,5 +175,5 @@ export const IncidentsTable = ({ incidents, userRole }: IncidentsTableProps) => 
         </div>
       )}
     </div>
-  )
-}
+  );
+};

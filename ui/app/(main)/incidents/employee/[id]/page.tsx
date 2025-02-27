@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { IncidentsTable } from "@/components/Incidents/landing";
 import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { incidentAPI } from '@/utils/api';
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Import authOptions
 
 interface PageProps {
   params: {
@@ -23,19 +24,25 @@ const fetchEmployeeIncidents = async (employeeId: string) => {
 };
 
 export default async function EmployeeIncidentsPage({ params }: PageProps) {
-  const session = await getServerSession();
+  // Use the params.id value directly in a variable first
+  const employeeId = params.id;
+  
+  // Pass authOptions to getServerSession to properly include custom fields
+  const session = await getServerSession(authOptions);
   
   // Check if user has permission to view these incidents
   const canViewIncidents = 
-    session?.role === "admin" || 
+    session?.role === "admin" || // Use session.user.role instead of session.role
     session?.role === "safety_officer" || 
-    session?.user?.id === params.id;
-
+    session?.user?.id === employeeId;
+  
   if (!canViewIncidents) {
     notFound();
   }
 
-  const incidents = await fetchEmployeeIncidents(params.id);
+  // Fetch the incidents after validating permissions
+  const incidents = await fetchEmployeeIncidents(employeeId);
+  
 
   return (
     <Suspense fallback={<TableSkeleton />}>

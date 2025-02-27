@@ -2,6 +2,7 @@
 import { HomeIcon, LayoutDashboard, MessageSquare, PieChart, Settings, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import LogoutButton from "@/components/LogoutButton" // Import the LogoutButton
 
 import {
   Sidebar,
@@ -14,10 +15,11 @@ import {
 } from "@/components/ui/sidebar"
 
 const sidebarItems = [
-  { icon: HomeIcon, label: "Dashboard", href: "/dashboard" },
+  { icon: HomeIcon, label: "Dashboard", href: "/" },
   { icon: Users, label: "Incidents", href: "/incidents" },
   { icon: PieChart, label: "Reports", href: "/reports" },
   { icon: MessageSquare, label: "Alerts", href: "/alerts" },
+  { icon: MessageSquare, label: "Tasks", href: "/tasks" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
@@ -51,8 +53,9 @@ export function AppSidebar() {
             <div className="truncate text-sm text-gray-500">john@example.com</div>
           </div>
         </div>
+        {/* Add LogoutButton to the SidebarFooter */}
+        <LogoutButton variant="ghost" className="w-full justify-start" />
       </SidebarFooter>
     </Sidebar>
   )
 }
-
