@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation';
 import { signUp } from '../../utils/authApi';
 import Input from '../Input';
 import Button from '../Button';
+import LocationDropdown from '@/components/locationDropDown';
 
 const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
     email: '',
     password: '',
-    confirmPassword: '', // Add confirm password field
+    ConfirmPassword: '', // Add confirm password field
     employeeNumber: '',
     firstName: '',
     lastName: '',
@@ -32,7 +33,7 @@ const SignUpForm: React.FC = () => {
 
     try {
       // Validate passwords match
-      if (userData.password !== userData.confirmPassword) {
+      if (userData.password !== userData.ConfirmPassword) {
         throw new Error('Passwords do not match');
       }
 
@@ -44,7 +45,7 @@ const SignUpForm: React.FC = () => {
       };
 
       // Remove unnecessary fields before sending to backend
-      // delete formattedData.confirmPassword;
+      // delete formattedData.ConfirmPassword;
 
       const res = await signUp(formattedData);
       router.push('/');
@@ -146,11 +147,11 @@ const SignUpForm: React.FC = () => {
       {/* Confirm Password */}
       <Input
         label="Confirm Password"
-        id="confirmPassword"
+        id="ConfirmPassword"
         type="password"
-        value={userData.confirmPassword}
+        value={userData.ConfirmPassword}
         onChange={(e) =>
-          setUserData({ ...userData, confirmPassword: e.target.value })
+          setUserData({ ...userData, ConfirmPassword: e.target.value })
         }
         required
       />
@@ -180,16 +181,20 @@ const SignUpForm: React.FC = () => {
       />
 
       {/* Office Location */}
-      <Input
-        label="Office Location"
-        id="officeLocation"
-        type="text"
-        value={userData.officeLocation}
-        onChange={(e) =>
-          setUserData({ ...userData, officeLocation: e.target.value })
-        }
-        required
-      />
+      <div className="space-y-2">
+        <label htmlFor="officeLocation" className="block text-sm font-medium text-gray-700">
+          Office Location
+        </label>
+        <LocationDropdown
+          id="officeLocation"
+          name="officeLocation"
+          value={userData.officeLocation}
+          onChange={(e) =>
+            setUserData({ ...userData, officeLocation: e.target.value })
+          }
+          required
+        />
+      </div>
 
       {/* Error Message */}
       {error && <p className="text-red-600 text-sm">{error}</p>}

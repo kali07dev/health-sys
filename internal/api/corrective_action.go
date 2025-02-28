@@ -15,6 +15,33 @@ func NewCorrectiveActionHandler(service *services.CorrectiveActionService) *Corr
 	return &CorrectiveActionHandler{CorrectiveActionservice: service}
 }
 
+// GetCorrectiveActionsByEmployeeID handles fetching corrective actions by employee ID
+func (h *CorrectiveActionHandler) GetCorrectiveActionsByEmployeeID(c *fiber.Ctx) error {
+	// Parse employee ID from the request
+	employeeIDStr := c.Params("id")
+	employeeID, err := uuid.Parse(employeeIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid employee ID",
+		})
+	}
+	emp, err := h.CorrectiveActionservice.GetEmployeeByUserID(employeeID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to check user existence", "details": err.Error()})
+	}
+
+	// Fetch corrective actions by employee ID
+	actions, err := h.CorrectiveActionservice.GetByEmployeeID(emp.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return the corrective actions
+	return c.Status(fiber.StatusOK).JSON(schema.ToCActionResponseArray(actions))
+}
+
 // GetCorrectiveActionsByIncidentID retrieves corrective actions by incident ID
 func (h *CorrectiveActionHandler) GetCorrectiveActionsByIncidentID(c *fiber.Ctx) error {
 	incidentID, err := uuid.Parse(c.Params("incidentID"))
@@ -37,7 +64,17 @@ func (h *CorrectiveActionHandler) CreateCorrectiveAction(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
 
-	action, err := h.CorrectiveActionservice.Create(c.Context(), req)
+	assignedBy, err := uuid.Parse(req.AssignedBy)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format", "userID": req.AssignedBy})
+	}
+
+	emp, err := h.CorrectiveActionservice.GetEmployeeByUserID(assignedBy)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to check user existence", "details": err.Error()})
+	}
+
+	action, err := h.CorrectiveActionservice.Create(c.Context(), req, emp.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

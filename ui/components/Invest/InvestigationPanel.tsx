@@ -74,7 +74,7 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
             title="Assign Investigator"
             icon={<Users className="w-6 h-6" />}
             onClick={() => setActiveModal('assign')}
-            status={investigation?.leadInvestigator ? 'completed' : 'pending'}
+            status={investigation?.leadInvestigatorId ? 'completed' : 'pending'}
           />
           <ActionCard
             title="Schedule Interview"
@@ -88,6 +88,8 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
             onClick={() => setActiveModal('findings')}
             status={investigation?.findings ? 'completed' : 'pending'}
           />
+
+          
         </div>
       )}
 
