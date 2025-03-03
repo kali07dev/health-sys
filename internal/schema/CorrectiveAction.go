@@ -8,6 +8,7 @@ import (
 
 type CorrectiveActionRequest struct {
 	IncidentID           string `json:"incident_id" validate:"required,uuid4"`
+	CompletedBy          string
 	Description          string `json:"description" validate:"required"`
 	ActionType           string `json:"action_type" validate:"required,max=50"`
 	Priority             string `json:"priority" validate:"required,oneof=low medium high critical"`
@@ -21,22 +22,39 @@ type CorrectiveActionRequest struct {
 	VerifiedBy           string `json:"verified_by" validate:"omitempty,uuid4"`
 	VerifiedAt           string `json:"verified_at" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 }
+type UpdateCorrectiveActionRequest struct {
+	IncidentID           string `json:"incident_id"`
+	CompletedBy          string
+	Description          string `json:"description" `
+	ActionType           string `json:"action_type" `
+	Priority             string `json:"priority"`
+	Status               string `json:"status" `
+	AssignedTo           string `json:"assigned_to"`
+	AssignedBy           string `json:"assigned_by"`
+	DueDate              string `json:"due_date" `
+	CompletedAt          string `json:"completed_at"`
+	CompletionNotes      string `json:"completion_notes" validate:"omitempty"`
+	VerificationRequired bool   `json:"verification_required"`
+	VerifiedBy           string `json:"verified_by" validate:"omitempty,uuid4"`
+	VerifiedAt           string `json:"verified_at"`
+}
 
 type CorrectiveActionResponse struct {
-	ID                   string  `json:"id"`
-	IncidentID           string  `json:"incidentId"`
-	Description          string  `json:"description"`
-	ActionType           string  `json:"actionType"`
-	Priority             string  `json:"priority"`
-	Status               string  `json:"status"`
-	AssignedTo           string  `json:"assignedTo"`
-	AssignedBy           string  `json:"assignedBy"`
-	DueDate              string  `json:"dueDate"`
-	CompletedAt          *string `json:"completedAt,omitempty"`
-	CompletionNotes      *string `json:"completionNotes,omitempty"`
-	VerificationRequired bool    `json:"verificationRequired"`
-	VerifiedBy           *string `json:"verifiedBy,omitempty"`
-	VerifiedAt           *string `json:"verifiedAt,omitempty"`
+	ID                   string    `json:"id"`
+	IncidentID           string    `json:"incidentId"`
+	Description          string    `json:"description"`
+	ActionType           string    `json:"actionType"`
+	Priority             string    `json:"priority"`
+	Status               string    `json:"status"`
+	AssignedTo           string    `json:"assignedTo"`
+	AssignedBy           string    `json:"assignedBy"`
+	DueDate              string    `json:"dueDate"`
+	CompletedAt          *string   `json:"completedAt,omitempty"`
+	CompletionNotes      *string   `json:"completionNotes,omitempty"`
+	VerificationRequired bool      `json:"verificationRequired"`
+	VerifiedBy           *string   `json:"verifiedBy,omitempty"`
+	VerifiedAt           *string   `json:"verifiedAt,omitempty"`
+	CreatedAt           time.Time `json:"createdAt,omitempty"`
 }
 
 func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
@@ -73,6 +91,7 @@ func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
 		VerificationRequired: ca.VerificationRequired,
 		VerifiedBy:           &verifiedBy,
 		VerifiedAt:           verifiedAt,
+		CreatedAt:           ca.CreatedAt,
 	}
 }
 
