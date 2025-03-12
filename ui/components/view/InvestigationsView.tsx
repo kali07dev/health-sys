@@ -10,30 +10,6 @@ import { InvestigationFindingsModal } from './InvestigationFindingsModal';
 import { InvestigationAPI } from '@/utils/investigationAPI';
 import { Investigation,} from '@/interfaces/incidents';
 
-// interface Investigation {
-//   ID: string;
-//   IncidentID: string;
-//   LeadInvestigatorID: string;
-//   Description: string;
-//   RootCause: string;
-//   ContributingFactors: any;
-//   InvestigationMethods: any;
-//   Findings: string;
-//   Recommendations: string;
-//   StartedAt: string;
-//   CompletedAt: string | null;
-//   Status: string;
-//   CreatedAt: string;
-//   UpdatedAt: string;
-//   LeadInvestigator?: {
-//     FirstName: string;
-//     LastName: string;
-//   };
-//   Incident?: {
-//     Title: string;
-//     Description: string;
-//   };
-// }
 
 interface InvestigationsViewProps {
   userId: string;
@@ -66,7 +42,7 @@ export default function InvestigationsView({ userId, userRole }: InvestigationsV
   }, [userId]);
   
   const filteredInvestigations = investigations.filter(investigation => 
-    investigation.Incident?.Title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    investigation.incident?.Title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     investigation.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -81,13 +57,14 @@ export default function InvestigationsView({ userId, userRole }: InvestigationsV
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const response = InvestigationAPI.getInvestigationByEmployee(userId)
-      setInvestigations(response);
+      const response = await InvestigationAPI.getInvestigationByEmployee(userId);
+      const investigationsArray = Array.isArray(response) ? response : [response];
+      setInvestigations(investigationsArray);
       
       // Refresh selected investigation if needed
       if (selectedInvestigation) {
-        const updatedInvestigation = response.find(
-          (inv: Investigation) => inv.id === selectedInvestigation.id
+        const updatedInvestigation = investigationsArray.find(
+          (inv) => inv.id === selectedInvestigation.id
         );
         setSelectedInvestigation(updatedInvestigation || null);
       }
@@ -153,6 +130,7 @@ export default function InvestigationsView({ userId, userRole }: InvestigationsV
         <InvestigationDetailsSidebar
           investigation={selectedInvestigation}
           onClose={handleCloseSidebar}
+          onInvestigationClosed={handleRefresh}
           onScheduleInterview={() => setShowInterviewModal(true)}
           onAddFindings={() => setShowFindingsModal(true)}
         />

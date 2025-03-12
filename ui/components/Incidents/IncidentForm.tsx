@@ -1,325 +1,309 @@
-// components/IncidentForm.tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import type { ChangeEvent, FormEvent } from "react"
-import { submitIncident, IncidentApiError } from "@/lib/api/incidents"
-import type { IncidentFormData } from "@/interfaces/incidents"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import type { ChangeEvent, FormEvent } from "react";
+import { submitIncident, IncidentApiError, submitIncidentWithoutAttachments } from "@/lib/api/incidents";
+import { IncidentFormData, Incident } from "@/interfaces/incidents";
+import { AlertCircle, Upload, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { format } from "date-fns";
 
 interface ValidationError {
-  field: string
-  message: string
+  field: string;
+  message: string;
 }
 
 interface IncidentFormProps {
-  onSuccess?: () => void; // Add this line
+  onSuccess?: (newIncident: Incident) => void;
 }
 
-const IncidentForm = ({ onSuccess }: IncidentFormProps) => { // Update this line
-  const router = useRouter()
-  const { data: session, status } = useSession()
+const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
   const [formData, setFormData] = useState<IncidentFormData>({
     type: "injury",
     severityLevel: "low",
     title: "",
     description: "",
     location: "",
-    occurredAt: "",
+    occurredAt: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     immediateActionsTaken: "",
     reportedBy: session?.user?.id || "",
-  })
-  
-  const [files, setFiles] = useState<File[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<{
-    message: string;
-    validationErrors?: ValidationError[];
-    fileErrors?: string[];
-  } | null>(null)
+  });
 
-  // Redirect to login if not authenticated
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<any>(null);
+
   if (status === "unauthenticated") {
-    router.push('/login')
-    return null
+    router.push("/auth/login");
+    return null;
   }
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      // Convert FileList to Array for easier manipulation
-      const fileArray = Array.from(e.target.files)
-      setFiles(fileArray)
+      const newFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...newFiles]);
     }
-  }
+  };
 
   const handleRemoveFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index))
-  }
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
     try {
-      await submitIncident(formData, files)
+      // Make different API call based on whether files are attached
+      const newIncident = files.length > 0 
+        ? await submitIncident(formData, files)
+        : await submitIncidentWithoutAttachments(formData); // No files parameter
+
       if (onSuccess) {
-        onSuccess(); // Call the onSuccess callback if it exists
+        onSuccess(newIncident);
       }
-      // router.push("/incidents")
     } catch (err) {
       if (err instanceof IncidentApiError) {
-        switch (err.code) {
-          case 'AUTH_REQUIRED':
-          case 'AUTH_EXPIRED':
-            router.push('/login')
-            break
-          case 'VALIDATION_ERROR':
-            setError({
-              message: 'Please correct the following errors:',
-              validationErrors: err.details
-            })
-            break
-          case 'INVALID_FILES':
-            setError({
-              message: 'File upload errors:',
-              fileErrors: err.details
-            })
-            break
-          case 'NETWORK_ERROR':
-            setError({
-              message: 'Network error. Please check your connection and try again.'
-            })
-            break
-          default:
-            setError({
-              message: err.message || 'An unexpected error occurred'
-            })
-        }
+        handleError(err);
       } else {
-        setError({
-          message: 'An unexpected error occurred'
-        })
+        setError({ message: "An unexpected error occurred" });
       }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
+
+  const handleError = (err: IncidentApiError) => {
+    switch (err.code) {
+      case "AUTH_REQUIRED":
+      case "AUTH_EXPIRED":
+        router.push("/auth/login");
+        break;
+      case "VALIDATION_ERROR":
+        setError({
+          message: "Please correct the following errors:",
+          validationErrors: err.details,
+        });
+        break;
+      case "INVALID_FILES":
+        setError({
+          message: "File upload errors:",
+          fileErrors: err.details,
+        });
+        break;
+      case "NETWORK_ERROR":
+        setError({
+          message: "Network error. Please check your connection and try again.",
+        });
+        break;
+      default:
+        setError({
+          message: err.message || "An unexpected error occurred",
+        });
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 divide-y divide-gray-200">
-      {/* ... existing form fields ... */}
-      <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            {/* Existing form fields */}
-            <div className="sm:col-span-3">
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                Type
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="injury">Injury</option>
-                <option value="near_miss">Near Miss</option>
-                <option value="property_damage">Property Damage</option>
-                <option value="environmental">Environmental</option>
-                <option value="security">Security</option>
-              </select>
-            </div>
-
-            <div className="sm:col-span-3">
-              <label htmlFor="severityLevel" className="block text-sm font-medium text-gray-700">
-                Severity Level
-              </label>
-              <select
-                id="severityLevel"
-                name="severityLevel"
-                value={formData.severityLevel}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-
-            <div className="sm:col-span-6">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                id="title"
-                required
-                value={formData.title}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div className="sm:col-span-6">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                required
-                value={formData.description}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div className="sm:col-span-6">
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                id="location"
-                required
-                value={formData.location}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div className="sm:col-span-6">
-              <label htmlFor="occurredAt" className="block text-sm font-medium text-gray-700">
-                Date and Time of Incident
-              </label>
-              <input
-                type="datetime-local"
-                name="occurredAt"
-                id="occurredAt"
-                required
-                value={formData.occurredAt}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div className="sm:col-span-6">
-              <label htmlFor="immediateActionsTaken" className="block text-sm font-medium text-gray-700">
-                Immediate Actions Taken
-              </label>
-              <textarea
-                id="immediateActionsTaken"
-                name="immediateActionsTaken"
-                rows={3}
-                value={formData.immediateActionsTaken}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-      {/* Enhanced file upload section */}
-      <div className="sm:col-span-6">
-        <label htmlFor="attachments" className="block text-sm font-medium text-gray-700">
-          Attachments
-        </label>
-        <input
-          type="file"
-          id="attachments"
-          name="attachments"
-          multiple
-          accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
-          onChange={handleFileChange}
-          className="mt-1 block w-full text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-md file:border-0
-            file:text-sm file:font-semibold
-            file:bg-indigo-50 file:text-indigo-700
-            hover:file:bg-indigo-100"
-        />
-        <p className="mt-1 text-sm text-gray-500">
-          Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, PDF, DOC, DOCX
-        </p>
-
-        {/* File list */}
-        {files.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {files.map((file, index) => (
-              <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
-                <span className="text-sm text-gray-600">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFile(index)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Enhanced error display */}
+    <div className="flex flex-col h-full pb-6">
       {error && (
-        <div className="mt-4 p-4 bg-red-50 rounded-md">
-          <p className="text-sm font-medium text-red-800">{error.message}</p>
-          {error.validationErrors && (
-            <ul className="mt-2 list-disc pl-5 space-y-1">
-              {error.validationErrors.map((err, index) => (
-                <li key={index} className="text-sm text-red-700">
-                  {err.field}: {err.message}
-                </li>
-              ))}
-            </ul>
-          )}
-          {error.fileErrors && (
-            <ul className="mt-2 list-disc pl-5 space-y-1">
-              {error.fileErrors.map((err, index) => (
-                <li key={index} className="text-sm text-red-700">
-                  {err}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-medium">{error.message}</p>
+            {error.validationErrors && (
+              <ul className="mt-2 text-sm">
+                {error.validationErrors.map((err: ValidationError, index: number) => (
+                  <li key={index}>{`${err.field}: ${err.message}`}</li>
+                ))}
+              </ul>
+            )}
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* ... submit buttons ... */}
-      <div className="pt-5">
-        <div className="flex justify-end">
-          <button
-            type="button"
-            // onClick={() => router.push("/incidents")}
-            disabled={isSubmitting}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Cancel
-          </button>
-          <button
+      <form onSubmit={handleSubmit} className="space-y-6 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-base">Title</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="Brief title of the incident"
+              className="h-12 text-base"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-base">Type</Label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleSelectChange("type", value)}
+              >
+                <SelectTrigger className="h-12 text-base bg-white">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="injury">Injury</SelectItem>
+                  <SelectItem value="near_miss">Near Miss</SelectItem>
+                  <SelectItem value="property_damage">Property Damage</SelectItem>
+                  <SelectItem value="environmental">Environmental</SelectItem>
+                  <SelectItem value="security">Security</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="severityLevel" className="text-base">Severity Level</Label>
+              <Select 
+                value={formData.severityLevel} 
+                onValueChange={(value) => handleSelectChange("severityLevel", value)}
+              >
+                <SelectTrigger className="h-12 text-base bg-white">
+                  <SelectValue placeholder="Select severity" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-base">Location</Label>
+              <Input
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                className="h-12 text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="occurredAt" className="text-base">Date and Time</Label>
+              <Input
+                id="occurredAt"
+                name="occurredAt"
+                type="datetime-local"
+                value={formData.occurredAt}
+                onChange={handleInputChange}
+                className="h-12 text-base"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-base">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Detailed description of what happened"
+              rows={4}
+              className="resize-none text-base"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="immediateActionsTaken" className="text-base">Immediate Actions Taken</Label>
+            <Textarea
+              id="immediateActionsTaken"
+              name="immediateActionsTaken"
+              value={formData.immediateActionsTaken}
+              onChange={handleInputChange}
+              placeholder="Actions taken to address the incident"
+              rows={4}
+              className="resize-none text-base"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-base">Attachments</Label>
+            <div className="border-2 border-dashed border-gray-300 hover:border-red-400 rounded-lg p-4 transition-colors">
+              <div className="flex flex-col items-center justify-center gap-2 py-4">
+                <Upload className="h-10 w-10 text-gray-400" />
+                <Label 
+                  htmlFor="file-upload" 
+                  className="cursor-pointer text-red-600 hover:text-red-500 font-medium"
+                >
+                  Upload files
+                </Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <p className="text-sm text-gray-500 text-center">
+                  Maximum file size: 5MB<br/>
+                  Supported formats: JPG, PNG, GIF, PDF, DOC, DOCX
+                </p>
+              </div>
+            </div>
+
+            {files.length > 0 && (
+              <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+                {files.map((file, index) => (
+                  <li key={index} className="flex items-center justify-between py-3 px-4 bg-white">
+                    <span className="text-sm font-medium text-gray-800 truncate">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveFile(index)}
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-4 flex justify-end">
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className="ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white"
+            size="lg"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </button>
+            {isSubmitting ? "Submitting..." : "Submit Incident Report"}
+          </Button>
         </div>
-      </div>
-    </form>
-  )
-}
+      </form>
+    </div>
+  );
+};
 
-export default IncidentForm
+export default IncidentForm;

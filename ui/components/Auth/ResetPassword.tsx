@@ -70,7 +70,7 @@ export const CompletePasswordReset = () => {
     const token = searchParams.get('token');
     if (!token) {
       toast.error('Invalid reset link');
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
 
@@ -90,7 +90,7 @@ export const CompletePasswordReset = () => {
       }
 
       toast.success('Password reset successfully');
-      router.push('/login');
+      router.push('/auth/login');
     } catch (error: any) {
       toast.error(error.message || 'Failed to reset password');
     } finally {

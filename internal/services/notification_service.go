@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"time"
 
@@ -20,6 +21,8 @@ const (
 	ActionOverdue      NotificationType = "action_overdue"
 	UrgentIncident      NotificationType = "urgent_incident"
 	InterviewScheduled NotificationType = "interview_scheduled"
+	InvestigationAssigned NotificationType = "investigation_assigned"
+	InterviewStatusChanged NotificationType = "interview_status_changed"
 )
 
 type NotificationService struct {
@@ -117,7 +120,7 @@ func (s *NotificationService) SendNotification(userID uuid.UUID, notificationTyp
 
     default:
         // For unknown types, send generic email
-        emailErr = s.emailService.SendEmail([]string{user.Email}, title, message)
+        emailErr = s.emailService.SendEmail([]string{user.Email}, title, template.HTML(message))
     }
 
     if emailErr != nil {
@@ -251,4 +254,59 @@ func (s *NotificationService) NotifyInterviewScheduled(interview *models.Investi
 	}
 
 	return s.db.Create(notification).Error
+}
+func (s *NotificationService) NotifyInterviewStatusChanged(interview *models.InvestigationInterview, status string) error {
+	// Define the notification message based on the status
+	var message string
+	switch status {
+	case "rescheduled":
+		message = fmt.Sprintf("Your interview has been rescheduled to %s at %s",
+			interview.ScheduledFor.Format("2006-01-02"),
+			interview.ScheduledFor.Format("15:04"))
+	case "canceled":
+		message = "Your interview has been canceled."
+	case "completed":
+		message = "Your interview has been completed."
+	default:
+		message = "There has been a change in your interview status."
+	}
+
+	// Create the notification
+	notification := &models.Notification{
+		UserID:  interview.IntervieweeID,
+		Type:    string(InterviewStatusChanged),
+		Title:   "Investigation Interview Status Changed",
+		Message: message,
+	}
+
+	// Save the notification to the database
+	return s.db.Create(notification).Error
+}
+
+func (s *NotificationService) NotifyInvestigationLeader(interview *models.Investigation) error {
+	var user models.Employee
+    if err := s.db.First(&user, "id = ?", interview.LeadInvestigatorID).Preload("User").Error; err != nil {
+        log.Printf("Failed to fetch user: %v", err)
+        return err
+    }
+	notification := &models.Notification{
+		UserID: user.UserID,
+		Type:   string(InvestigationAssigned),
+		Title:  "You have been Assigned as the lead Investigator",
+		Message: fmt.Sprintf("You have been scheduled the lead Investigator for the incident %s on %s at %s",
+			interview.Incident.Description,
+			interview.StartedAt.Format("2006-01-02"),
+			interview.StartedAt.Format("15:04")),
+	}
+
+	if err := s.db.Create(&notification).Error; err != nil {
+        log.Printf("Failed to create notification record: %v", err)
+        return err
+    }
+	
+	emailErr := s.emailService.sendLeadInvestigatorAssignedEmail([]string{user.User.Email}, interview, &interview.Incident)
+	if emailErr != nil {
+        log.Printf("Failed to send email notification: %v", emailErr)
+    }
+	return nil
 }

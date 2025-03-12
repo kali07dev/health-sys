@@ -20,6 +20,7 @@ interface Session {
 const fetchIncidents = async () => {
   try {
     const response = await incidentAPI.getAllIncidents();
+    console.log(response)
     return response;
   } catch (error) {
     console.error("Failed to fetch incidents:", error);
@@ -33,7 +34,7 @@ export default async function IncidentsPage() {
   
   // Handle no session case
   if (!session) {
-    redirect('/login');
+    redirect('/auth/login');
   }
 
   // Handle role-based access

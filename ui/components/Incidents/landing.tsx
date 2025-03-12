@@ -2,18 +2,20 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, formatDistance } from "date-fns";
 import { 
-  Loader2, 
-  ChevronUp, 
-  ChevronDown, 
-  Search, 
-  Filter, 
-  ArrowUpDown,
-  Calendar,
-  X
+    Loader2, 
+    ChevronUp, 
+    ChevronDown, 
+    Search, 
+    Filter, 
+    ArrowUpDown,
+    Calendar,
+    MapPin,
+    User,
+    X
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+// import { useToast } from "@/components/ui/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +44,8 @@ import type { Incident } from "@/interfaces/incidents";
 import IncidentForm from "./IncidentForm";
 import IncidentDetails from "./IncidentDetails";
 import { toast } from "react-hot-toast";
+import InfoPanel from "@/components/ui/InfoPanel";
+import { CalendarClock, Plus, FileText } from "lucide-react";
 
 interface IncidentsTableProps {
   incidents: Incident[];
@@ -49,7 +53,7 @@ interface IncidentsTableProps {
 }
 
 // Type definitions for sorting and filtering
-type SortField = 'referenceNumber' | 'type' | 'severityLevel' | 'status' | 'occurredAt';
+type SortField = 'title' | 'location' | 'type' | 'severityLevel' | 'status' | 'occurredAt';
 type SortDirection = 'asc' | 'desc';
 type FilterState = {
   search: string;
@@ -95,6 +99,22 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
     toast.success("Incident Successfully Created");
   };
 
+    // Enhanced formatting helpers
+    const formatIncidentType = (type: string) => {
+        return type
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      };
+    
+      const getTimeAgo = (dateString: string) => {
+        try {
+          return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
+        } catch (e) {
+            console.log(e)
+          return 'Unknown time';
+        }
+      };
   // Sort handler
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -185,10 +205,14 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
       let valueB: any;
       
       switch (sortField) {
-        case 'referenceNumber':
-          valueA = a.referenceNumber;
-          valueB = b.referenceNumber;
+        case 'title':
+          valueA = a.title;
+          valueB = b.title;
           break;
+        case 'location':
+            valueA = a.location;
+            valueB = b.location;
+            break;
         case 'type':
           valueA = a.type;
           valueB = b.type;
@@ -225,6 +249,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
     try {
       return format(new Date(dateString), 'MMM d, yyyy h:mm a');
     } catch (e) {
+      console.log(e)
       return 'Invalid date';
     }
   };
@@ -255,6 +280,35 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
           </Button>
         </div>
       </div>
+      <InfoPanel 
+        title="Incident Reporting Tools" 
+        icon={<FileText className="h-5 w-5 text-blue-600" />}
+      >
+        <p>
+          This page allows you to create, view, and manage safety incidents. 
+          Use the <strong>New Incident</strong> button to report new issues. 
+          All incidents require review within 24 hours of submission.
+        </p>
+        <div className="flex gap-4 mt-3">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            New Incident
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+          >
+            <CalendarClock className="h-4 w-4 mr-1" />
+            View Reports
+          </Button>
+        </div>
+      </InfoPanel>
       
       {/* Search and Filter Bar */}
       <div className="mt-6 flex flex-col sm:flex-row gap-4">
@@ -433,12 +487,12 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                     <tr>
                       <th 
                         className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
-                        onClick={() => handleSort('referenceNumber')}
+                        onClick={() => handleSort('title')}
                       >
                         <div className="flex items-center gap-1">
-                          Reference Number
+                          Incident Details
                           <span className="ml-1">
-                            {sortField === 'referenceNumber' ? (
+                            {sortField === 'title' ? (
                               sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
                             ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
                           </span>
@@ -446,6 +500,19 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                       </th>
                       <th 
                         className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell cursor-pointer"
+                        onClick={() => handleSort('location')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Location
+                          <span className="ml-1">
+                            {sortField === 'location' ? (
+                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                          </span>
+                        </div>
+                      </th>
+                      <th 
+                        className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden md:table-cell cursor-pointer"
                         onClick={() => handleSort('type')}
                       >
                         <div className="flex items-center gap-1">
@@ -471,24 +538,11 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                         </div>
                       </th>
                       <th 
-                        className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden md:table-cell cursor-pointer"
-                        onClick={() => handleSort('status')}
-                      >
-                        <div className="flex items-center gap-1">
-                          Status
-                          <span className="ml-1">
-                            {sortField === 'status' ? (
-                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                            ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
-                          </span>
-                        </div>
-                      </th>
-                      <th 
                         className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden lg:table-cell cursor-pointer"
                         onClick={() => handleSort('occurredAt')}
                       >
                         <div className="flex items-center gap-1">
-                          Date & Time
+                          Timing
                           <span className="ml-1">
                             {sortField === 'occurredAt' ? (
                               sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
@@ -507,14 +561,27 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                         key={incident.id}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                          {incident.referenceNumber}
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                          <div className="flex items-center">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {incident.title}
+                              </div>
+                              <div className="text-gray-500 text-xs flex items-center gap-1">
+                                <User className="h-3 w-3 opacity-50" />
+                                {incident.referenceNumber}
+                              </div>
+                            </div>
+                          </div>
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
-                          {incident.type.replace('_', ' ').replace(
-                            /\w\S*/g,
-                            (txt) => txt.charAt(0).toUpperCase() + txt.substr(1)
-                          )}
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4 text-gray-400" />
+                            {incident.location}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm hidden md:table-cell">
+                          {formatIncidentType(incident.type)}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm">
                           <Badge
@@ -554,7 +621,12 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden lg:table-cell">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                            {formatDate(incident.occurredAt)}
+                            <div>
+                              <div>{formatDate(incident.occurredAt)}</div>
+                              <div className="text-xs text-gray-500">
+                                {getTimeAgo(incident.occurredAt)}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
@@ -582,7 +654,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
             </div>
           </div>
         </div>
-      )}
+    )}
 
       {/* View Incident Slide-over */}
       <Sheet open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>

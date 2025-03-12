@@ -18,7 +18,12 @@ interface Props {
 export function IncidentSummaryView({ summary }: Props) {
   const [activeTab, setActiveTab] = useState('details');
 
-  const getSeverityColor = (level: string) => {
+  if (!summary.incident) {
+    return <div>No incident data available.</div>;
+  }
+
+  const getSeverityColor = (level: string | undefined) => {
+    if (!level) return 'bg-gray-500';
     switch (level.toLowerCase()) {
       case 'critical': return 'bg-red-500';
       case 'high': return 'bg-orange-500';
@@ -28,7 +33,8 @@ export function IncidentSummaryView({ summary }: Props) {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'bg-gray-500';
     switch (status.toLowerCase()) {
       case 'closed': return 'bg-green-500';
       case 'investigating': return 'bg-blue-500';
@@ -79,11 +85,12 @@ export function IncidentSummaryView({ summary }: Props) {
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-gray-500">Occurred At:</dt>
-                    <dd>{format(new Date(summary.incident.occurred_at), 'PPP')}</dd>
+                    {/* <dd>{format(new Date(summary.incident.occurred_at), 'PPP')}</dd> */}
+                    <dd>{summary.incident.occurred_at}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-gray-500">Reported By:</dt>
-                    <dd>{summary.incident.reported_by.full_name}</dd>
+                    {/* <dd>{summary.incident.reported_by.full_name}</dd> */}
                   </div>
                 </dl>
               </div>
@@ -111,7 +118,7 @@ export function IncidentSummaryView({ summary }: Props) {
               </div>
             </div>
 
-            {summary.incident.attachments.length > 0 && (
+            {/* {summary.incident.attachments.length > 0 && (
               <div className="mt-8">
                 <h3 className="text-lg font-semibold mb-4">Attachments</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -139,7 +146,7 @@ export function IncidentSummaryView({ summary }: Props) {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </Card>
         </TabsContent>
 
@@ -152,7 +159,7 @@ export function IncidentSummaryView({ summary }: Props) {
                   <dl className="space-y-4">
                     <div>
                       <dt className="text-gray-500">Lead Investigator</dt>
-                      <dd className="mt-1">{summary.investigation.lead_investigator.full_name}</dd>
+                      {/* <dd className="mt-1">{summary.investigation.lead_investigator.full_name}</dd> */}
                     </div>
                     <div>
                       <dt className="text-gray-500">Root Cause</dt>
@@ -190,7 +197,7 @@ export function IncidentSummaryView({ summary }: Props) {
                   <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <dt className="text-gray-500">Assigned To</dt>
-                      <dd>{action.assigned_to.full_name}</dd>
+                      {/* <dd>{action.assigned_to.full_name}</dd> */}
                     </div>
                     <div>
                       <dt className="text-gray-500">Due Date</dt>

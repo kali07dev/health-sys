@@ -43,7 +43,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
       // Sign out from NextAuth
       await signOut({ 
         redirect: false,
-        callbackUrl: '/login'
+        callbackUrl: '/auth/login'
       });
 
       toast({
@@ -51,7 +51,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
         description: "You have been safely logged out of your account.",
       });
 
-      router.push('/login');
+      router.push('/auth/login');
     } catch (error) {
       console.error('Logout error:', error);
       toast({

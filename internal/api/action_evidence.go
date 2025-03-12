@@ -16,7 +16,7 @@ import (
 )
 func (h *CorrectiveActionHandler) VerifyCompletion(c *fiber.Ctx) error {
 	// Parse action ID from request params
-	actionIDStr := c.Params("actionID")
+	actionIDStr := c.Params("id")
 	if actionIDStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "action ID is required"})
 	}
@@ -102,6 +102,13 @@ func (h *CorrectiveActionHandler) GetActionEvidenceByID(c *fiber.Ctx) error {
 }
 
 func (h *CorrectiveActionHandler) CreateActionEvidenceWithAttachments(c *fiber.Ctx) error {
+
+	actionID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid action ID format",
+		})
+	}
 	// Parse evidence data from form
 	evidenceDataStr := c.FormValue("evidenceData")
 	if evidenceDataStr == "" {
@@ -153,16 +160,22 @@ func (h *CorrectiveActionHandler) CreateActionEvidenceWithAttachments(c *fiber.C
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format", "userID": userID})
 	}
 
-	uuidUserID, err := uuid.Parse(userIDStr)
+	userIDSesh, err := uuid.Parse(userIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format", "userID": userID})
 	}
+	emp, err:= h.CorrectiveActionservice.GetEmployeeByUserID(userIDSesh)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot find associated employeeID"})
+	}
+	uuidUserID := emp.ID
 
 	// Parse ActionID from request
-	actionID, err := uuid.Parse(req.ActionID)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid action ID format"})
-	}
+
+	// actionID, err := uuid.Parse(req.ActionID)
+	// if err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid action ID format"})
+	// }
 
 	// Save files and create evidence records
 	for _, file := range uploadedFiles {

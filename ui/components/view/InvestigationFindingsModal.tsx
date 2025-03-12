@@ -15,6 +15,7 @@ interface InvestigationFindingsModalProps {
 type FindingsFormData = {
   rootCause: string;
   contributingFactors: string[];
+  investigationMethods: string[];
   findings: string;
   recommendations: string;
 };
@@ -27,6 +28,7 @@ export const InvestigationFindingsModal = ({
   const [formData, setFormData] = useState<FindingsFormData>({
     rootCause: '',
     contributingFactors: [''],
+    investigationMethods: [''],
     findings: '',
     recommendations: '',
   });
@@ -37,24 +39,24 @@ export const InvestigationFindingsModal = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleFactorChange = (index: number, value: string) => {
-    const newFactors = [...formData.contributingFactors];
+  const handleFactorChange = (index: number, value: string, field: 'contributingFactors' | 'investigationMethods') => {
+    const newFactors = [...formData[field]];
     newFactors[index] = value;
-    setFormData(prev => ({ ...prev, contributingFactors: newFactors }));
+    setFormData(prev => ({ ...prev, [field]: newFactors }));
   };
   
-  const addFactor = () => {
+  const addFactor = (field: 'contributingFactors' | 'investigationMethods') => {
     setFormData(prev => ({
       ...prev,
-      contributingFactors: [...prev.contributingFactors, '']
+      [field]: [...prev[field], '']
     }));
   };
   
-  const removeFactor = (index: number) => {
-    if (formData.contributingFactors.length > 1) {
-      const newFactors = [...formData.contributingFactors];
+  const removeFactor = (index: number, field: 'contributingFactors' | 'investigationMethods') => {
+    if (formData[field].length > 1) {
+      const newFactors = [...formData[field]];
       newFactors.splice(index, 1);
-      setFormData(prev => ({ ...prev, contributingFactors: newFactors }));
+      setFormData(prev => ({ ...prev, [field]: newFactors }));
     }
   };
   
@@ -63,11 +65,13 @@ export const InvestigationFindingsModal = ({
     setLoading(true);
     
     const filteredFactors = formData.contributingFactors.filter(factor => factor.trim() !== '');
+    const filteredMethods = formData.investigationMethods.filter(method => method.trim() !== '');
     
     try {
       await InvestigationAPI.addFindings(investigationId, {
         ...formData,
-        contributingFactors: filteredFactors
+        contributingFactors: filteredFactors,
+        investigationMethods: filteredMethods,
       });
       onSubmit();
       onClose();
@@ -110,7 +114,7 @@ export const InvestigationFindingsModal = ({
               <label className="block text-sm font-medium text-gray-700">Contributing Factors</label>
               <button
                 type="button"
-                onClick={addFactor}
+                onClick={() => addFactor('contributingFactors')}
                 className="flex items-center text-sm text-red-500 hover:text-red-600"
               >
                 <PlusIcon className="h-4 w-4 mr-1" />
@@ -122,7 +126,7 @@ export const InvestigationFindingsModal = ({
               <div key={index} className="flex items-center mb-2 last:mb-0">
                 <textarea
                   value={factor}
-                  onChange={(e) => handleFactorChange(index, e.target.value)}
+                  onChange={(e) => handleFactorChange(index, e.target.value, 'contributingFactors')}
                   rows={2}
                   className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
                   placeholder={`Factor ${index + 1}`}
@@ -130,13 +134,48 @@ export const InvestigationFindingsModal = ({
                 {formData.contributingFactors.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => removeFactor(index)}
+                    onClick={() => removeFactor(index, 'contributingFactors')}
                     className="ml-2 p-1 text-gray-400 hover:text-red-500"
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
                 )}
-                              </div>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-700">Investigation Methods</label>
+              <button
+                type="button"
+                onClick={() => addFactor('investigationMethods')}
+                className="flex items-center text-sm text-red-500 hover:text-red-600"
+              >
+                <PlusIcon className="h-4 w-4 mr-1" />
+                Add Method
+              </button>
+            </div>
+            
+            {formData.investigationMethods.map((method, index) => (
+              <div key={index} className="flex items-center mb-2 last:mb-0">
+                <textarea
+                  value={method}
+                  onChange={(e) => handleFactorChange(index, e.target.value, 'investigationMethods')}
+                  rows={2}
+                  className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  placeholder={`Method ${index + 1}`}
+                />
+                {formData.investigationMethods.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeFactor(index, 'investigationMethods')}
+                    className="ml-2 p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
 

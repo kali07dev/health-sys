@@ -21,25 +21,69 @@ func NewCorrectiveActionService(db *gorm.DB) *CorrectiveActionService {
 	return &CorrectiveActionService{db: db}
 }
 
-func (s *CorrectiveActionService) GetByEmployeeID(employeeID uuid.UUID) ([]models.CorrectiveAction, error) {
-	var actions []models.CorrectiveAction
-	err := s.db.Preload("Incident").
+// Get corrective action by ID with evidence attachments
+func (s *CorrectiveActionService) GetByID(ctx context.Context, id uuid.UUID) (*schema.CorrectiveActionResponse, error) {
+	var action models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
 		Preload("Assignee").
 		Preload("Assigner").
 		Preload("Verifier").
-		Where("assigned_to = ?", employeeID).
-		Find(&actions).Error
+		First(&action, "id = ?", id).Error
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to get corrective actions by employee ID: %w", err)
+		return nil, fmt.Errorf("record not found: %w", err)
 	}
-	return actions, nil
+
+	// Convert to response
+	response := schema.ToCActionResponse(&action)
+
+	// Fetch evidence attachments
+	evidence, err := s.GetActionEvidenceByCorrectiveActionID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch evidence: %w", err)
+	}
+
+	// Add evidence to response
+	evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+	for i, ev := range evidence {
+		evidenceResponses[i] = schema.ToActionEvidenceResponse(&ev)
+	}
+	response.Evidence = evidenceResponses
+
+	return &response, nil
 }
-func (s *CorrectiveActionService) GetByIncidentID(incidentID uuid.UUID) ([]models.CorrectiveAction, error) {
+
+// Enhancement for GetByIncidentID to include evidence
+func (s *CorrectiveActionService) GetByIncidentID(ctx context.Context, incidentID uuid.UUID) ([]schema.CorrectiveActionResponse, error) {
 	var actions []models.CorrectiveAction
-	if err := s.db.Where("incident_id = ?", incidentID).Find(&actions).Error; err != nil {
-		return nil, err
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		Where("incident_id = ?", incidentID).
+		Find(&actions).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get corrective actions by incident ID: %w", err)
 	}
-	return actions, nil
+
+	// Convert to response format
+	responses := make([]schema.CorrectiveActionResponse, len(actions))
+	for i, action := range actions {
+		responses[i] = schema.ToCActionResponse(&action)
+
+		// Fetch evidence for each action
+		evidence, _ := s.GetActionEvidenceByCorrectiveActionID(action.ID)
+		evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+		for j, ev := range evidence {
+			evidenceResponses[j] = schema.ToActionEvidenceResponse(&ev)
+		}
+		responses[i].Evidence = evidenceResponses
+	}
+
+	return responses, nil
 }
 func (r *CorrectiveActionService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employee, error) {
 	var employee models.Employee
@@ -101,7 +145,7 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 	// Handle optional fields
 	if req.CompletedAt != "" {
 		if completedAt, err := time.Parse(time.RFC3339, req.CompletedAt); err == nil {
-			correctiveAction.CompletedAt = completedAt
+			correctiveAction.CompletedAt = &completedAt
 		}
 	}
 
@@ -117,7 +161,7 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 
 	if req.VerifiedAt != "" {
 		if verifiedAt, err := time.Parse(time.RFC3339, req.VerifiedAt); err == nil {
-			correctiveAction.VerifiedAt = verifiedAt
+			correctiveAction.VerifiedAt = &verifiedAt
 		}
 	}
 
@@ -144,20 +188,36 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 	return correctiveAction, nil
 }
 
-// Get corrective action by ID
-func (s *CorrectiveActionService) GetByID(ctx context.Context, id uuid.UUID) (*models.CorrectiveAction, error) {
-	var action models.CorrectiveAction
+// Enhancement for GetByEmployeeID to include evidence
+func (s *CorrectiveActionService) GetByEmployeeID(ctx context.Context, employeeID uuid.UUID) ([]schema.CorrectiveActionResponse, error) {
+	var actions []models.CorrectiveAction
 	err := s.db.WithContext(ctx).
 		Preload("Incident").
 		Preload("Assignee").
 		Preload("Assigner").
 		Preload("Verifier").
-		First(&action, "id = ?", id).Error
+		Where("assigned_to = ?", employeeID).
+		Find(&actions).Error
 
 	if err != nil {
-		return nil, fmt.Errorf("record not found: %w", err)
+		return nil, fmt.Errorf("failed to get corrective actions by employee ID: %w", err)
 	}
-	return &action, nil
+
+	// Convert to response format
+	responses := make([]schema.CorrectiveActionResponse, len(actions))
+	for i, action := range actions {
+		responses[i] = schema.ToCActionResponse(&action)
+
+		// Fetch evidence for each action
+		evidence, _ := s.GetActionEvidenceByCorrectiveActionID(action.ID)
+		evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+		for j, ev := range evidence {
+			evidenceResponses[j] = schema.ToActionEvidenceResponse(&ev)
+		}
+		responses[i].Evidence = evidenceResponses
+	}
+
+	return responses, nil
 }
 
 // Update existing corrective action
@@ -216,7 +276,7 @@ func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req 
 	// Handle completion fields
 	if req.CompletedAt != "" {
 		if completedAt, err := time.Parse(time.RFC3339, req.CompletedAt); err == nil {
-			action.CompletedAt = completedAt
+			action.CompletedAt = &completedAt
 		}
 	}
 
@@ -231,7 +291,7 @@ func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req 
 
 	if req.VerifiedAt != "" {
 		if verifiedAt, err := time.Parse(time.RFC3339, req.VerifiedAt); err == nil {
-			action.VerifiedAt = verifiedAt
+			action.VerifiedAt = &verifiedAt
 		}
 	}
 
@@ -295,6 +355,21 @@ func (s *CorrectiveActionService) GetActionEvidenceByCorrectiveActionID(correcti
 	return evidences, nil
 }
 
+// Get corrective action by ID
+func (s *CorrectiveActionService) InuseGetByID(ctx context.Context, id uuid.UUID) (*models.CorrectiveAction, error) {
+	var action models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		First(&action, "id = ?", id).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("record not found: %w", err)
+	}
+	return &action, nil
+}
 func (s *CorrectiveActionService) VerifyCompletion(ctx context.Context, actionID uuid.UUID, verifierID uuid.UUID) error {
 	// Begin a transaction
 	tx := s.db.Begin()
@@ -305,16 +380,17 @@ func (s *CorrectiveActionService) VerifyCompletion(ctx context.Context, actionID
 	}()
 
 	// Fetch the corrective action by ID
-	action, err := s.GetByID(ctx, actionID)
+	action, err := s.InuseGetByID(ctx, actionID)
 	if err != nil {
 		tx.Rollback() // Rollback in case of an error
 		return err
 	}
 
+	now := time.Now()
 	// Update the corrective action status
 	action.Status = "verified"
 	action.VerifiedBy = &verifierID
-	action.VerifiedAt = time.Now()
+	action.VerifiedAt = &now
 
 	if err := tx.Save(action).Error; err != nil {
 		tx.Rollback() // Rollback in case of an error
@@ -340,6 +416,32 @@ func (s *CorrectiveActionService) VerifyCompletion(ctx context.Context, actionID
 	// Commit the transaction if everything is successful
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *CorrectiveActionService) LabelAsCompleted(id uuid.UUID, notes string) error {
+	// Fetch the investigation
+	var action models.CorrectiveAction
+	if err := s.db.First(&action, "id = ?", id).Error; err != nil {
+		return fmt.Errorf("action not found: %w", err)
+	}
+
+	// Check if the investigation is already closed
+	if action.Status == "completed" {
+		return fmt.Errorf("action is already closed")
+	}
+
+	// Update the action status and set the completion time
+	now := time.Now()
+	action.Status = "completed"
+	action.CompletedAt = &now
+	action.CompletionNotes = notes
+
+	// Save the updated action
+	if err := s.db.Save(&action).Error; err != nil {
+		return fmt.Errorf("failed to close action: %w", err)
 	}
 
 	return nil

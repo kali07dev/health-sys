@@ -5,6 +5,7 @@ import { signUp } from '../../utils/authApi';
 import Input from '../Input';
 import Button from '../Button';
 import LocationDropdown from '@/components/locationDropDown';
+import DepartmentDropdown from '@/components/DepartmentDropdown'; // Import the DepartmentDropdown component
 
 const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
@@ -44,11 +45,9 @@ const SignUpForm: React.FC = () => {
         role: 'employee', // Ensure role is always "employee"
       };
 
-      // Remove unnecessary fields before sending to backend
-      // delete formattedData.ConfirmPassword;
-
+      // Call the sign-up API
       const res = await signUp(formattedData);
-      router.push('/');
+      router.push('/auth/login'); // Redirect to home page after successful sign-up
     } catch (err: any) {
       setError(err.message || 'Sign-up failed. Please try again.');
     } finally {
@@ -95,16 +94,18 @@ const SignUpForm: React.FC = () => {
       />
 
       {/* Department */}
-      <Input
-        label="Department"
-        id="department"
-        type="text"
-        value={userData.department}
-        onChange={(e) =>
-          setUserData({ ...userData, department: e.target.value })
-        }
-        required
-      />
+      <div className="space-y-2">
+        <label htmlFor="department" className="block text-sm font-medium text-gray-700">
+          Department
+        </label>
+        <DepartmentDropdown
+          value={userData.department}
+          onChange={(value) =>
+            setUserData({ ...userData, department: value })
+          }
+          placeholder="Select Department"
+        />
+      </div>
 
       {/* Position */}
       <Input

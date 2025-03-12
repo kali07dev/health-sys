@@ -8,6 +8,10 @@ import (
 	"github.com/hopkali04/health-sys/internal/models"
 )
 
+type CompletionNoted struct {
+	Notes string `json:"completionNotes"`
+}
+
 type CorrectiveActionRequest struct {
 	IncidentID           string `json:"incident_id" validate:"required,uuid4"`
 	CompletedBy          string
@@ -34,11 +38,11 @@ type UpdateCorrectiveActionRequest struct {
 	AssignedTo           string `json:"assigned_to"`
 	AssignedBy           string `json:"assigned_by"`
 	DueDate              string `json:"due_date" `
-	CompletedAt          string `json:"completed_at"`
-	CompletionNotes      string `json:"completion_notes" validate:"omitempty"`
+	CompletedAt          string `json:"completedAt"`
+	CompletionNotes      string `json:"completionNotes" validate:"omitempty"`
 	VerificationRequired bool   `json:"verification_required"`
-	VerifiedBy           string `json:"verified_by" validate:"omitempty,uuid4"`
-	VerifiedAt           string `json:"verified_at"`
+	VerifiedBy           string `json:"verifiedby" validate:"omitempty,uuid4"`
+	VerifiedAt           string `json:"verifiedat"`
 }
 
 // Enhanced ActionEvidenceResponse struct to include in the response
@@ -72,7 +76,7 @@ type CorrectiveActionResponse struct {
 	DueDate              string                   `json:"dueDate"`
 	DaysRemaining        int                      `json:"daysRemaining,omitempty"`
 	IsOverdue            bool                     `json:"isOverdue"`
-	CompletedAt          *string                  `json:"completedAt"`
+	CompletedAt          *time.Time               `json:"completedAt"`
 	CompletionNotes      *string                  `json:"completionNotes,omitempty"`
 	VerificationRequired bool                     `json:"verificationRequired"`
 	VerifiedBy           *string                  `json:"verifiedBy,omitempty"`
@@ -108,10 +112,10 @@ func ToActionEvidenceResponse(evidence *models.ActionEvidence) ActionEvidenceRes
 func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
 	// Convert time fields to ISO 8601 formatted strings
 	dueDate := ca.DueDate.Format(time.RFC3339)
-	var completedAt, verifiedAt *string
+	var _, verifiedAt *string
 	if !ca.CompletedAt.IsZero() {
-		completedAtStr := ca.CompletedAt.Format(time.RFC3339)
-		completedAt = &completedAtStr
+		// completedAtStr := ca.CompletedAt.Format(time.RFC3339)
+		// completedAt = &completedAtStr
 	}
 	if !ca.VerifiedAt.IsZero() {
 		verifiedAtStr := ca.VerifiedAt.Format(time.RFC3339)
@@ -168,7 +172,7 @@ func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
 		DueDate:              dueDate,
 		DaysRemaining:        daysRemaining,
 		IsOverdue:            isOverdue,
-		CompletedAt:          completedAt,
+		CompletedAt:          ca.CompletedAt,
 		CompletionNotes:      &ca.CompletionNotes,
 		VerificationRequired: ca.VerificationRequired,
 		VerifiedBy:           &verifiedBy,

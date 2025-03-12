@@ -36,6 +36,25 @@ export const userService = {
       body: JSON.stringify({ role }),
     });
   },
+  async updateUser(userId: string, userData: { 
+    email: string, 
+    firstName: string, 
+    lastName: string, 
+    department: string, 
+    position: string, 
+    contactNumber: string 
+  }) {
+    return fetchWithAuth(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  },
+  async updateUserStatus(userId: string, status: boolean) {
+    return fetchWithAuth(`/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
 
   async getUserProfile() {
     return fetchWithAuth('/users/profile');
@@ -53,7 +72,7 @@ export const userService = {
       body: JSON.stringify(data),
     });
   },
-  async bulkcreateUserWithEmployee(data: Partial<userRows>) {
+  async bulkcreateUserWithEmployee(data: any) {
     return fetchWithAuth('/auth/signup/employees/bulk', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -79,25 +98,38 @@ export interface EmployeeUpdateData {
     phone: string;
   };
 }
-export interface  userRows {
+export interface UserRow {
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName: string;  // Note: backend uses firstname (lowercase 'n')
+  lastName: string;   // Note: backend uses lastname (lowercase 'n')
   department: string;
   position: string;
   contactNumber: string;
+  // Additional required fields
+  password: string;
+  confirmPassword: string;
+  employeeNumber: string;
+  role: 'admin' | 'safety_officer' | 'manager' | 'employee';
+  startDate: Date;
+  officeLocation: string;
+  // Optional fields
+  reportingManagerId?: string;
+  endDate?: Date;
+  isSafetyOfficer?: boolean;
+  emergencyContact?: string;
 }
 
 export interface User {
   id: string;
   email: string;
   role: string;
+  IsActive: boolean;
   employee?: {
-    firstName: string;
-    lastName: string;
-    department: string;
-    position: string;
-    contactNumber: string;
+    FirstName: string;
+    LastName: string;
+    Department: string;
+    Position: string;
+    ContactNumber: string;
     officeLocation: string;
     emergencyContact: {
       name: string;

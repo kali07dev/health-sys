@@ -244,11 +244,11 @@ func (app *UserHandler) RegisterUserWithEmployeeAcc(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// if err := app.userService.CreateUserWithEmployee(&user); err != nil {
-	//     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-	//         "error": err.Error(),
-	//     })
-	// }
+	if err := app.userService.CreateUserWithEmployee(&user); err != nil {
+	    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	        "error": err.Error(),
+	    })
+	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User Created Successfully!",
@@ -367,9 +367,11 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 	}
 
 	user, err = app.userService.Login(&RequestData)
+	log.Println(err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
+			"ddetails": err.Error(),
 		})
 	}
 
@@ -501,4 +503,108 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 		})
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// UpdateUserRole updates a user's role
+func (h *UserHandler) UpdateUserRole(c *fiber.Ctx) error {
+	// Get user ID from URL parameter
+	userIDStr := c.Params("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Parse request body
+	var req schema.UpdateUserRoleRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body: " + err.Error(),
+		})
+	}
+
+	// Call service method
+	err = h.userService.UpdateUserRole(userID, req.Role)
+	if err != nil {
+		statusCode := fiber.StatusInternalServerError
+		if err.Error() == "invalid role: "+req.Role || err.Error() == "employee not found for user ID: "+userID.String() {
+			statusCode = fiber.StatusBadRequest
+		}
+		return c.Status(statusCode).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User role updated successfully",
+	})
+}
+
+// UpdateUser updates user and employee information
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
+	// Get user ID from URL parameter
+	userIDStr := c.Params("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Parse request body
+	var req schema.UserUpdateData
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body: " + err.Error(),
+		})
+	}
+
+	// Call service method
+	err = h.userService.UpdateUser(userID, req)
+	if err != nil {
+		statusCode := fiber.StatusInternalServerError
+		if err.Error() == "employee not found for user ID: "+userID.String() {
+			statusCode = fiber.StatusBadRequest
+		}
+		return c.Status(statusCode).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User information updated successfully",
+	})
+}
+
+// UpdateUserStatus updates a user's active status
+func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
+	// Get user ID from URL parameter
+	userIDStr := c.Params("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Parse request body
+	var req schema.UpdateUserStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body: " + err.Error(),
+		})
+	}
+
+	// Call service method
+	err = h.userService.UpdateUserStatus(userID, req.IsActive)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User status updated successfully",
+	})
 }

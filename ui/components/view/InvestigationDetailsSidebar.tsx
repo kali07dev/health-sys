@@ -5,7 +5,9 @@ import {
   DocumentTextIcon, 
   UserCircleIcon, 
   CheckCircleIcon,
-  LockClosedIcon 
+  LockClosedIcon,
+  MapPinIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { InvestigationAPI } from '@/utils/investigationAPI';
@@ -16,7 +18,7 @@ interface InvestigationDetailsSidebarProps {
   onClose: () => void;
   onScheduleInterview: () => void;
   onAddFindings: () => void;
-  onInvestigationClosed: () => void; // New prop for handling investigation closure
+  onInvestigationClosed: () => void;
 }
 
 export const InvestigationDetailsSidebar = ({ 
@@ -38,12 +40,39 @@ export const InvestigationDetailsSidebar = ({
     try {
       await InvestigationAPI.closeInvestigation(investigation.id);
       onInvestigationClosed();
-      router.refresh(); // Refresh the page to reflect the updated status
+      router.refresh();
     } catch (error) {
       console.error('Error closing investigation:', error);
     } finally {
       setIsClosing(false);
     }
+  };
+
+  const getSeverityColor = (severity: string | undefined) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical':
+        return 'text-red-600 bg-red-50';
+      case 'high':
+        return 'text-orange-600 bg-orange-50';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'low':
+        return 'text-green-600 bg-green-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -72,13 +101,25 @@ export const InvestigationDetailsSidebar = ({
             
             <div className="flex items-center text-sm text-gray-500">
               <ClockIcon className="h-4 w-4 mr-1" />
-              <span>{new Date(investigation.startedAt).toLocaleDateString()}</span>
+              <span>{formatDate(investigation.startedAt)}</span>
             </div>
           </div>
           
-          <h3 className="text-lg font-bold text-gray-900 mb-2">
-            Incident Name: :{investigation.incident?.Title || 'Investigation'}
-          </h3>
+          <div className="mb-6 flex flex-col space-y-2">
+            <h3 className="text-lg font-bold text-gray-900">
+              Incident: {investigation.incident?.Title || 'Untitled Incident'}
+            </h3>
+            
+            <div className="flex items-center text-sm text-gray-600">
+              <MapPinIcon className="h-4 w-4 mr-2 text-gray-500" />
+              <span>{investigation.incident?.Location || 'Location Not Specified'}</span>
+            </div>
+            
+            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSeverityColor(investigation.incident?.SeverityLevel)}`}>
+              <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
+              {investigation.incident?.SeverityLevel || 'Unknown Severity'}
+            </div>
+          </div>
           
           <div className="mb-6">
             <div className="flex items-center mb-2">
@@ -86,19 +127,11 @@ export const InvestigationDetailsSidebar = ({
               <span className="text-sm font-medium text-gray-900">Lead Investigator</span>
             </div>
             <p className="text-sm text-gray-600 ml-7">
-              {investigation.leadInvestigatorName ||  'Unassigned'}
+              {investigation.leadInvestigatorName || 'Unassigned'}
             </p>
           </div>
           
           <div className="mb-6">
-            <div className="flex items-center mb-2">
-              <DocumentTextIcon className="h-5 w-5 text-gray-500 mr-2" />
-              <span className="text-sm font-medium text-gray-900">Description</span>
-            </div>
-            <p className="text-sm text-gray-600 ml-7">
-              {investigation.rootCause || investigation.incident?.Description || 'No description available.'}
-            </p>
-
             <div className="flex items-center mb-2">
               <DocumentTextIcon className="h-5 w-5 text-gray-500 mr-2" />
               <span className="text-sm font-medium text-gray-900">Incident Description</span>
@@ -115,23 +148,6 @@ export const InvestigationDetailsSidebar = ({
                 <span className="text-sm font-medium text-gray-900">Root Cause</span>
               </div>
               <p className="text-sm text-gray-600 ml-7">{investigation.rootCause}</p>
-            </div>
-          )}
-          
-          {investigation.contributingFactors && (
-            <div className="mb-6">
-              <div className="flex items-center mb-2">
-                <CheckCircleIcon className="h-5 w-5 text-gray-500 mr-2" />
-                <span className="text-sm font-medium text-gray-900">Contributing Factors</span>
-              </div>
-              <ul className="list-disc list-inside text-sm text-gray-600 ml-7">
-                {Array.isArray(investigation.contributingFactors) ? 
-                  investigation.contributingFactors.map((factor, index) => (
-                    <li key={index}>{factor}</li>
-                  )) : 
-                  <li>No contributing factors available</li>
-                }
-              </ul>
             </div>
           )}
           
@@ -154,6 +170,20 @@ export const InvestigationDetailsSidebar = ({
               <p className="text-sm text-gray-600 ml-7">{investigation.recommendations}</p>
             </div>
           )}
+          
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-gray-500">
+              <div>
+                <span className="font-medium">Started:</span> {formatDate(investigation.startedAt)}
+              </div>
+              <div>
+                <span className="font-medium">Duration:</span> {investigation.durationDays || 0} days
+              </div>
+            </div>
+            <div className="text-sm text-gray-500 mt-2">
+              <span className="font-medium">Last Updated:</span> {formatDate(investigation.updatedAt)}
+            </div>
+          </div>
           
           <div className="border-t border-gray-200 pt-6 space-y-4">
             {investigation.status !== 'completed' && (

@@ -96,8 +96,10 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
       body: formDataToSend,
       headers: {
         'Authorization': `Bearer ${session.token}`,
+        // Remove explicit Content-Type to let browser set it with boundary
       }
     })
+    console.log(response)
 
     if (response.status === 401) {
       throw new IncidentApiError(
@@ -133,5 +135,67 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
       'NETWORK_ERROR',
       error
     )
+  }
+}
+
+export async function submitIncidentWithoutAttachments(formData: IncidentFormData) {
+  try {
+    // Get current session
+    const session = await getSession();
+    if (!session?.token) {
+      throw new IncidentApiError(
+        'Authentication required',
+        'AUTH_REQUIRED'
+      );
+    }
+
+    // Validate incident data
+    const validatedData = incidentSchema.parse(formData);
+
+    // Submit to backend with auth header
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    const response = await fetch(`${apiBaseUrl}/api/v1/incidents`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.token}`,
+        'Content-Type': 'application/json', // Explicitly set for JSON payload
+      },
+      body: JSON.stringify(validatedData), // Send as JSON
+    });
+
+    if (response.status === 401) {
+      throw new IncidentApiError(
+        'Authentication expired',
+        'AUTH_EXPIRED'
+      );
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new IncidentApiError(
+        errorData.message || 'Failed to submit incident',
+        errorData.code || 'UNKNOWN_ERROR',
+        errorData.details
+      );
+    }
+
+    return await response.json();
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new IncidentApiError(
+        'Validation error',
+        'VALIDATION_ERROR',
+        error.errors
+      );
+    }
+    if (error instanceof IncidentApiError) {
+      throw error;
+    }
+    throw new IncidentApiError(
+      'Failed to submit incident',
+      'NETWORK_ERROR',
+      error
+    );
   }
 }

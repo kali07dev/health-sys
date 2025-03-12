@@ -77,23 +77,22 @@ export default function NotificationItem({
               {format(new Date(notification.createdAt), 'MMM d, h:mm a')}
             </span>
           </div>
-          
-          <p className="mt-1 text-sm text-gray-600 truncate">
-            {notification.message}
-          </p>
-          
+          <p className="mt-1 text-sm text-gray-600 line-clamp-2">{notification.message}</p>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs text-gray-500 capitalize">
+            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">
               {notification.type}
             </span>
-            
-            {!isRead && (
+            {!isRead ? (
               <button
                 onClick={handleMarkAsRead}
                 className="text-xs font-medium text-red-600 hover:text-red-700 focus:outline-none"
               >
                 Mark as read
               </button>
+            ): (
+              <p className="text-center text-sm text-gray-500">
+                Read on {notification.readAt && format(new Date(notification.readAt), 'MMM d, h:mm a')}
+              </p>
             )}
           </div>
         </div>

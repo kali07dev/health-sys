@@ -1,82 +1,54 @@
-"use client"
+// app/notifications/page.tsx
+import { Suspense } from 'react';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import NotificationsContainer from '@/components/notifications/NotificationsContainer';
+import NotificationsSkeletonLoader from '@/components/NotificationsSkeletonLoader';
+import InfoPanel from "@/components/ui/InfoPanel";
+import { Bell, Check } from "lucide-react";
+import {Button} from '@/components/ui/button';
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+export default async function NotificationsPage() {
+  const session = await getServerSession(authOptions);
 
-interface User {
-  id: string
-  email: string
-  role: string
-  // add other user fields as needed
-}
-
-export default function UsersPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [users, setUsers] = useState<User[]>([])
-  const [error, setError] = useState<string>("")
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login")
-      return
-    }
-
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/user", {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        })
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            router.push("/login")
-            return
-          }
-          throw new Error(`Error: ${response.status}`)
-        }
-
-        const data = await response.json()
-        setUsers(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch users")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (session?.token) {
-      fetchUsers()
-    }
-  }, [session, router, status])
-
-  if (loading) {
-    return <div className="p-4">Loading...</div>
+  // Check if user is authenticated
+  if (!session) {
+    redirect('/auth/login');
   }
 
-  if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>
-  }
+  // Get user role and ID from session
+  const userRole = session.role;
+  const userId = session.user?.id;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Users</h1>
-      
-      <div className="grid gap-4">
-        {users.map((user) => (
-          <div 
-            key={user.id} 
-            className="p-4 border rounded shadow"
+    <div className="flex flex-col w-full min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Notifications</h1>
+        <InfoPanel 
+            title="System Alerts & Reminders"
+            icon={<Bell className="h-5 w-5 text-blue-600" />}
           >
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
-          </div>
-        ))}
+            <p>
+              Your notifications include: <strong>investigation reminders</strong>, 
+              <strong> action deadlines</strong>, and <strong>system updates</strong>. 
+              Critical alerts are marked with a red badge. Check regularly to stay compliant.
+            </p>
+            <div className="flex gap-4 mt-3">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+              >
+                <Check className="h-4 w-4 mr-1" />
+                Dismiss All
+              </Button>
+            </div>
+        </InfoPanel>
+        <Suspense fallback={<NotificationsSkeletonLoader />}>
+          <NotificationsContainer userId={userId} userRole={userRole} />
+        </Suspense>
       </div>
     </div>
-  )
+  );
 }

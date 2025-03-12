@@ -1,6 +1,6 @@
 // components/CorrectiveActions/ViewActionPanel.tsx
 import React, { useState } from 'react';
-import { X, AlertCircle, Calendar, User, FileText, CheckCircle, Edit, Check, XCircle } from 'lucide-react';
+import { X, Calendar, User, FileText, CheckCircle, Edit, Check } from 'lucide-react';
 import { CorrectiveAction } from '@/interfaces/incidents';
 import { incidentAPI } from '@/utils/api';
 import { toast } from 'react-hot-toast';
@@ -9,6 +9,7 @@ interface ViewActionPanelProps {
   action: CorrectiveAction;
   onClose: () => void;
   userRole: string;
+  userID: string;
   refreshActions: () => void;
 }
 
@@ -16,6 +17,7 @@ export const ViewActionPanel: React.FC<ViewActionPanelProps> = ({
   action, 
   onClose, 
   userRole,
+  userID,
   refreshActions 
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -79,12 +81,12 @@ export const ViewActionPanel: React.FC<ViewActionPanelProps> = ({
       await incidentAPI.updateCorrectiveAction(action.id, {
         ...action,
         status: 'verified',
-        verifiedBy: 'currentUser', // This should be replaced with actual user ID
+        verifiedBy: userID, 
         verifiedAt: new Date().toISOString(),
       });
       
       if (closeIncident) {
-        await incidentAPI.updateIncident(action.incidentId, { status: 'closed' });
+        incidentAPI.closeIncident(action.incidentId);
         toast.success("Action verified and incident closed");
       } else {
         toast.success("Action verified and completed");

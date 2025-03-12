@@ -26,6 +26,7 @@ interface ActionDetailsSidebarProps {
   onClose: () => void;
   onActionUpdated: () => void;
   userId: string;
+  userRole: string;
 }
 
 export default function ActionDetailsSidebar({ 
@@ -33,14 +34,18 @@ export default function ActionDetailsSidebar({
   isOpen, 
   onClose, 
   onActionUpdated,
-  userId
+  // userId,
+  userRole
 }: ActionDetailsSidebarProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
-  
+
+  const BE_URL = process.env.Go_API_URL || "http://localhost:8000"
+
   const canAddEvidence = action.status !== 'completed' && action.status !== 'verified';
+  const isAdminOrSafetyOfficer = userRole === 'admin' || userRole === 'safety_officer';
 
   // Get status icon and color
   const getStatusDetails = (status: string) => {
@@ -158,10 +163,34 @@ export default function ActionDetailsSidebar({
         
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Description */}
+          {/* Incident Title */}
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
-            <p className="text-base text-gray-900">{action.description}</p>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Incident Title</h3>
+            <p className="text-base text-gray-900">{action.incidentTitle}</p>
+          </div>
+
+          {/* Assigned By and Assigned To */}
+          <div className="flex">
+            <div className="w-1/2">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Assigned By</h3>
+              <p className="text-base text-gray-900">{action.assignerName}</p>
+            </div>
+            <div className="w-1/2">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Assigned To</h3>
+              <p className="text-base text-gray-900">{action.assigneeName}</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="flex">
+            <div className="w-1/2">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Location</h3>
+              <p className="text-base text-gray-900">{action.incidentLocation}</p>
+            </div>
+            <div className="w-1/2">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
+              <p className="text-base text-gray-900">{action.description}</p>
+            </div>
           </div>
           
           {/* Due date */}
@@ -218,11 +247,60 @@ export default function ActionDetailsSidebar({
             
             {evidenceExpanded && (
               <div className="p-4 border-t">
-                {/* Evidence list would go here */}
-                <div className="text-center text-gray-500 py-4">
-                  <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p>No evidence uploaded yet</p>
-                </div>
+                {action.evidence && action.evidence.length > 0 ? (
+                  <div className="space-y-4">
+                    {action.evidence.map((evidence) => (
+                      <div key={evidence.id} className="flex flex-col space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{evidence.fileName}</p>
+                            <p className="text-xs text-gray-500">Uploaded by {evidence.uploaderName}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(evidence.uploadedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        {/* File Preview */}
+                        <div className="mt-2">
+                          {/* Check file extension instead of fileType */}
+                          {evidence.fileName.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
+                            <div className="w-full h-auto rounded-lg border border-gray-200 overflow-hidden">
+                              <img
+                                src={`${BE_URL}/${evidence.fileURL}`}
+                                alt={evidence.fileName}
+                                className="w-full h-auto object-cover max-h-48"
+                              />
+                            </div>
+                          ) : (
+                            <a
+                              href={evidence.fileURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              Preview File
+                            </a>
+                          )}
+                          {evidence.description && (
+                            <p className="text-xs text-gray-600 mt-1">{evidence.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-4">
+                    <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                    <p>No evidence uploaded yet</p>
+                  </div>
+                )}
                 
                 {canAddEvidence && (
                   <button
@@ -359,6 +437,17 @@ export default function ActionDetailsSidebar({
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Evidence
+              </button>
+            )}
+
+            {/* Verification button for Admin or Safety Officer */}
+            {action.verificationRequired && isAdminOrSafetyOfficer && (
+              <button
+                onClick={() => handleSectionToggle('verification')}
+                className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Verify Action
               </button>
             )}
           </div>

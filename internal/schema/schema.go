@@ -52,6 +52,7 @@ func ToEmployeeWithUserResponse(u *models.Employee) NewUserResponse {
 	}
 
 	response.Employee = &EmployeeResponse{
+		ID: u.ID.String(),
 		FirstName:        u.FirstName,
 		LastName:         u.LastName,
 		Department:       u.Department,

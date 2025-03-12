@@ -42,11 +42,12 @@ type UpdateEvidenceDTO struct {
 
 // Corrective Action Evidence DTOs
 type CreateActionEvidenceDTO struct {
-	FileType    string    `json:"fileType" validate:"required,oneof=document photo video"`
-	FileName    string    `json:"fileName" validate:"required"`
-	FileURL     string    `json:"fileUrl" validate:"required"`
-	UploadedBy  uuid.UUID `json:"uploadedBy" validate:"required"`
-	Description string    `json:"description"`
+	FileType    string `json:"fileType" validate:"required,oneof=document photo video"`
+	FileName    string `json:"fileName" validate:"required"`
+	FileURL     string `json:"fileUrl" validate:"required"`
+	UploadedBy  string `json:"uploadedBy" validate:"required"`
+	ActionID    string `json:"actionID" `
+	Description string `json:"description"`
 }
 
 // Investigation Timeline Entry DTO

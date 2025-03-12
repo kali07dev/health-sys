@@ -2,9 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+// import { useSession } from 'next-auth/react';
 import { 
-  UserCog, 
+  // UserCog, 
   Loader2, 
   Edit2, 
   Shield, 
@@ -22,7 +22,7 @@ import { RoleModal } from '@/components/users/RoleModal';
 import { StatusModal } from '@/components/users/StatusModal';
 
 export default function UserManagement() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +42,7 @@ export default function UserManagement() {
       setUsers(data);
     } catch (error) {
       toast.error('Failed to load users');
+      toast.error(error);
     } finally {
       setLoading(false);
     }
@@ -49,8 +50,8 @@ export default function UserManagement() {
 
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.employee?.firstName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ?? false) || // Use nullish coalescing
-    (user.employee?.lastName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ?? false)
+    (user.employee?.FirstName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ?? false) || // Use nullish coalescing
+    (user.employee?.LastName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ?? false)
   );
 
   return (
@@ -120,12 +121,12 @@ export default function UserManagement() {
                   <div className="h-10 w-10 flex-shrink-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-600">
                       {/* Handle undefined employee */}
-                      {(user.employee?.firstName?.[0]?.toUpperCase() || user.email[0]?.toUpperCase()) || '-'}
+                      {(user.employee?.FirstName?.[0]?.toUpperCase() || user.email[0]?.toUpperCase()) || '-'}
                     </div>
                   </div>
                   <div className="ml-4">
                     <div className="font-medium text-gray-900">
-                      {user.employee?.firstName} {user.employee?.lastName || ''}
+                      {user.employee?.FirstName} {user.employee?.LastName || ''}
                     </div>
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
@@ -146,7 +147,7 @@ export default function UserManagement() {
                 </span>
               </td>
               <td className="px-6 py-4 text-sm text-gray-500">
-                {user.employee?.department || '-'} 
+                {user.employee?.Department || '-'} 
                 {/* Fallback for missing department */}
               </td>
               <td className="px-6 py-4 text-right">
@@ -156,27 +157,33 @@ export default function UserManagement() {
                       setSelectedUser(user);
                       setIsEditModalOpen(true);
                     }}
-                    className="inline-flex items-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                    title="Edit user details"
                   >
                     <Edit2 className="h-5 w-5" />
+                    <span className="text-xs font-medium">Edit</span>
                   </button>
                   <button
                     onClick={() => {
                       setSelectedUser(user);
                       setIsRoleModalOpen(true);
                     }}
-                    className="inline-flex items-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                    title="Change user role"
                   >
                     <Shield className="h-5 w-5" />
+                    <span className="text-xs font-medium">Role</span>
                   </button>
                   <button
                     onClick={() => {
                       setSelectedUser(user);
                       setIsStatusModalOpen(true);
                     }}
-                    className="inline-flex items-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                    title={user.IsActive ? "Deactivate user" : "Activate user"}
                   >
                     {user.IsActive ? <Ban className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+                    <span className="text-xs font-medium">{user.IsActive ? "Deactivate" : "Activate"}</span>
                   </button>
                 </div>
               </td>

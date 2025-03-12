@@ -13,7 +13,7 @@ export const VerifyAccount = () => {
     const token = searchParams.get('token');
     if (!token) {
       toast.error('Invalid verification link');
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
 
@@ -32,10 +32,10 @@ export const VerifyAccount = () => {
         }
 
         toast.success('Account verified successfully');
-        router.push('/login');
+        router.push('/auth/login');
       } catch (error: any) {
         toast.error(error.message || 'Failed to verify account');
-        router.push('/login');
+        router.push('/auth/login');
       } finally {
         setIsVerifying(false);
       }

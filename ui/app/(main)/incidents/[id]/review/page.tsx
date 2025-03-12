@@ -11,15 +11,15 @@ interface PageProps {
   }>;
 }
 
-async function getIncident(id: string): Promise<Incident> {
-  try {
-    const response = await incidentAPI.getIncident(id);
-    return response;
-  } catch (error) {
-    console.error('Failed to fetch incident:', error);
-    throw new Error('Failed to fetch incident');
-  }
-}
+// async function getIncident(id: string): Promise<Incident> {
+//   try {
+//     const response = await incidentAPI.getIncident(id);
+//     return response;
+//   } catch (error) {
+//     console.error('Failed to fetch incident:', error);
+//     throw new Error('Failed to fetch incident');
+//   }
+// }
 
 export default async function Page({ params }: PageProps) {
   // Await the params object
@@ -30,12 +30,12 @@ export default async function Page({ params }: PageProps) {
 
   // Redirect if not authenticated
   if (!session) {
-    redirect('/auth/signin');
+    redirect('/auth/login');
   }
 
   // Restrict access based on user role
   if (!['admin', 'safety_officer'].includes(session?.role ?? '')) {
-    console.log('Unauthorized access:', session?.role);
+    console.log('Unauthorized access:', session);
     // redirect('/dashboard'); // Uncomment to enable redirect
   }
 

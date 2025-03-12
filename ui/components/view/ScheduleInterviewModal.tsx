@@ -1,59 +1,54 @@
-// components/Investigations/ScheduleInterviewModal.tsx
 'use client';
+// components/Investigations/ScheduleInterviewModal.tsx
 
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { api } from '@/utils/api';
+import { InvestigationAPI } from '@/utils/investigationAPI';
+import { SearchEmployee } from '@/components/SearchEmployee';
+// import type { Employee } from '@/types/employee';
 
-export const ScheduleInterviewModal = ({ investigationId, onClose, onSchedule }) => {
-  const [formData, setFormData] = useState({
+interface ScheduleInterviewModalProps {
+  investigationId: string;
+  onClose: () => void;
+  onSchedule: () => void;
+}
+
+interface InterviewFormData {
+  intervieweeId: string;
+  scheduledFor: string;
+  location: string;
+}
+
+export const ScheduleInterviewModal = ({
+  investigationId,
+  onClose,
+  onSchedule,
+}: ScheduleInterviewModalProps) => {
+  const [formData, setFormData] = useState<InterviewFormData>({
     intervieweeId: '',
     scheduledFor: '',
     location: '',
   });
   const [loading, setLoading] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  
-  const handleInputChange = (e) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setSearchQuery(query);
-    setSearchLoading(true);
-    
-    try {
-      const response = await api.get(`/api/employees/search?query=${query}`);
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error('Error searching employees:', error);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-  
-  const handleSelectEmployee = (employee) => {
+
+  const handleSelectEmployee = (employee: any) => {
     setSelectedEmployee(employee);
     setFormData(prev => ({ ...prev, intervieweeId: employee.ID }));
-    setSearchResults([]);
-    setSearchQuery('');
   };
-  
-  const handleSubmit = async (e) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      await api.post(`/api/investigations/${investigationId}/interviews`, formData);
+      await InvestigationAPI.scheduleInterview(investigationId, formData);
+      // await api.post(`/api/investigations/${investigationId}/interviews`, formData);
       onSchedule();
       onClose();
     } catch (error) {
@@ -62,7 +57,7 @@ export const ScheduleInterviewModal = ({ investigationId, onClose, onSchedule })
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-25 z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -79,40 +74,12 @@ export const ScheduleInterviewModal = ({ investigationId, onClose, onSchedule })
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Interviewee</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search for employee..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
-              />
-              
-              {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
-                  {searchResults.map(employee => (
-                    <button
-                      key={employee.ID}
-                      type="button"
-                      onClick={() => handleSelectEmployee(employee)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                    >
-                      {`${employee.FirstName} ${employee.LastName}`} ({employee.EmployeeNumber})
-                    </button>
-                  ))}
-                </div>
-              )}
-              
-              {searchLoading && (
-                <div className="absolute right-3 top-2">
-                  <div className="animate-spin h-5 w-5 border-2 border-red-500 border-t-transparent rounded-full"></div>
-                </div>
-              )}
-            </div>
+            <SearchEmployee onSelect={handleSelectEmployee} />
             
             {selectedEmployee && (
               <div className="mt-2 p-2 bg-gray-50 rounded-md text-sm">
-                Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} 
+                ({selectedEmployee.EmployeeNumber})
               </div>
             )}
           </div>

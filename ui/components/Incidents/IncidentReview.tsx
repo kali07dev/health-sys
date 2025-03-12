@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+// import { useRouter } from "next/navigation"
+import Router from "next/router"
 import type { Incident } from "../../utils/dummyData"
 
 interface IncidentReviewProps {
@@ -10,7 +11,7 @@ interface IncidentReviewProps {
 }
 
 const IncidentReview: React.FC<IncidentReviewProps> = ({ incident }) => {
-  const router = useRouter()
+  // const router = useRouter()
   const [formData, setFormData] = useState({
     status: incident.status,
     assignedTo: incident.assignedTo || "",
@@ -27,7 +28,7 @@ const IncidentReview: React.FC<IncidentReviewProps> = ({ incident }) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log("Updated incident:", { ...incident, ...formData })
-    router.push("/incidents")
+    Router.push("/incidents")
   }
 
   return (
@@ -96,7 +97,7 @@ const IncidentReview: React.FC<IncidentReviewProps> = ({ incident }) => {
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => router.push("/incidents")}
+            onClick={() => Router.push("/incidents")}
             className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Cancel

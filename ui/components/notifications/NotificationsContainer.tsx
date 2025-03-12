@@ -119,74 +119,53 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
   }
 
   return (
-    <div className="flex h-full">
-      <div className="w-full">
-        <div className="mb-4 flex justify-between items-center">
-            <h1 className="text-xl font-semibold">Your Notifications</h1>
-            {canViewSystemNotifications && (
-              <button
-                onClick={navigateToSystemNotifications}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                View System Notifications
-              </button>
-            )}
-        </div>
-        {notifications.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-600">You have no notifications at this time.</p>
-          </div>
-        ) : (
-          <>
-            <div className="bg-white rounded-lg shadow mb-6">
-              <div className="flex justify-between items-center p-4 border-b">
-                <h2 className="text-lg font-medium">All Notifications</h2>
-                <div className="flex items-center space-x-2">
-                  <label htmlFor="pageSize" className="text-sm text-gray-600">
-                    Show:
-                  </label>
-                  <select
-                    id="pageSize"
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="border rounded p-1 text-sm"
-                  >
-                    {pageSizeOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <ul className="divide-y divide-gray-200">
-                {notifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onClick={() => handleNotificationClick(notification)}
-                    onMarkAsRead={() => markAsRead(notification.id)}
-                  />
-                ))}
-              </ul>
-            </div>
-            
-            <PaginationControls 
-              currentPage={currentPage}
-              totalItems={totalNotifications}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-            />
-          </>
+    <div className="w-full bg-white rounded-lg shadow overflow-hidden">
+      <div className="px-4 py-5 sm:px-6 border-b">
+        <h3 className="text-lg font-medium text-gray-900">Your Notifications</h3>
+        {canViewSystemNotifications && (
+          <button className="mt-2 text-sm text-blue-600 hover:text-blue-800">
+            View System Notifications
+          </button>
         )}
       </div>
       
-      <NotificationDetailsSidebar
-        notification={selectedNotification}
-        isOpen={sidebarOpen}
-        onClose={handleCloseSidebar}
-        onMarkAsRead={markAsRead}
-      />
+      {notifications.length === 0 ? (
+        <div className="p-6 text-center text-gray-500">
+          You have no notifications at this time.
+        </div>
+      ) : (
+        <>
+          <div className="border-b p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <h4 className="text-md font-medium text-gray-700">All Notifications</h4>
+              <div className="flex items-center text-sm">
+                <span className="mr-2">Show:</span>
+                <select 
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="border rounded p-1 text-sm"
+                >
+                  {pageSizeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <ul className="divide-y divide-gray-200">
+            {notifications.map((notification) => (
+              <NotificationItem 
+                key={notification.id}
+                notification={notification}
+                onClick={() => handleNotificationClick(notification)}
+                onMarkAsRead={() => markAsRead(notification.id)}
+              />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

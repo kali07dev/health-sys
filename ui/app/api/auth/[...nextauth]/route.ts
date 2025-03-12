@@ -68,14 +68,14 @@ const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt" as const,
-    maxAge: 8 * 60 * 60, // 8 hours (shorter than backend)
+    maxAge: 60 * 60, // 1 hour (shorter than backend)
   },
   jwt: {
-    maxAge: 8 * 60 * 60, // Match session maxAge
+    maxAge: 60 * 60, // Match session maxAge
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/login",
+    signIn: "/auth/login",
   },
 };
 

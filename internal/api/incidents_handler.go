@@ -35,7 +35,59 @@ func NewIncidentsHandler(service *services.IncidentService, attSvc *services.Att
 // 	v1.Post("/incidents", h.CreateIncident)
 // 	v1.Post("/incidents/with-attachments", h.CreateIncidentWithAttachments)
 // }
+func (h *IncidentsHandler) GetIncidentsByEmployeeID(c *fiber.Ctx) error {
+	// Parse employee ID from the request
+	employeeIDStr := c.Params("id")
+	employeeID, err := uuid.Parse(employeeIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid employee ID",
+		})
+	}
+	employee, err := h.service.GetEmployeeByUserID(employeeID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to check user existence", "details": err.Error()})
+	}
 
+	// Fetch incidents by employee ID
+	incidents, err := h.service.GetByEmployeeID(employee.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return the incidents
+	return c.Status(fiber.StatusOK).JSON(schema.ToIncidentResponses(incidents))
+}
+func (h *IncidentsHandler) GetIncidentSummary(c *fiber.Ctx) error {
+    // Parse incident ID from URL
+    idStr := c.Params("id")
+    id, err := uuid.Parse(idStr)
+    if err != nil {
+        log.Error("Failed to parse incident ID: %v", err)
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid incident ID format"})
+    }
+
+    // Generate summary
+    summary, err := h.service.GenerateIncidentSummary(id)
+    if err != nil {
+        log.Error("Failed to generate incident summary for ID %v: %v", id, err)
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to generate incident summary", 
+            "details": err.Error(),
+        })
+    }
+
+    // Add a nil check
+    if summary == nil {
+        log.Warn("Generated incident summary is nil for ID %v", id)
+        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "No summary found for this incident"})
+    }
+
+    log.Info("Successfully retrieved incident summary for ID %v", id)
+    return c.JSON(summary)
+}
 // CreateIncident handles basic incident creation without attachments
 func (h *IncidentsHandler) CreateIncident(c *fiber.Ctx) error {
 	// Get the currently authenticated user's ID
@@ -61,10 +113,16 @@ func (h *IncidentsHandler) CreateIncident(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	incident, err := h.service.CreateIncident(req, uuidUserID)
+	employee, err := h.service.GetEmployeeByUserID(uuidUserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to check user existence", "details": err.Error()})
+	}
+	
+	incident, err := h.service.CreateIncident(req, employee.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+
 	h.employeeSVC.HandleSevereIncidentNotification(&req)
 
 	return c.Status(fiber.StatusCreated).JSON(incident)
@@ -117,7 +175,7 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 	}
 
 	// Use first file for now (service method needs to be updated to handle multiple files)
-	file := uploadedFiles[0]
+	// file := uploadedFiles[0]
 
 	// Type assertion for userID
 	userIDStr, ok := userID.(string)
@@ -137,10 +195,12 @@ func (h *IncidentsHandler) CreateIncidentWithAttachments(c *fiber.Ctx) error {
 
 	// req.ReportedBy = uuidUserID
 
-	incident, err := h.service.CreateIncidentWithAttachment(req, file, employee.ID)
+	incident, err := h.service.CreateIncidentWithAttachment(req, uploadedFiles, employee.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error(), "req": req, "incidentDataStr": incidentDataStr})
 	}
+
+	h.employeeSVC.HandleSevereIncidentNotification(&req)
 
 	return c.Status(fiber.StatusCreated).JSON(incident)
 }

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
+import { SearchEmployee } from '../SearchEmployee';
 
 export const ScheduleInterview: React.FC<any> = ({ incidentId, onClose, onSchedule }) => {
     const [formData, setFormData] = useState({
@@ -11,6 +12,12 @@ export const ScheduleInterview: React.FC<any> = ({ incidentId, onClose, onSchedu
       location: '',
     });
     const [loading, setLoading] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+
+    const handleEmployeeSelect = (employee: any) => {
+      setSelectedEmployee(employee); // Store the selected employee's details
+      setFormData({ ...formData, intervieweeId: employee.ID }); // Update the form data with the employee's ID
+    };
   
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -36,15 +43,12 @@ export const ScheduleInterview: React.FC<any> = ({ incidentId, onClose, onSchedu
               <label className="block text-sm font-medium text-gray-700">
                 Interviewee
               </label>
-              <select
-                value={formData.intervieweeId}
-                onChange={(e) => setFormData({ ...formData, intervieweeId: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select an interviewee...</option>
-                {/* Add your employees list here */}
-              </select>
+              <SearchEmployee onSelect={handleEmployeeSelect} />
+                {selectedEmployee && (
+                  <div className="mt-2 text-sm text-gray-500">
+                      Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                    </div>
+                )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">

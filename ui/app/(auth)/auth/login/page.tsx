@@ -2,6 +2,7 @@ import React from 'react';
 import LoginForm from '@/components/Auth/loginForm';
 import GoogleSignIn from '@/components/Auth/GoogleSignIn';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Link from 'next/link';
 
 const LoginPage: React.FC = () => {
   return (
@@ -20,6 +21,14 @@ const LoginPage: React.FC = () => {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <LoginForm />
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Sign up
+                </Link>
+              </p>
+            </div>
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

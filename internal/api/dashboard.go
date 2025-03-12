@@ -1,6 +1,9 @@
 package api
 
 import (
+	"math"
+	"reflect"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
@@ -32,6 +35,9 @@ func (h *SafetyDashboardHandler) GetEmployeeDashboard(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	if containsNaN(dashboard) {
+	 	return c.JSON(fiber.Map{})
+	 }
 
 	return c.JSON(dashboard)
 }
@@ -61,7 +67,55 @@ func (h *SafetyDashboardHandler) GetAdminDashboard(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	// Check for NaN values in the dashboard response
+	if containsNaN(dashboard) {
+		return c.JSON(fiber.Map{})
+	}
 
 	return c.JSON(dashboard)
 }
 
+func containsNaN(v interface{}) bool {
+	val := reflect.ValueOf(v)
+	return checkForNaN(val)
+}
+
+func checkForNaN(val reflect.Value) bool {
+	switch val.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return math.IsNaN(val.Float())
+
+	case reflect.Ptr:
+		if val.IsNil() {
+			return false
+		}
+		return checkForNaN(val.Elem())
+
+	case reflect.Struct:
+		for i := 0; i < val.NumField(); i++ {
+			// Skip unexported fields
+			if !val.Type().Field(i).IsExported() {
+				continue
+			}
+			if checkForNaN(val.Field(i)) {
+				return true
+			}
+		}
+
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < val.Len(); i++ {
+			if checkForNaN(val.Index(i)) {
+				return true
+			}
+		}
+
+	case reflect.Map:
+		for _, key := range val.MapKeys() {
+			if checkForNaN(val.MapIndex(key)) {
+				return true
+			}
+		}
+	}
+
+	return false
+}

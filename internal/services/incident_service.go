@@ -34,7 +34,16 @@ func (r *IncidentService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employe
     // Return the retrieved employee
     return &employee, nil
 }
-
+func (s *IncidentService) GetByEmployeeID(employeeID uuid.UUID) ([]models.Incident, error) {
+	var incidents []models.Incident
+	err := s.db.Preload("Reporter").Preload("Assignee").
+		Where("reported_by = ?", employeeID).
+		Find(&incidents).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get incidents by employee ID: %w", err)
+	}
+	return incidents, nil
+}
 // CreateIncident creates a new incident record
 func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userID uuid.UUID) (*models.Incident, error) {
 	refNumber := generateReferenceNumber()
@@ -66,7 +75,7 @@ func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userI
 // CreateIncidentWithAttachment creates an incident with an image attachment
 func (s *IncidentService) CreateIncidentWithAttachment(
 	req schema.CreateIncidentRequest,
-	file *multipart.FileHeader,
+	files []*multipart.FileHeader,
 	uploadedBy uuid.UUID,
 ) (*models.Incident, error) {
 	// Start a transaction
@@ -82,58 +91,61 @@ func (s *IncidentService) CreateIncidentWithAttachment(
 		return nil, err
 	}
 
-	// Handle file upload
-	filename := filepath.Base(file.Filename)
-	storagePath := fmt.Sprintf("uploads/incidents/%s/%s", incident.ID, filename)
+	// Loop through each file and handle the upload
+	for _, file := range files {
+		// Handle file upload
+		filename := filepath.Base(file.Filename)
+		storagePath := fmt.Sprintf("uploads/incidents/%s/%s", incident.ID, filename)
 
-	// Create directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(storagePath), 0755); err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to create directory: %w", err)
+		// Create directory if it doesn't exist
+		if err := os.MkdirAll(filepath.Dir(storagePath), 0755); err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to create directory: %w", err)
+		}
+
+		// Open and save the file
+		src, err := file.Open()
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to open file: %w", err)
+		}
+		defer src.Close()
+
+		dst, err := os.Create(storagePath)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to create file: %w", err)
+		}
+		defer dst.Close()
+
+		if _, err = io.Copy(dst, src); err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to save file: %w", err)
+		}
+
+		// Create attachment record
+		attachment := &models.IncidentAttachment{
+			IncidentID:  incident.ID,
+			FileName:    filename,
+			FileType:    file.Header.Get("Content-Type"),
+			FileSize:    int(file.Size),
+			StoragePath: storagePath,
+			UploadedBy:  uploadedBy,
+		}
+
+		if err := tx.Create(attachment).Error; err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to create attachment record: %w", err)
+		}
 	}
 
-	// Open and save the file
-	src, err := file.Open()
-	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(storagePath)
-	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to create file: %w", err)
-	}
-	defer dst.Close()
-
-	if _, err = io.Copy(dst, src); err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to save file: %w", err)
-	}
-
-	// Create attachment record
-	attachment := &models.IncidentAttachment{
-		IncidentID:  incident.ID,
-		FileName:    filename,
-		FileType:    file.Header.Get("Content-Type"),
-		FileSize:    int(file.Size),
-		StoragePath: storagePath,
-		UploadedBy:  uploadedBy,
-	}
-
-	if err := tx.Create(attachment).Error; err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to create attachment record: %w", err)
-	}
-
+	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return incident, nil
 }
-
 // GetIncident retrieves an incident by ID
 func (s *IncidentService) GetIncident(id uuid.UUID) (*models.Incident, error) {
 	var incident models.Incident

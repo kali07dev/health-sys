@@ -5,21 +5,45 @@ export interface User {
   role: 'admin' | 'safety_officer' | 'employee';
   name: string;
 }
-
+export interface IncidentFormData {
+  type: 'injury' | 'near_miss' | 'property_damage' | 'environmental' | 'security';
+  severityLevel: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  location: string;
+  occurredAt: string;
+  immediateActionsTaken?: string;
+  reportedBy: string;
+  witnesses?: Array<{
+    name: string;
+    contact: string;
+  }>;
+  environmentalConditions?: Record<string, unknown>;
+  equipmentInvolved?: Record<string, unknown>;
+}
 export interface Investigation {
   id: string;
   incidentId: string;
   leadInvestigatorId: string;
-  rootCause: string;
-  contributingFactors: string[];
-  investigationMethods: string[];
-  findings: string;
-  recommendations: string;
+  leadInvestigatorName?: string;
+  description?: string;
+  rootCause?: string;
+  contributingFactors?: string[] | null;
+  investigationMethods?: string[] | null;
+  findings?: string;
+  recommendations?: string;
   startedAt: string;
   completedAt?: string;
   status: 'in_progress' | 'pending_review' | 'completed' | 'reopened';
+  durationDays?: number;
   createdAt: string;
   updatedAt: string;
+  incident?: {
+    Title: string;
+    Description: string;
+    Location: string;
+    SeverityLevel: string;
+  };
 }
 
 export interface Interview {
@@ -46,19 +70,27 @@ export interface CorrectiveAction {
   completedAt?: string;
   completionNotes?: string;
   verificationRequired: boolean;
+  incidentTitle: string;
+  assignerName: string;
+  assigneeName: string;
+  incidentLocation: string;
   verifiedBy?: string;
   verifiedAt?: string;
+  createdAt: string;
+  evidence: ActionEvidence[];
 }
+
 
 export interface ActionEvidence {
   id: string;
   correctiveActionId: string;
   fileType: 'document' | 'photo' | 'video';
   fileName: string;
-  fileUrl: string;
+  fileURL: string;
   uploadedBy: string;
   uploadedAt: string;
   description?: string;
+  uploaderName?: string;
 }
 
 export interface Incident {
@@ -86,7 +118,7 @@ export interface IncidentAttachment {
   id: string;
   fileName: string;
   fileType: string;
-  storagePath: string;
+  StoragePath: string;
   fileSize: number;
   createdAt: string;
   uploader: string;

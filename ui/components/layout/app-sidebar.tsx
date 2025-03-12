@@ -1,8 +1,21 @@
 "use client"
-import { HomeIcon, LayoutDashboard, MessageSquare, PieChart, Settings, Users } from "lucide-react"
+import { 
+  LayoutDashboard, 
+  AlertTriangle, 
+  FileBarChart, 
+  Bell, 
+  ClipboardList, 
+  Settings,
+  // LogOut,
+  Search, // Icon for Investigations
+  ListChecks, // Icon for Assigned Actions
+  Shield
+} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import LogoutButton from "@/components/LogoutButton" // Import the LogoutButton
+import LogoutButton from "@/components/LogoutButton"
+import { useSession } from "next-auth/react"
+import Image from 'next/image';
 
 import {
   Sidebar,
@@ -15,28 +28,32 @@ import {
 } from "@/components/ui/sidebar"
 
 const sidebarItems = [
-  { icon: HomeIcon, label: "Dashboard", href: "/" },
-  { icon: Users, label: "Incidents", href: "/incidents" },
-  { icon: PieChart, label: "Reports", href: "/reports" },
-  { icon: MessageSquare, label: "Alerts", href: "/alerts" },
-  { icon: MessageSquare, label: "Tasks", href: "/tasks" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
+  { icon: Search, label: "Investigations", href: "/investigation" }, // New route for Investigations
+  { icon: ListChecks, label: "Assigned Actions", href: "/actions" }, // New route for Assigned Actions
+  { icon: FileBarChart, label: "Reports", href: "/reports" },
+  { icon: Bell, label: "Alerts", href: "/alerts" },
+  { icon: ClipboardList, label: "Tasks", href: "/tasks" },
+  { icon: Settings, label: "Profile", href: "/profile" },
+  { icon: Shield, label: "Admin", href: "/admin" },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <h1 className="text-lg font-semibold text-violet-600">Safety System</h1>
+        <h1 className="text-lg font-semibold text-red-600">Safety System</h1>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           {sidebarItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} passHref legacyBehavior>
-                <SidebarMenuButton className={pathname === item.href ? "bg-violet-50 text-violet-600" : undefined}>
+                <SidebarMenuButton className={pathname === item.href ? "bg-red-50 text-red-600" : undefined}>
                   <item.icon className="h-5 w-5" />
                   {item.label}
                 </SidebarMenuButton>
@@ -47,10 +64,16 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-3 px-3 py-2">
-          <img src="/placeholder.svg?height=32&width=32" alt="User" className="h-9 w-9 rounded-full" />
+        <Image
+          src="/user.svg"
+          alt="User"
+          width={36} // Set the width to match your design (h-9 = 36px)
+          height={36} // Set the height to match your design (w-9 = 36px)
+          className="rounded-full"
+        />
           <div className="flex-1 truncate">
-            <div className="truncate text-sm font-medium text-gray-900">John Doe</div>
-            <div className="truncate text-sm text-gray-500">john@example.com</div>
+            <div className="truncate text-sm font-medium text-gray-900">{session?.role}</div>
+            <div className="truncate text-sm text-gray-500">{session?.user?.email}</div>
           </div>
         </div>
         {/* Add LogoutButton to the SidebarFooter */}
