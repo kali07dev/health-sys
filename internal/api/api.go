@@ -61,7 +61,7 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	userRoutes := app.Group("/api/users")
 	
 	// Apply auth middleware to all user routes
-	userRoutes.Use(middleware.AuthMiddleware)
+	// userRoutes.Use(middleware.AuthMiddleware)
 
 	// Route for updating user role
 	userRoutes.Put("/:userId/role",  middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserRole)
