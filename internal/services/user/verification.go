@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"time"
 
 	"github.com/hopkali04/health-sys/internal/models"
@@ -48,7 +49,7 @@ func (s *VerificationService) SendVerificationEmail(user *models.User) error {
 	return s.emailService.SendEmail(
 		[]string{user.Email},
 		"Verify Your Account",
-		fmt.Sprintf("Please verify your account by clicking this link: %s", verificationLink),
+		template.HTML(fmt.Sprintf("Please verify your account by clicking this link: %s", verificationLink)),
 	)
 }
 
@@ -97,7 +98,7 @@ func (s *VerificationService) InitiatePasswordReset(email string) error {
 	return s.emailService.SendEmail(
 		[]string{user.Email},
 		"Reset Your Password",
-		fmt.Sprintf("Click this link to reset your password: %s", resetLink),
+		template.HTML(fmt.Sprintf("Click this link to reset your password: %s", resetLink)),
 	)
 }
 

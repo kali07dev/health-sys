@@ -1,21 +1,21 @@
 "use client"
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Toaster } from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
+import { Loader2, XCircle } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
 import { Incident, IncidentAttachment } from '@/interfaces/incidents'; 
 import IncidentDetails from '../Incidents/IncidentDetails';
 import { InvestigationPanel } from './InvestigationPanel';
 import { CorrectiveActionsPanel } from '../CorrectiveActions/CorrectiveActionsPanel';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 
 interface IncidentReviewPageProps {
   incidentId: string;
 }
 
 const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
-  // const { data: session } = useSession();
+  const router = useRouter();
   const { data: session, status } = useSession()
   const [incident, setIncident] = useState<Incident | null>(null);
   const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
@@ -23,20 +23,32 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
   const [activeTab, setActiveTab] = useState('details');
 
   const handleCloseModal = () => {
-    setActiveTab('details'); // Reset to the default tab
+    setActiveTab('details');
   };
 
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return
-  }
-  if (status === "authenticated") {
-    const userID = session.user?.id
-    const userRole = session.role
-  }
+  const handleCloseIncident = async () => {
+    try {
+      if (!isAuthorized) {
+        toast.error('You are not authorized to close this incident.');
+        return;
+      }
+
+      // Confirm before closing
+      const confirmed = window.confirm('Are you sure you want to close this incident?');
+      if (!confirmed) return;
+
+      incidentAPI.closeIncident(incidentId);
+      toast.success('Incident closed successfully');
+      
+      // Optionally redirect or refresh
+      router.push('/incidents');
+    } catch (error) {
+      console.error('Error closing incident:', error);
+      toast.error('Failed to close incident');
+    }
+  };
+
   const isAuthorized = ['admin', 'safety_officer'].includes(session?.role ?? '');
-  console.log('session', session);
-  console.log('isAuthorized', session?.role, session?.user?.id  );
 
   useEffect(() => {
     const fetchIncident = async () => {
@@ -65,13 +77,24 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
     <div className="container mx-auto px-4 py-8">
       <Toaster position="top-right" />
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Incident Review: {incident?.referenceNumber}
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Status: <span className="font-semibold">{incident?.status}</span>
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Incident Review: {incident?.referenceNumber}
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Status: <span className="font-semibold">{incident?.status}</span>
+          </p>
+        </div>
+        {isAuthorized && incident?.status !== 'Closed' && (
+          <button 
+            onClick={handleCloseIncident}
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            <XCircle className="w-5 h-5" />
+            Close Incident
+          </button>
+        )}
       </div>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
@@ -80,7 +103,7 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
               onClick={() => setActiveTab('details')}
               className={`${
                 activeTab === 'details'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-red-500 text-red-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
             >
@@ -92,7 +115,7 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
                   onClick={() => setActiveTab('investigation')}
                   className={`${
                     activeTab === 'investigation'
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-red-500 text-red-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
                 >
@@ -102,7 +125,7 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
                   onClick={() => setActiveTab('actions')}
                   className={`${
                     activeTab === 'actions'
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-red-500 text-red-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
                 >
@@ -114,15 +137,21 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
         </div>
         <div className="p-6">
           {activeTab === 'details' && incident && (
-            <IncidentDetails incident={incident} 
-            attachments={attachments}
-            isAuthorized={isAuthorized}  />
+            <IncidentDetails 
+              incident={incident} 
+              attachments={attachments}
+              isAuthorized={isAuthorized}  
+            />
           )}
           {activeTab === 'investigation' && isAuthorized && (
             <InvestigationPanel incidentId={incidentId} />
           )}
           {activeTab === 'actions' && isAuthorized && session?.role && (
-            <CorrectiveActionsPanel incidentId={incidentId} userRole={session.role} userID= {session?.user?.id } />
+            <CorrectiveActionsPanel 
+              incidentId={incidentId} 
+              userRole={session.role} 
+              userID={session?.user?.id} 
+            />
           )}
         </div>
       </div>

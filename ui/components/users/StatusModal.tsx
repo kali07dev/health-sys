@@ -1,5 +1,5 @@
 // components/modals/StatusModal.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Loader2 } from 'lucide-react';
 import { User, userService } from '@/utils/userAPI';
@@ -13,20 +13,32 @@ interface StatusModalProps {
 
 export function StatusModal({ isOpen, onClose, user, onSuccess }: StatusModalProps) {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(user?.employee?.status || 'active');
+  const [status, setStatus] = useState<boolean>(false);
+
+  // Update the status state when the user prop changes
+  useEffect(() => {
+    if (user) {
+      setStatus(user.IsActive || false);
+    }
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!user) return;
+    
     setLoading(true);
     try {
       await userService.updateUserStatus(user.id, status);
       onSuccess();
+      onClose();
     } catch (error) {
       console.error('Failed to update status:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Only render the dialog when there is a user
+  if (!user) return null;
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -46,13 +58,12 @@ export function StatusModal({ isOpen, onClose, user, onSuccess }: StatusModalPro
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Select Status</label>
             <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              value={status ? "active" : "inactive"}
+              onChange={(e) => setStatus(e.target.value === "active")}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="on_leave">On Leave</option>
             </select>
           </div>
           <div className="flex justify-end">

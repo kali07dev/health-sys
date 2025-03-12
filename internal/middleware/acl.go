@@ -22,7 +22,19 @@ func HasPermission(role string, requiredPermission string) bool {
 // PermissionMiddleware enforces access control based on permissions
 func PermissionMiddleware(requiredPermission string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userRole := c.Locals("role").(string)
+		roleInterface := c.Locals("role")
+		if roleInterface == nil {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Forbidden: Role information not found",
+			})
+		}
+
+		userRole, ok := roleInterface.(string)
+		if !ok {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Internal Server Error: Invalid role format",
+			})
+		}
 
 		if !HasPermission(userRole, requiredPermission) {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{

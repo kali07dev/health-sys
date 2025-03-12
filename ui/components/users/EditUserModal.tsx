@@ -2,8 +2,27 @@
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Loader2 } from 'lucide-react';
-import { User, userService } from '@/utils/userAPI';
+import { userService } from '@/utils/userAPI';
 
+interface User {
+  id: string;
+  email: string;
+  role: string;
+  IsActive: boolean;
+  employee?: {
+    FirstName: string;
+    LastName: string;
+    Department: string;
+    Position: string;
+    ContactNumber: string;
+    officeLocation: string;
+    emergencyContact: {
+      name: string;
+      relationship: string;
+      phone: string;
+    };
+  };
+}
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,11 +34,11 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: user.email || '',
-    firstName: user.employee?.firstName || '',
-    lastName: user.employee?.lastName || '',
-    department: user.employee?.department || '',
-    position: user.employee?.position || '',
-    contactNumber: user.employee?.contactNumber || '',
+    firstName: user.employee?.FirstName || '',
+    lastName: user.employee?.LastName || '',
+    department: user.employee?.Department || '',
+    position: user.employee?.Position || '',
+    contactNumber: user.employee?.ContactNumber || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

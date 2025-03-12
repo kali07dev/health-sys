@@ -35,20 +35,20 @@ func (j JSONB) Value() (driver.Value, error) {
 }
 
 type EmployeeResponse struct {
-	ID                 string            `json:"id"`
-	UserID             string            `json:"userId"`
-	EmployeeNumber     string            `json:"employeeNumber"`
-	FirstName          string            `json:"firstName"`
-	LastName           string            `json:"lastName"`
-	Department         string            `json:"department"`
-	Position           string            `json:"position"`
-	Role               string            `json:"role"`
-	ReportingManagerID string            `json:"reportingManagerId,omitempty"`
+	ID                 string            `json:"ID"`
+	UserID             string            `json:"UserId"`
+	EmployeeNumber     string            `json:"EmployeeNumber"`
+	FirstName          string            `json:"FirstName"`
+	LastName           string            `json:"LastName"`
+	Department         string            `json:"Department"`
+	Position           string            `json:"Position"`
+	Role               string            `json:"Role"`
+	ReportingManagerID *string           `json:"ReportingManagerId,omitempty"`
 	StartDate          string            `json:"startDate"`
 	EndDate            *string           `json:"endDate,omitempty"`
-	EmergencyContact   map[string]string `json:"emergencyContact"`
-	ContactNumber      string            `json:"contactNumber"`
-	OfficeLocation     string            `json:"officeLocation"`
+	EmergencyContact   map[string]string `json:"EmergencyContact,omitempty"`
+	ContactNumber      string            `json:"ContactNumber"`
+	OfficeLocation     string            `json:"OfficeLocation"`
 	IsSafetyOfficer    bool              `json:"isSafetyOfficer"`
 	IsActive           bool              `json:"isActive"`
 	CreatedAt          string            `json:"createdAt"`
@@ -56,35 +56,56 @@ type EmployeeResponse struct {
 	DeletedAt          *string           `json:"deletedAt,omitempty"`
 }
 
-// ToResponse converts a single Employee model to an EmployeeResponse schema
 func EmployeeToResponse(e *models.Employee) EmployeeResponse {
-	// Convert time fields to ISO 8601 formatted strings
-	startDate := e.StartDate.Format(time.RFC3339)
-	var endDate, deletedAt *string
-	if !e.EndDate.IsZero() {
-		endDateStr := e.EndDate.Format(time.RFC3339)
-		endDate = &endDateStr
-	}
-	if !e.DeletedAt.IsZero() {
-		deletedAtStr := e.DeletedAt.Format(time.RFC3339)
-		deletedAt = &deletedAtStr
+	// First check if the employee pointer is nil
+	if e == nil {
+		return EmployeeResponse{}
 	}
 
 	// Convert UUID fields to strings
-	reportingManagerID := ""
+	var reportingManagerID *string
 	if e.ReportingManagerID != nil && *e.ReportingManagerID != uuid.Nil {
-		reportingManagerID = e.ReportingManagerID.String()
+		str := e.ReportingManagerID.String()
+		reportingManagerID = &str
 	}
 
 	// Convert EmergencyContact JSONB to a map[string]string
 	var emergencyContact map[string]string
 	if e.EmergencyContact != nil {
-		// Create a new map and convert all values to strings
 		emergencyContact = make(map[string]string)
 		jsonMap := *e.EmergencyContact
 		for k, v := range jsonMap {
-			emergencyContact[k] = fmt.Sprintf("%v", v)
+			if v != nil { // Add nil check for map values
+				emergencyContact[k] = fmt.Sprintf("%v", v)
+			}
 		}
+	}
+
+	// Handle nil time fields
+	var endDate, deletedAt *string
+	if !e.EndDate.IsZero() {
+		formatted := e.EndDate.Format(time.RFC3339)
+		endDate = &formatted
+	}
+	if e.DeletedAt != nil && !e.DeletedAt.IsZero() { // Add nil check
+		formatted := e.DeletedAt.Format(time.RFC3339)
+		deletedAt = &formatted
+	}
+
+	// Handle required time fields
+	createdAt := time.Now().Format(time.RFC3339)
+	if !e.CreatedAt.IsZero() {
+		createdAt = e.CreatedAt.Format(time.RFC3339)
+	}
+
+	updatedAt := time.Now().Format(time.RFC3339)
+	if !e.UpdatedAt.IsZero() {
+		updatedAt = e.UpdatedAt.Format(time.RFC3339)
+	}
+
+	startDate := time.Now().Format(time.RFC3339)
+	if !e.StartDate.IsZero() {
+		startDate = e.StartDate.Format(time.RFC3339)
 	}
 
 	return EmployeeResponse{
@@ -104,17 +125,22 @@ func EmployeeToResponse(e *models.Employee) EmployeeResponse {
 		OfficeLocation:     e.OfficeLocation,
 		IsSafetyOfficer:    e.IsSafetyOfficer,
 		IsActive:           e.IsActive,
-		CreatedAt:          e.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:          e.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
 		DeletedAt:          deletedAt,
 	}
 }
 
 // ToResponseArray converts a slice of Employee models to a slice of EmployeeResponse schemas
 func EmployeeToResponseArray(employees []models.Employee) []EmployeeResponse {
+	if len(employees) == 0 {
+		return []EmployeeResponse{}
+	}
+
 	response := make([]EmployeeResponse, len(employees))
 	for i, employee := range employees {
-		response[i] = EmployeeToResponse(&employee)
+		emp := employee // Create a copy to avoid pointer issues
+		response[i] = EmployeeToResponse(&emp)
 	}
 	return response
 }

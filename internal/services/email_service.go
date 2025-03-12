@@ -26,7 +26,7 @@ type EmailService struct {
 type EmailTemplate struct {
 	Subject     string
 	Title       string
-	Message     string
+	Message     template.HTML
 	ActionLink  string
 	ActionText  string
 	CompanyName string
@@ -104,16 +104,16 @@ func (s *EmailService) TestConnection() error {
 }
 
 // SendEmail sends an email to a list of recipients
-func (s *EmailService) SendEmail(to []string, subject, body string) error {
+func (s *EmailService) SendEmail(to []string, subject string, body template.HTML) error {
 	if len(to) == 0 {
 		return fmt.Errorf("recipient list cannot be empty")
 	}
-	template := &EmailTemplate{
-		Subject:     subject,
-		Title:       subject,
-		Message:     body,
-		CompanyName: "Health System",
-	}
+    template := &EmailTemplate{
+        Subject:     subject,
+        Title:       subject,
+        Message:     body,
+        CompanyName: "Health System",
+    }
 	htmlContent, err := s.generateHTMLEmail(template)
 	if err != nil {
 		return fmt.Errorf("failed to generate HTML email: %v", err)
@@ -334,15 +334,15 @@ func (s *EmailService) sendActionAssignmentEmail(to []string, action *models.Cor
 	template := &EmailTemplate{
 		Subject: "New Corrective Action Assigned",
 		Title:   "New Task Assignment",
-		Message: fmt.Sprintf(`
-			<div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-				<h3 style="color: #1d1d1f; margin-bottom: 15px;">Task Details</h3>
-				<p><strong>Description:</strong> %s</p>
-				<p><strong>Due Date:</strong> %s</p>
-				<p style="color: #424245; margin-top: 15px;">Please review and begin working on this task as soon as possible.</p>
-			</div>`,
-			action.Description,
-			action.DueDate.Format("January 2, 2006")),
+        Message: template.HTML(fmt.Sprintf(`
+            <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #1d1d1f; margin-bottom: 15px;">Task Details</h3>
+                <p><strong>Description:</strong> %s</p>
+                <p><strong>Due Date:</strong> %s</p>
+                <p style="color: #424245; margin-top: 15px;">Please review and begin working on this task as soon as possible.</p>
+            </div>`,
+            action.Description,
+            action.DueDate.Format("January 2, 2006"))),
 		ActionLink: fmt.Sprintf("/actions/%s", action.ID),
 		ActionText: "View Task Details",
 	}
@@ -355,7 +355,7 @@ func (s *EmailService) sendActionDueSoonEmail(to []string, action *models.Correc
 	template := &EmailTemplate{
 		Subject: "⚠️ Action Due Soon",
 		Title:   "Upcoming Deadline",
-		Message: fmt.Sprintf(`
+		Message: template.HTML(fmt.Sprintf(`
 			<div style="background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
 				<h3 style="color: #e65100; margin-bottom: 15px;">Action Required Soon</h3>
 				<p><strong>Task:</strong> %s</p>
@@ -363,7 +363,7 @@ func (s *EmailService) sendActionDueSoonEmail(to []string, action *models.Correc
 				<p style="color: #424245; margin-top: 15px;">This task requires your attention. Please complete it before the deadline.</p>
 			</div>`,
 			action.Description,
-			action.DueDate.Format("January 2, 2006")),
+			action.DueDate.Format("January 2, 2006"))),
 		ActionLink: fmt.Sprintf("/actions/%s", action.ID),
 		ActionText: "Review Task",
 	}
@@ -376,7 +376,7 @@ func (s *EmailService) sendInterviewScheduledEmail(to []string, interview *model
 	template := &EmailTemplate{
 		Subject: "Interview Scheduled",
 		Title:   "Investigation Interview Details",
-		Message: fmt.Sprintf(`
+		Message: template.HTML(fmt.Sprintf(`
 			<div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
 				<h3 style="color: #2e7d32; margin-bottom: 15px;">Interview Scheduled</h3>
 				<div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -388,7 +388,7 @@ func (s *EmailService) sendInterviewScheduledEmail(to []string, interview *model
 			</div>`,
 			interview.ScheduledFor.Format("Monday, January 2, 2006"),
 			interview.ScheduledFor.Format("3:04 PM"),
-			interview.Location),
+			interview.Location)),
 		ActionLink: fmt.Sprintf("/interviews/%s", interview.ID),
 		ActionText: "Add to Calendar",
 	}
@@ -400,7 +400,7 @@ func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.Cre
     template := &EmailTemplate{
         Subject: "🚨 URGENT: Critical Incident Reported",
         Title:   "Critical Incident Alert",
-        Message: fmt.Sprintf(`
+        Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Critical Incident Reported</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -420,7 +420,7 @@ func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.Cre
             incident.Location,
             incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
             incident.Description,
-            incident.ImmediateActionsTaken),
+            incident.ImmediateActionsTaken)),
         ActionLink: "/incidents/urgent",
         ActionText: "Review Incident",
     }
@@ -459,7 +459,7 @@ func (s *EmailService) sendActionAssignedEmail(to []string, action *models.Corre
     template := &EmailTemplate{
         Subject: "New Action Item Assigned",
         Title:   "Action Item Assignment",
-        Message: fmt.Sprintf(`
+        Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1976d2; margin-bottom: 15px;">New Action Item</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -484,7 +484,7 @@ func (s *EmailService) sendActionAssignedEmail(to []string, action *models.Corre
             action.Description,
             action.DueDate.Format("Monday, January 2, 2006"),
             action.Status,
-            getAdditionalContext(action)),
+            getAdditionalContext(action))),
         ActionLink: fmt.Sprintf("/actions/%s", action.ID),
         ActionText: "View Action Details",
     }
@@ -497,7 +497,7 @@ func (s *EmailService) sendActionOverdueEmail(to []string, action *models.Correc
     template := &EmailTemplate{
         Subject: "⚠️ OVERDUE: Action Item Requires Immediate Attention",
         Title:   "Overdue Action Item",
-        Message: fmt.Sprintf(`
+        Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Action Item Overdue</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -513,7 +513,7 @@ func (s *EmailService) sendActionOverdueEmail(to []string, action *models.Correc
             action.Description,
             action.DueDate.Format("January 2, 2006"),
             int(time.Since(action.DueDate).Hours()/24),
-            action.Status),
+            action.Status)),
         ActionLink: fmt.Sprintf("/actions/%s", action.ID),
         ActionText: "Update Action Item",
     }
@@ -544,13 +544,30 @@ func getAdditionalContext(action *models.CorrectiveAction) string {
         </div>`,
         action.Description)
 }
-
+func InvestigationAdditionalContext(action *models.Incident) string {
+    if action.Description == "" {
+        return ""
+    }
+    return fmt.Sprintf(`
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Additional Incident Context:</strong></p>
+            <p>Description : %s</p>
+            <p>Type : %s</p>
+            <p>Location : %s</p>
+            <p>ImmediateActionsTaken : %s</p>
+        </div>`,
+        action.Description,
+        action.Type,
+        action.Location,
+        action.ImmediateActionsTaken,
+    )
+}
 
 func (s *EmailService) sendVerificationEmail(to []string, verificationLink string) error {
     template := &EmailTemplate{
         Subject: "Verify Your Account",
         Title:   "Welcome! Please Verify Your Account",
-        Message: fmt.Sprintf(`
+        Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1d1d1f; margin-bottom: 15px;">Welcome to Health System</h3>
                 <p>To complete your account setup, please click the button below to verify your email address and set up your password.</p>
@@ -560,7 +577,7 @@ func (s *EmailService) sendVerificationEmail(to []string, verificationLink strin
                 </div>
                 <p style="color: #424245; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
             </div>`,
-            verificationLink),
+            verificationLink)),
         ActionLink:  verificationLink,
         ActionText:  "Verify Account",
         CompanyName: "Health System",
@@ -573,7 +590,7 @@ func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) err
     template := &EmailTemplate{
         Subject: "Reset Your Password",
         Title:   "Password Reset Request",
-        Message: fmt.Sprintf(`
+        Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1d1d1f; margin-bottom: 15px;">Password Reset Requested</h3>
                 <p>We received a request to reset your password. Click the button below to create a new password.</p>
@@ -583,10 +600,51 @@ func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) err
                 </div>
                 <p style="color: #424245; font-size: 14px;">If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
             </div>`,
-            resetLink),
+            resetLink)),
         ActionLink:  resetLink,
         ActionText:  "Reset Password",
         CompanyName: "Health System",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}
+
+// sendLeadInvestigatorAssignedEmail sends a notification for a newly assigned lead investigator
+func (s *EmailService) sendLeadInvestigatorAssignedEmail(to []string, investigation *models.Investigation, incident *models.Incident) error {
+    template := &EmailTemplate{
+        Subject: "You Have Been Assigned As Lead Investigator",
+        Title:   "Lead Investigator Assignment",
+        Message: template.HTML(fmt.Sprintf(`
+            <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #1976d2; margin-bottom: 15px;">Lead Investigator Assignment</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>Investigation Title:</strong> %s</p>
+                    <p><strong>Priority:</strong> <span style="color: %s">%s</span></p>
+                    <p><strong>Description:</strong> %s</p>
+                    <p><strong>Start Date:</strong> %s</p>
+                    <p><strong>Status:</strong> %s</p>
+                    %s
+                </div>
+                <div style="margin-top: 15px; color: #1976d2;">
+                    <p>As the Lead Investigator, you are responsible for overseeing this investigation and ensuring it is completed thoroughly and on time.</p>
+                    <p><strong>Your Responsibilities:</strong></p>
+                    <ul style="margin-top: 5px;">
+                        <li>Review the investigation details and scope</li>
+                        <li>Coordinate with team members and stakeholders</li>
+                        <li>Ensure all evidence and findings are documented</li>
+                        <li>Submit the final investigation report by the due date</li>
+                    </ul>
+                </div>
+            </div>`,
+            investigation.Description,
+            getPriorityColor(incident.SeverityLevel),
+            incident.SeverityLevel,
+            investigation.Description,
+            investigation.StartedAt.Format("Monday, January 2, 2006"),
+            investigation.Status,
+            InvestigationAdditionalContext(incident))),
+        ActionLink: fmt.Sprintf("/investigations/%s", investigation.ID),
+        ActionText: "View Investigation Details",
     }
 
     return s.SendEmail(to, template.Subject, template.Message)

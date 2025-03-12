@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,27 +21,112 @@ func NewCorrectiveActionService(db *gorm.DB) *CorrectiveActionService {
 	return &CorrectiveActionService{db: db}
 }
 
-func (s *CorrectiveActionService) GetByIncidentID(incidentID uuid.UUID) ([]models.CorrectiveAction, error) {
-    var actions []models.CorrectiveAction
-    if err := s.db.Where("incident_id = ?", incidentID).Find(&actions).Error; err != nil {
-        return nil, err
-    }
-    return actions, nil
+// Get corrective action by ID with evidence attachments
+func (s *CorrectiveActionService) GetByID(ctx context.Context, id uuid.UUID) (*schema.CorrectiveActionResponse, error) {
+	var action models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		First(&action, "id = ?", id).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("record not found: %w", err)
+	}
+
+	// Convert to response
+	response := schema.ToCActionResponse(&action)
+
+	// Fetch evidence attachments
+	evidence, err := s.GetActionEvidenceByCorrectiveActionID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch evidence: %w", err)
+	}
+
+	// Add evidence to response
+	evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+	for i, ev := range evidence {
+		evidenceResponses[i] = schema.ToActionEvidenceResponse(&ev)
+	}
+	response.Evidence = evidenceResponses
+
+	return &response, nil
+}
+
+// Enhancement for GetByIncidentID to include evidence
+func (s *CorrectiveActionService) GetByIncidentID(ctx context.Context, incidentID uuid.UUID) ([]schema.CorrectiveActionResponse, error) {
+	var actions []models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		Where("incident_id = ?", incidentID).
+		Find(&actions).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get corrective actions by incident ID: %w", err)
+	}
+
+	// Convert to response format
+	responses := make([]schema.CorrectiveActionResponse, len(actions))
+	for i, action := range actions {
+		responses[i] = schema.ToCActionResponse(&action)
+
+		// Fetch evidence for each action
+		evidence, _ := s.GetActionEvidenceByCorrectiveActionID(action.ID)
+		evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+		for j, ev := range evidence {
+			evidenceResponses[j] = schema.ToActionEvidenceResponse(&ev)
+		}
+		responses[i].Evidence = evidenceResponses
+	}
+
+	return responses, nil
+}
+func (r *CorrectiveActionService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employee, error) {
+	var employee models.Employee
+
+	// Query the database for the employee with the given UserID
+	result := r.db.Where("user_id = ?", userID).First(&employee)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Return the retrieved employee
+	return &employee, nil
 }
 
 // Create a new corrective action
-func (s *CorrectiveActionService) Create(ctx context.Context, req schema.CorrectiveActionRequest) (*models.CorrectiveAction, error) {
+func (s *CorrectiveActionService) Create(ctx context.Context, req schema.CorrectiveActionRequest, empID uuid.UUID) (*models.CorrectiveAction, error) {
+	// Start a database transaction
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
+	}
+
+	// Defer rollback in case anything fails - will be a no-op if transaction is committed
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
 	validate := validator.New()
 	if err := validate.Struct(req); err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	incidentID, _ := uuid.Parse(req.IncidentID)
 	assignedTo, _ := uuid.Parse(req.AssignedTo)
-	assignedBy, _ := uuid.Parse(req.AssignedBy)
+	// assignedBy, _ := uuid.Parse(req.AssignedBy)
 
 	dueDate, err := time.Parse(time.RFC3339, req.DueDate)
 	if err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("invalid due_date format: %w", err)
 	}
 
@@ -51,7 +137,7 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 		Priority:             req.Priority,
 		Status:               req.Status, // Database default will handle if empty
 		AssignedTo:           assignedTo,
-		AssignedBy:           assignedBy,
+		AssignedBy:           empID,
 		DueDate:              dueDate,
 		VerificationRequired: req.VerificationRequired,
 	}
@@ -59,7 +145,7 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 	// Handle optional fields
 	if req.CompletedAt != "" {
 		if completedAt, err := time.Parse(time.RFC3339, req.CompletedAt); err == nil {
-			correctiveAction.CompletedAt = completedAt
+			correctiveAction.CompletedAt = &completedAt
 		}
 	}
 
@@ -75,35 +161,67 @@ func (s *CorrectiveActionService) Create(ctx context.Context, req schema.Correct
 
 	if req.VerifiedAt != "" {
 		if verifiedAt, err := time.Parse(time.RFC3339, req.VerifiedAt); err == nil {
-			correctiveAction.VerifiedAt = verifiedAt
+			correctiveAction.VerifiedAt = &verifiedAt
 		}
 	}
 
-	if err := s.db.WithContext(ctx).Create(correctiveAction).Error; err != nil {
+	// Create the corrective action
+	if err := tx.Create(correctiveAction).Error; err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("database error: %w", err)
+	}
+
+	// Update the incident status to 'action_required'
+	if err := tx.Model(&models.Incident{}).
+		Where("id = ?", incidentID).
+		Update("status", "action_required").
+		Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to update incident status: %w", err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return correctiveAction, nil
 }
 
-// Get corrective action by ID
-func (s *CorrectiveActionService) GetByID(ctx context.Context, id uuid.UUID) (*models.CorrectiveAction, error) {
-	var action models.CorrectiveAction
+// Enhancement for GetByEmployeeID to include evidence
+func (s *CorrectiveActionService) GetByEmployeeID(ctx context.Context, employeeID uuid.UUID) ([]schema.CorrectiveActionResponse, error) {
+	var actions []models.CorrectiveAction
 	err := s.db.WithContext(ctx).
 		Preload("Incident").
 		Preload("Assignee").
 		Preload("Assigner").
 		Preload("Verifier").
-		First(&action, "id = ?", id).Error
+		Where("assigned_to = ?", employeeID).
+		Find(&actions).Error
 
 	if err != nil {
-		return nil, fmt.Errorf("record not found: %w", err)
+		return nil, fmt.Errorf("failed to get corrective actions by employee ID: %w", err)
 	}
-	return &action, nil
+
+	// Convert to response format
+	responses := make([]schema.CorrectiveActionResponse, len(actions))
+	for i, action := range actions {
+		responses[i] = schema.ToCActionResponse(&action)
+
+		// Fetch evidence for each action
+		evidence, _ := s.GetActionEvidenceByCorrectiveActionID(action.ID)
+		evidenceResponses := make([]schema.ActionEvidenceResponse, len(evidence))
+		for j, ev := range evidence {
+			evidenceResponses[j] = schema.ToActionEvidenceResponse(&ev)
+		}
+		responses[i].Evidence = evidenceResponses
+	}
+
+	return responses, nil
 }
 
 // Update existing corrective action
-func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req schema.CorrectiveActionRequest) (*models.CorrectiveAction, error) {
+func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req schema.UpdateCorrectiveActionRequest) (*models.CorrectiveAction, error) {
 	validate := validator.New()
 	if err := validate.Struct(req); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -158,7 +276,7 @@ func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req 
 	// Handle completion fields
 	if req.CompletedAt != "" {
 		if completedAt, err := time.Parse(time.RFC3339, req.CompletedAt); err == nil {
-			action.CompletedAt = completedAt
+			action.CompletedAt = &completedAt
 		}
 	}
 
@@ -173,7 +291,7 @@ func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req 
 
 	if req.VerifiedAt != "" {
 		if verifiedAt, err := time.Parse(time.RFC3339, req.VerifiedAt); err == nil {
-			action.VerifiedAt = verifiedAt
+			action.VerifiedAt = &verifiedAt
 		}
 	}
 
@@ -193,5 +311,138 @@ func (s *CorrectiveActionService) Delete(ctx context.Context, id uuid.UUID) erro
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+	return nil
+}
+
+func (s *CorrectiveActionService) CreateActionEvidence(evidence *models.ActionEvidence) error {
+	// Validate required fields
+	if evidence.CorrectiveActionID == uuid.Nil || evidence.FileType == "" || evidence.FileName == "" || evidence.FileURL == "" || evidence.UploadedBy == uuid.Nil {
+		return fmt.Errorf("missing required fields")
+	}
+
+	// Create the record
+	result := s.db.Create(evidence)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+func (s *CorrectiveActionService) GetActionEvidenceByID(id uuid.UUID) (*models.ActionEvidence, error) {
+	var evidence models.ActionEvidence
+
+	// Fetch the record by ID
+	result := s.db.Preload("CorrectiveAction").Preload("Uploader").First(&evidence, "id = ?", id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("action evidence not found")
+		}
+		return nil, result.Error
+	}
+
+	return &evidence, nil
+}
+
+func (s *CorrectiveActionService) GetActionEvidenceByCorrectiveActionID(correctiveActionID uuid.UUID) ([]models.ActionEvidence, error) {
+	var evidences []models.ActionEvidence
+
+	// Fetch all records by CorrectiveActionID
+	result := s.db.Preload("CorrectiveAction").Preload("Uploader").Where("corrective_action_id = ?", correctiveActionID).Find(&evidences)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return evidences, nil
+}
+
+// Get corrective action by ID
+func (s *CorrectiveActionService) InuseGetByID(ctx context.Context, id uuid.UUID) (*models.CorrectiveAction, error) {
+	var action models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		First(&action, "id = ?", id).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("record not found: %w", err)
+	}
+	return &action, nil
+}
+func (s *CorrectiveActionService) VerifyCompletion(ctx context.Context, actionID uuid.UUID, verifierID uuid.UUID) error {
+	// Begin a transaction
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Fetch the corrective action by ID
+	action, err := s.InuseGetByID(ctx, actionID)
+	if err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return err
+	}
+
+	now := time.Now()
+	// Update the corrective action status
+	action.Status = "verified"
+	action.VerifiedBy = &verifierID
+	action.VerifiedAt = &now
+
+	if err := tx.Save(action).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to verify corrective action: %w", err)
+	}
+
+	// Fetch the associated incident
+	var incident models.Incident
+	if err := tx.First(&incident, "id = ?", action.IncidentID).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to find incident: %w", err)
+	}
+
+	// Update the incident status
+	incident.Status = "resolved"
+	incident.ClosedAt = time.Now()
+
+	if err := tx.Save(&incident).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to update incident: %w", err)
+	}
+
+	// Commit the transaction if everything is successful
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *CorrectiveActionService) LabelAsCompleted(id uuid.UUID, notes string) error {
+	// Fetch the investigation
+	var action models.CorrectiveAction
+	if err := s.db.First(&action, "id = ?", id).Error; err != nil {
+		return fmt.Errorf("action not found: %w", err)
+	}
+
+	// Check if the investigation is already closed
+	if action.Status == "completed" {
+		return fmt.Errorf("action is already closed")
+	}
+
+	// Update the action status and set the completion time
+	now := time.Now()
+	action.Status = "completed"
+	action.CompletedAt = &now
+	action.CompletionNotes = notes
+
+	// Save the updated action
+	if err := s.db.Save(&action).Error; err != nil {
+		return fmt.Errorf("failed to close action: %w", err)
+	}
+
 	return nil
 }

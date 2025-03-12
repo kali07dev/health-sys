@@ -8,6 +8,8 @@ interface AttachmentsListProps {
 }
 
 export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
+
+  const BE_URL = process.env.Go_API_URL || "http://localhost:8000"
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -30,7 +32,7 @@ export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments })
             {isImage(attachment.fileType) ? (
               <div className="aspect-w-16 aspect-h-9 mb-3">
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/${attachment.storagePath}`}
+                  src={`${BE_URL}/${attachment.StoragePath}`}
                   alt={attachment.fileName}
                   className="object-cover rounded-md"
                 />
@@ -52,7 +54,7 @@ export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments })
               </span>
             </div>
             <a
-              href={`${process.env.NEXT_PUBLIC_API_URL}/${attachment.storagePath}`}
+              href={`${BE_URL}/${attachment.StoragePath}`}
               download
               className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600"
             >

@@ -28,5 +28,5 @@ type User struct {
 
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt time.Time
+	DeletedAt *time.Time
 }

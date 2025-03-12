@@ -2,8 +2,12 @@ import { incidentAPI } from "@/utils/api";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
+interface ViewInvestigationProps {
+  incidentId: string;
+  onClose: () => void;
+}
 // components/Investigation/ViewInvestigation.tsx
-export const ViewInvestigation: React.FC<{ incidentId: string }> = ({ incidentId }) => {
+export const ViewInvestigation: React.FC<ViewInvestigationProps> = ({ incidentId, onClose }) => {
     const [investigation, setInvestigation] = useState<any>(null);
     const [loading, setLoading] = useState(true);
   

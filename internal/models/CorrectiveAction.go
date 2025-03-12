@@ -16,11 +16,11 @@ type CorrectiveAction struct {
 	AssignedTo           uuid.UUID `gorm:"type:uuid;not null"`
 	AssignedBy           uuid.UUID `gorm:"type:uuid;not null"`
 	DueDate              time.Time `gorm:"not null"`
-	CompletedAt          time.Time
+	CompletedAt          *time.Time
 	CompletionNotes      string     `gorm:"type:text"`
 	VerificationRequired bool       `gorm:"default:false"`
 	VerifiedBy           *uuid.UUID `gorm:"type:uuid"`
-	VerifiedAt           time.Time
+	VerifiedAt           *time.Time
 	CreatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 

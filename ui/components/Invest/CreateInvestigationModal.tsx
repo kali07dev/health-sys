@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { SearchEmployee } from '@/components/SearchEmployee'; 
 
 interface CreateInvestigationModalProps {
   incidentId: string;
@@ -19,7 +20,13 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
     leadInvestigator: '',
     startDate: '',
   });
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null); // State for selected employee details
   const [loading, setLoading] = useState(false);
+
+  const handleEmployeeSelect = (employee: any) => {
+    setSelectedEmployee(employee); // Store the selected employee's details
+    setFormData({ ...formData, leadInvestigator: employee.ID }); // Update the form data with the employee's ID
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +35,8 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
       const payload = {
         incident_id: incidentId,
         description: formData.description,
-        lead_investigator: formData.leadInvestigator,
-        start_date: formData.startDate,
+        lead_investigator_id: formData.leadInvestigator,
+        started_at: new Date(formData.startDate).toISOString(),
       };
       await onSubmit(payload);
     } catch (error) {
@@ -62,7 +69,7 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
             <label className="block text-sm font-medium text-gray-700">
               Lead Investigator
             </label>
-            <input
+            {/* <input
               type="text"
               value={formData.leadInvestigator}
               onChange={(e) =>
@@ -70,7 +77,14 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
               }
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
-            />
+            /> */}
+            {/* Integrate the SearchEmployee component */}
+             <SearchEmployee onSelect={handleEmployeeSelect} />
+              {selectedEmployee && (
+                 <div className="mt-2 text-sm text-gray-500">
+                    Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                  </div>
+              )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
