@@ -24,9 +24,3 @@ smtp:
   username: your-email@example.com
   password: your-email-password
 
-smtp:
-  host: smtp.gmail.com
-  port: 587
-  username: hopekalitera@gmail.com
-  password: yhsn ymrd krsy kxlw
-  use_tls: false
