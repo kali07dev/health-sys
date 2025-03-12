@@ -1,13 +1,30 @@
-
-// components/Investigations/InvestigationFindingsModal.tsx
 'use client';
+// components/Investigations/InvestigationFindingsModal.tsx
 
 import { useState } from 'react';
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { InvestigationAPI } from '@/utils/investigationAPI';
+// import type { Investigation } from '@/interfaces/incidents';
 
-export const InvestigationFindingsModal = ({ investigationId, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
+interface InvestigationFindingsModalProps {
+  investigationId: string;
+  onClose: () => void;
+  onSubmit: () => void;
+}
+
+type FindingsFormData = {
+  rootCause: string;
+  contributingFactors: string[];
+  findings: string;
+  recommendations: string;
+};
+
+export const InvestigationFindingsModal = ({
+  investigationId,
+  onClose,
+  onSubmit,
+}: InvestigationFindingsModalProps) => {
+  const [formData, setFormData] = useState<FindingsFormData>({
     rootCause: '',
     contributingFactors: [''],
     findings: '',
@@ -15,12 +32,12 @@ export const InvestigationFindingsModal = ({ investigationId, onClose, onSubmit 
   });
   const [loading, setLoading] = useState(false);
   
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleFactorChange = (index, value) => {
+  const handleFactorChange = (index: number, value: string) => {
     const newFactors = [...formData.contributingFactors];
     newFactors[index] = value;
     setFormData(prev => ({ ...prev, contributingFactors: newFactors }));
@@ -33,7 +50,7 @@ export const InvestigationFindingsModal = ({ investigationId, onClose, onSubmit 
     }));
   };
   
-  const removeFactor = (index) => {
+  const removeFactor = (index: number) => {
     if (formData.contributingFactors.length > 1) {
       const newFactors = [...formData.contributingFactors];
       newFactors.splice(index, 1);
@@ -41,15 +58,14 @@ export const InvestigationFindingsModal = ({ investigationId, onClose, onSubmit 
     }
   };
   
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Filter out empty contributing factors
     const filteredFactors = formData.contributingFactors.filter(factor => factor.trim() !== '');
     
     try {
-      await api.put(`/api/investigations/${investigationId}/findings`, {
+      await InvestigationAPI.addFindings(investigationId, {
         ...formData,
         contributingFactors: filteredFactors
       });

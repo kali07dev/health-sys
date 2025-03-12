@@ -1,21 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { 
-  Users, 
   ShieldCheck, 
   Building2, 
   AlertTriangle,
   AlertCircle,
-  Activity,
   TrendingUp,
   ClipboardCheck,
   Clock,
-  ArrowUpCircle,
-  ArrowDownCircle
+  UserCog,
+  Settings,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/dashCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { 
   AdminDashboardResponse, 
@@ -84,6 +82,27 @@ export default function SafetyDashboard() {
     }));
   };
 
+  const QuickAction = ({ title, description, icon: Icon, href, color }: {
+    title: string;
+    description: string;
+    icon: any;
+    href: string;
+    color: string;
+  }) => (
+    <Link 
+      href={href}
+      className="flex transform items-center rounded-lg bg-white p-6 shadow-md transition-all hover:scale-105 hover:shadow-lg"
+    >
+      <div className={`mr-4 rounded-full p-3 ${color}`}>
+        <Icon className="h-6 w-6 text-white" />
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-600">{description}</p>
+      </div>
+    </Link>
+  );
+
   const StatCard = ({ title, value, description, icon: Icon, color }: {
     title: string;
     value: number | string;
@@ -91,48 +110,44 @@ export default function SafetyDashboard() {
     icon: any;
     color: string;
   }) => (
-    <Card className="hover:shadow-lg transition-shadow duration-300">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
-            {description && (
-              <p className="mt-2 text-sm text-gray-500">{description}</p>
-            )}
-          </div>
-          <div className={`rounded-full p-3 ${color}`}>
-            <Icon className="h-6 w-6 text-white" />
-          </div>
+    <div className="rounded-lg bg-white p-6 shadow-md">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
+          {description && (
+            <p className="mt-2 text-sm text-gray-500">{description}</p>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className={`rounded-full p-3 ${color}`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+      </div>
+    </div>
   );
 
   const IncidentCard = ({ incident }: { incident: Incident }) => (
-    <Card className="hover:shadow-md transition-shadow duration-300">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium">{incident.Title}</h3>
-            <p className="text-sm text-gray-500">{incident.ReferenceNumber}</p>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs ${
-            incident.SeverityLevel === 'Critical' ? 'bg-red-100 text-red-800' :
-            incident.SeverityLevel === 'High' ? 'bg-orange-100 text-orange-800' :
-            incident.SeverityLevel === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-green-100 text-green-800'
-          }`}>
-            {incident.SeverityLevel}
-          </span>
+    <div className="rounded-lg bg-white p-6 shadow-md">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-medium">{incident.Title}</h3>
+          <p className="text-sm text-gray-500">{incident.ReferenceNumber}</p>
         </div>
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">{incident.Description}</p>
-        <div className="mt-3 flex justify-between text-xs text-gray-500">
-          <span>Location: {incident.Location}</span>
-          <span>Reported: {new Date(incident.CreatedAt).toLocaleDateString()}</span>
-        </div>
-      </CardContent>
-    </Card>
+        <span className={`px-2 py-1 rounded-full text-xs ${
+          incident.SeverityLevel === 'Critical' ? 'bg-red-100 text-red-800' :
+          incident.SeverityLevel === 'High' ? 'bg-orange-100 text-orange-800' :
+          incident.SeverityLevel === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-green-100 text-green-800'
+        }`}>
+          {incident.SeverityLevel}
+        </span>
+      </div>
+      <p className="mt-2 text-sm text-gray-600 line-clamp-2">{incident.Description}</p>
+      <div className="mt-3 flex justify-between text-xs text-gray-500">
+        <span>Location: {incident.Location}</span>
+        <span>Reported: {new Date(incident.CreatedAt).toLocaleDateString()}</span>
+      </div>
+    </div>
   );
 
   if (loading) {
@@ -195,6 +210,32 @@ export default function SafetyDashboard() {
         <p className="mt-2 text-gray-600">
           Welcome back, {session?.user?.email}
         </p>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <QuickAction
+          title="User Management"
+          description="Manage user roles and permissions"
+          icon={UserCog}
+          href="/admin/user-management"
+          color="bg-blue-600"
+        />
+        <QuickAction
+          title="Department Settings"
+          description="Configure department structures"
+          icon={Building2}
+          href="/admin/departments"
+          color="bg-purple-600"
+        />
+        <QuickAction
+          title="General Settings"
+          description="Configure system settings"
+          icon={Settings}
+          href="/admin"
+          color="bg-gray-600"
+        />
       </div>
 
       {/* Filters */}
@@ -300,194 +341,176 @@ export default function SafetyDashboard() {
 
       {/* Trends Chart */}
       {dashboardData && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
-              Incident Trends
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart 
-                  data={formatTimeSeriesData(dashboardData.trendAnalysis.incidentTrend)}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="timestamp" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    name="Incidents" 
-                    stroke="#dc2626" 
-                    activeDot={{ r: 8 }} 
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <div className="flex items-center mb-4">
+            <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
+            <h2 className="text-xl font-semibold">Incident Trends</h2>
+          </div>
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart 
+                data={formatTimeSeriesData(dashboardData.trendAnalysis.incidentTrend)}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  name="Incidents" 
+                  stroke="#dc2626" 
+                  activeDot={{ r: 8 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
       )}
 
       {/* Distribution Charts */}
       {dashboardData && (
         <div className="mb-8 grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold flex items-center">
-                <AlertCircle className="mr-2 h-5 w-5 text-red-500" />
-                Incidents by Type
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={getIncidentTypeData()}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" name="Count" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold flex items-center">
-                <AlertTriangle className="mr-2 h-5 w-5 text-yellow-500" />
-                Incidents by Severity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={getSeverityData()}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" name="Count" fill="#f59e0b" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="mr-2 h-5 w-5 text-red-500" />
+              <h2 className="text-xl font-semibold">Incidents by Type</h2>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={getIncidentTypeData()}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Count" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="mr-2 h-5 w-5 text-yellow-500" />
+              <h2 className="text-xl font-semibold">Incidents by Severity</h2>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={getSeverityData()}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Count" fill="#f59e0b" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Department Metrics */}
       {dashboardData && dashboardData.departmentMetrics.length > 0 && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold flex items-center">
-              <Building2 className="mr-2 h-5 w-5 text-purple-500" />
-              Department Safety Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incidents</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Critical</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolution Rate</th>
+        <div className="rounded-lg bg-white p-6 shadow-md mb-8">
+          <div className="flex items-center mb-4">
+            <Building2 className="mr-2 h-5 w-5 text-purple-500" />
+            <h2 className="text-xl font-semibold">Department Safety Performance</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incidents</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Critical</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolution Rate</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dashboardData.departmentMetrics.map((dept, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{dept.departmentName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.incidentCount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.resolvedCount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.criticalIncidents}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-2 ${
+                          dept.resolutionRate >= 75 ? 'bg-green-500' : 
+                          dept.resolutionRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}></div>
+                        {dept.resolutionRate.toFixed(1)}%
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dashboardData.departmentMetrics.map((dept, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{dept.departmentName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.incidentCount}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.resolvedCount}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept.criticalIncidents}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <div className={`w-2 h-2 rounded-full mr-2 ${
-                            dept.resolutionRate >= 75 ? 'bg-green-500' : 
-                            dept.resolutionRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}></div>
-                          {dept.resolutionRate.toFixed(1)}%
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Top Hazards */}
       {dashboardData && dashboardData.topHazards && dashboardData.topHazards.length > 0 && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold flex items-center">
-              <ShieldCheck className="mr-2 h-5 w-5 text-orange-500" />
-              Top Hazards
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Severity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Reported</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affected Departments</th>
+        <div className="rounded-lg bg-white p-6 shadow-md mb-8">
+          <div className="flex items-center mb-4">
+            <ShieldCheck className="mr-2 h-5 w-5 text-orange-500" />
+            <h2 className="text-xl font-semibold">Top Hazards</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Severity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Reported</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affected Departments</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dashboardData.topHazards.map((hazard, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{hazard.type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hazard.frequency}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-2 ${
+                          hazard.averageSeverity > 3 ? 'bg-red-500' : 
+                          hazard.averageSeverity > 2 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}></div>
+                        {hazard.averageSeverity.toFixed(1)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(hazard.lastReportedAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-1">
+                        {hazard.affectedDepartments.map((dept, i) => (
+                          <span key={i} className="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                            {dept}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dashboardData.topHazards.map((hazard, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{hazard.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hazard.frequency}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <div className={`w-2 h-2 rounded-full mr-2 ${
-                            hazard.averageSeverity > 3 ? 'bg-red-500' : 
-                            hazard.averageSeverity > 2 ? 'bg-yellow-500' : 'bg-green-500'
-                          }`}></div>
-                          {hazard.averageSeverity.toFixed(1)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(hazard.lastReportedAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex flex-wrap gap-1">
-                          {hazard.affectedDepartments.map((dept, i) => (
-                            <span key={i} className="px-2 py-1 bg-gray-100 rounded-full text-xs">
-                              {dept}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Recent Incidents */}
