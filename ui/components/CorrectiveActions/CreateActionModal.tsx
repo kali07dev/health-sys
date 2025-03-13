@@ -1,14 +1,22 @@
-// components/CorrectiveActions/CreateActionModal.tsx
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import { SearchEmployee } from '@/components/SearchEmployee'; // Import the SearchEmployee component
+import { SearchEmployee } from '@/components/SearchEmployee';
+import { CorrectiveAction } from '@/interfaces/incidents'; // Import the CorrectiveAction interface
+
+// Define the type for the employee object
+interface Employee {
+  ID: string;
+  FirstName: string;
+  LastName: string;
+  EmployeeNumber: string;
+}
 
 interface CreateActionModalProps {
   incidentId: string;
   userID: string;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
+  onSubmit: (formData: Partial<CorrectiveAction>) => void; // Update to accept Partial<CorrectiveAction>
 }
 
 export const CreateActionModal: React.FC<CreateActionModalProps> = ({
@@ -20,14 +28,14 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
   const [formData, setFormData] = useState({
     description: '',
     actionType: '',
-    priority: 'low',
+    priority: 'low' as 'low' | 'medium' | 'high' | 'critical', // Ensure priority matches CorrectiveAction type
     assignedTo: '', // This will store the selected employee's ID
     dueDate: '',   // Store the raw input value
   });
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null); // State for selected employee details
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null); // State for selected employee details
   const [loading, setLoading] = useState(false);
 
-  const handleEmployeeSelect = (employee: any) => {
+  const handleEmployeeSelect = (employee: Employee) => {
     setSelectedEmployee(employee); // Store the selected employee's details
     setFormData({ ...formData, assignedTo: employee.ID }); // Update the form data with the employee's ID
   };
@@ -40,16 +48,16 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
       // Format the dueDate field to RFC3339
       const formattedDueDate = new Date(formData.dueDate).toISOString();
 
-      const payload = {
-        incident_id: incidentId,
+      const payload: Partial<CorrectiveAction> = {
+        incidentId: incidentId,
         description: formData.description,
-        action_type: formData.actionType,
+        actionType: formData.actionType,
         priority: formData.priority,
         status: 'pending',
-        assigned_to: formData.assignedTo, // Use the selected employee's ID
-        assigned_by: userID, // Replace with actual user ID
-        due_date: formattedDueDate, // Use the formatted date
-        verification_required: false,
+        assignedTo: formData.assignedTo, // Use the selected employee's ID
+        assignedBy: userID, // Replace with actual user ID
+        dueDate: formattedDueDate, // Use the formatted date
+        verificationRequired: false,
       };
 
       await onSubmit(payload);
@@ -57,7 +65,7 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
       console.error(error);
       toast.error('Failed to create corrective action');
     } finally {
-      toast.success("Actions Have Been set successfully")
+      toast.success("Actions Have Been set successfully");
       setLoading(false);
     }
   };
@@ -102,7 +110,7 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
             <select
               value={formData.priority}
               onChange={(e) =>
-                setFormData({ ...formData, priority: e.target.value })
+                setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' })
               }
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >

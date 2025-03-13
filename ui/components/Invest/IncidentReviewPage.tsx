@@ -16,15 +16,15 @@ interface IncidentReviewPageProps {
 
 const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
   const router = useRouter();
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [incident, setIncident] = useState<Incident | null>(null);
   const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
 
-  const handleCloseModal = () => {
-    setActiveTab('details');
-  };
+  // const handleCloseModal = () => {
+  //   setActiveTab('details');
+  // };
 
   const handleCloseIncident = async () => {
     try {
@@ -86,7 +86,7 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
             Status: <span className="font-semibold">{incident?.status}</span>
           </p>
         </div>
-        {isAuthorized && incident?.status !== 'Closed' && (
+        {isAuthorized && incident?.status !== 'closed' && (
           <button 
             onClick={handleCloseIncident}
             className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"

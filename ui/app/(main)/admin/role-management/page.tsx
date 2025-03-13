@@ -1,15 +1,15 @@
 // app/admin/role-management/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+// import { useSession } from 'next-auth/react';
 import { userService, User } from '@/utils/userAPI';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import ErrorMessage from '@/components/ui/ErrorMessage';
+// import LoadingSpinner from '@/components/ui/LoadingSpinner';
+// import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export default function RoleManagement() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -41,9 +41,9 @@ export default function RoleManagement() {
       await userService.updateUserRole(userId, newRole);
       toast.success('Role updated successfully');
       loadUsers(); // Reload users to reflect changes
-    } catch (error) {
+    } catch {
       toast.error('Failed to update role');
-    } finally {
+    }finally {
       setUpdating(null); // Clear updating state
     }
   };
@@ -109,7 +109,7 @@ export default function RoleManagement() {
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="text-sm text-gray-900">{user.email}</div>
                   <div className="text-sm text-gray-500">
-                    {user.employee?.firstName} {user.employee?.lastName}
+                    {user.employee?.FirstName} {user.employee?.LastName}
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">

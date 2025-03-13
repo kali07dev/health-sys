@@ -1,24 +1,24 @@
 // app/incidents/employee/[id]/page.tsx
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { IncidentsTable } from "@/components/Incidents/landing";
 import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { incidentAPI } from '@/utils/api';
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/auth-options";
 // import { toast } from 'react-hot-toast';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const fetchEmployeeIncidents = async (employeeId: string) => {
   try {
     const response = await incidentAPI.getIncidentsByEmployee(employeeId);
     return response || [];
-  } catch (error) {
+  } catch  {
     // toast.error('Please check your email to set up your password');
     // console.error("Failed to fetch employee incidents:", error);
     return [];
@@ -30,7 +30,8 @@ export default async function EmployeeIncidentsPage({ params }: PageProps) {
   const session = await getServerSession(authOptions);
   
   // Then access route parameters
-  const employeeId = params.id;
+  const { id } = await params;
+  const employeeId = id;
 
   const canViewIncidents = 
     session?.role === "admin" ||

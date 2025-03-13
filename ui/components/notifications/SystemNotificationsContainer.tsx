@@ -29,8 +29,8 @@ export default function SystemNotificationsContainer({ userRole }: SystemNotific
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, ] = useState('created_at');
+  const [sortOrder, ] = useState('desc');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -45,33 +45,53 @@ export default function SystemNotificationsContainer({ userRole }: SystemNotific
   useEffect(() => {
     // Only fetch if user has permission
     if (hasPermission) {
+      const fetchSystemNotifications = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(
+            `/api/notifications/system?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch system notifications');
+          }
+          
+          const data = await response.json();
+          setNotifications(data.notifications);
+          setTotalNotifications(data.total);
+        } catch (error) {
+          console.error('Error fetching system notifications:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
       fetchSystemNotifications();
     } else {
       // Redirect unauthorized users
       router.push('/alerts');
     }
-  }, [hasPermission, currentPage, pageSize, sortBy, sortOrder]);
+  }, [hasPermission, currentPage, pageSize, sortBy, sortOrder, router]);
 
-  const fetchSystemNotifications = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/notifications/system?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-      );
+  // const fetchSystemNotifications = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `/api/notifications/system?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+  //     );
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch system notifications');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch system notifications');
+  //     }
       
-      const data = await response.json();
-      setNotifications(data.notifications);
-      setTotalNotifications(data.total);
-    } catch (error) {
-      console.error('Error fetching system notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     setNotifications(data.notifications);
+  //     setTotalNotifications(data.total);
+  //   } catch (error) {
+  //     console.error('Error fetching system notifications:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleNotificationClick = (notification: Notification) => {
     setSelectedNotification(notification);

@@ -51,7 +51,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
 
       await reportsApi.downloadReport(request);
       toast.success('Report generated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate report');
       //console.error(error);
     } finally {

@@ -13,7 +13,7 @@ interface SidebarProps {
   isMobile: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile }) => {
+export const Sidebar: React.FC<SidebarProps> = () => {
   return (
     <div>
       {/* Sidebar content */}

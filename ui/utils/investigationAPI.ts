@@ -1,10 +1,7 @@
 // utils/api.ts
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
 import { useSession } from "next-auth/react";
 import {
-  Incident,
-  IncidentAttachment,
   Investigation,
   Interview,
   ActionEvidence,
@@ -21,7 +18,7 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || 'An error occurred';
+    // const message = error.response?.data?.message || 'An error occurred';
     // toast.error(message);
     console.log(error)
     return Promise.reject(error);
@@ -63,8 +60,8 @@ export const InvestigationAPI = {
 };
 
 export const useAuthorization = () => {
+  const { data: session } = useSession();
   const checkPermission = (requiredRole: string[]) => {
-    const { data: session } = useSession();
     return requiredRole.includes(session?.role as string);
   };
   return { checkPermission };

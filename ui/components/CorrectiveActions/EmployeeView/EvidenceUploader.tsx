@@ -12,6 +12,7 @@ import {
   ImageIcon 
 } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
+import Image from 'next/image';
 
 interface EvidenceUploaderProps {
   actionId: string;
@@ -175,7 +176,7 @@ export default function EvidenceUploader({
                 <li key={id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                   <div className="flex items-center space-x-2">
                     {preview ? (
-                      <img src={preview} alt="Preview" className="h-10 w-10 object-cover rounded" />
+                      <Image src={preview} alt="Preview" className="h-10 w-10 object-cover rounded" />
                     ) : (
                       getFileIcon(file)
                     )}

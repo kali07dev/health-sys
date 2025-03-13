@@ -1,12 +1,15 @@
 // app/api/notifications/user/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/auth-options';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> } // Update params to be a Promise
 ) {
+  // Await the params object
+  const { userId } = await params;
+
   const session = await getServerSession(authOptions);
 
   // Check authentication
@@ -15,7 +18,7 @@ export async function GET(
   }
 
   // Verify user is requesting their own notifications
-  if (session.user?.id !== params.userId) {
+  if (session.user?.id !== userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -29,9 +32,9 @@ export async function GET(
 
   try {
     // Construct the backend API URL with all parameters
-    const baseUrl = process.env.BACKEND_API_URL || "http://localhost:8000"
-    const apiUrl = `${baseUrl}/api/v1/notifications/user/${params.userId}?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}${type ? `&type=${type}` : ''}`;
-    console.log(apiUrl)
+    const baseUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
+    const apiUrl = `${baseUrl}/api/v1/notifications/user/${userId}?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}${type ? `&type=${type}` : ''}`;
+    console.log(apiUrl);
     const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${session.token}`,

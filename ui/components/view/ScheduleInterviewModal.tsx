@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { InvestigationAPI } from '@/utils/investigationAPI';
-import { SearchEmployee } from '@/components/SearchEmployee';
+import { SearchEmployee, Employee } from '@/components/SearchEmployee';
 // import type { Employee } from '@/types/employee';
 
 interface ScheduleInterviewModalProps {
@@ -30,14 +30,14 @@ export const ScheduleInterviewModal = ({
     location: '',
   });
   const [loading, setLoading] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectEmployee = (employee: any) => {
+  const handleSelectEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
     setFormData(prev => ({ ...prev, intervieweeId: employee.ID }));
   };

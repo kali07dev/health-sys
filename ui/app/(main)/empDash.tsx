@@ -6,13 +6,11 @@ import { useState, useEffect } from 'react';
 import { PlusCircle, ClipboardList, UserCircle, AlertCircle, CheckCircle, XCircle, TrendingUp  } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/dashCard';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import StatCard from '@/components/statCard';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
+// import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+// import { getServerSession } from 'next-auth';
+// import { redirect } from 'next/navigation';
 import { dashboardAPI } from '@/utils/adminApi';
 
 interface Incident {
@@ -72,37 +70,37 @@ export default function EmployeeDashboard ({ userID } : EmployeeDashProps) {
         };
     
         fetchDashboardData();
-  }, []);
+  }, [toast, userID]);
 
-  const fetchDashboardData = async () => {
-    try {
-      const session = await getServerSession(authOptions);
-        if (!session) {
-          redirect('/auth/login');
-        }
-      const userId = session.user?.id;
-      const response = await fetch(`http://localhost:8000/api/v1/dashboard/employee/${userId}`, {
-        credentials: 'include' // This ensures cookies are sent with the request
-      });
-      console.log("dashboard",response);
+  // const fetchDashboardData = async () => {
+  //   try {
+  //     const session = await getServerSession(authOptions);
+  //       if (!session) {
+  //         redirect('/auth/login');
+  //       }
+  //     const userId = session.user?.id;
+  //     const response = await fetch(`http://localhost:8000/api/v1/dashboard/employee/${userId}`, {
+  //       credentials: 'include' // This ensures cookies are sent with the request
+  //     });
+  //     console.log("dashboard",response);
 
       
-      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+  //     if (!response.ok) throw new Error('Failed to fetch dashboard data');
       
-      const data = await response.json();
-      console.log("dashboard",data);
-      setDashboardData(data);
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error)
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data. Please try again.",
-        variant: "error"
-      });
-      setIsLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     console.log("dashboard",data);
+  //     setDashboardData(data);
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.log(error)
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to load dashboard data. Please try again.",
+  //       variant: "error"
+  //     });
+  //     setIsLoading(false);
+  //   }
+  // };
 
   if (isLoading) {
     return (

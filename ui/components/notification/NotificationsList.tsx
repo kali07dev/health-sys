@@ -16,14 +16,31 @@ export default function NotificationsList({ userId, isSystemView = false }: Noti
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const [filter, setFilter] = useState<NotificationFilter>({
+  const [filter] = useState<NotificationFilter>({
     sortBy: 'CreatedAt',
     sortOrder: 'desc'
   });
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const data = isSystemView
+          ? await notificationService.getAllSystemNotifications(filter)
+          : await notificationService.getUserNotifications(userId, filter);
+        setNotifications(data);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to fetch notifications",
+          variant: "error"
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
     fetchNotifications();
-  }, [filter]);
+  }, [filter, isSystemView, toast, userId]);
 
   const fetchNotifications = async () => {
     try {
@@ -32,7 +49,7 @@ export default function NotificationsList({ userId, isSystemView = false }: Noti
         ? await notificationService.getAllSystemNotifications(filter)
         : await notificationService.getUserNotifications(userId, filter);
       setNotifications(data);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to fetch notifications",
@@ -51,7 +68,7 @@ export default function NotificationsList({ userId, isSystemView = false }: Noti
         description: "Notification marked as read"
       });
       fetchNotifications();
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to mark notification as read",

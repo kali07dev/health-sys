@@ -4,8 +4,8 @@ export interface Investigation {
     incident_id: string; // UUID as string
     lead_investigator_id: string; // UUID as string
     root_cause: string;
-    contributing_factors: Record<string, any>; // JSONB field
-    investigation_methods: Record<string, any>; // JSONB field
+    contributing_factors: Record<string, unknown>; // JSONB field
+    investigation_methods: Record<string, unknown>; // JSONB field
     findings: string;
     recommendations: string;
     started_at: string; // ISO date string

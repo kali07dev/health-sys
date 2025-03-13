@@ -29,8 +29,8 @@ export const RequestPasswordReset = () => {
 
       toast.success('Password reset instructions sent to your email');
       setEmail('');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to request password reset');
+    } catch {
+      toast.error('Failed to request password reset');
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +91,8 @@ export const CompletePasswordReset = () => {
 
       toast.success('Password reset successfully');
       router.push('/auth/login');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to reset password');
+    } catch {
+      toast.error('Failed to reset password');
     } finally {
       setIsLoading(false);
     }

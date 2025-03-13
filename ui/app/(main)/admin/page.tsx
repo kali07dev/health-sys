@@ -1,10 +1,8 @@
 // app/admin/page.tsx
 'use client';
 
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { 
-  Users, 
   UserCog,
   Building2,
   Settings,
@@ -13,11 +11,12 @@ import {
   Ban,
   History,
   HardDrive,
-  Lock
+  Lock,
+  LucideIcon
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
 
   const AdminAction = ({ 
     title, 
@@ -28,7 +27,7 @@ export default function AdminDashboard() {
   }: {
     title: string;
     description: string;
-    icon: any;
+    icon: LucideIcon ;
     href: string;
     color: string;
   }) => (

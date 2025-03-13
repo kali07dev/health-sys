@@ -1,5 +1,7 @@
 // app/reset-password/complete/page.tsx
+import { Suspense } from 'react';
 import { CompletePasswordReset } from '@/components/Auth/ResetPassword';
+import { LoadingSpinner } from '@/components/ui/loading-spinner'; 
 
 export default function CompleteResetPage() {
   return (
@@ -11,7 +13,9 @@ export default function CompleteResetPage() {
       </div>
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <CompletePasswordReset />
+          <Suspense fallback={<LoadingSpinner />}>
+            <CompletePasswordReset />
+          </Suspense>
         </div>
       </div>
     </div>

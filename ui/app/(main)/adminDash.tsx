@@ -13,6 +13,7 @@ import {
   Clock,
   UserCog,
   Settings,
+  LucideIcon,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { 
@@ -85,7 +86,7 @@ export default function SafetyDashboard() {
   const QuickAction = ({ title, description, icon: Icon, href, color }: {
     title: string;
     description: string;
-    icon: any;
+    icon: LucideIcon;
     href: string;
     color: string;
   }) => (
@@ -107,7 +108,7 @@ export default function SafetyDashboard() {
     title: string;
     value: number | string;
     description?: string;
-    icon: any;
+    icon: LucideIcon;
     color: string;
   }) => (
     <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/dashCard';
 import { Timeline } from '@/components/ui/timeline';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'react-hot-toast';
+
 
 interface Props {
   summary: IncidentSummary;

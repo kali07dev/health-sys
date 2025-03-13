@@ -1,7 +1,7 @@
 // app/(main)/tasks/page.tsx
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/auth-options';
 import EmployeeTasksDashboard from './EmployeeTasksDashboard';
 import TasksSkeleton from './TasksSkeleton';
 import { Suspense } from 'react';

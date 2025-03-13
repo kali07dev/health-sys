@@ -20,6 +20,12 @@ interface ValidationError {
   message: string;
 }
 
+interface FormError {
+  message: string;
+  validationErrors?: ValidationError[];
+  fileErrors?: string[];
+}
+
 interface IncidentFormProps {
   onSuccess?: (newIncident: Incident) => void;
 }
@@ -41,7 +47,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
 
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<FormError | null>(null);
 
   if (status === "unauthenticated") {
     router.push("/auth/login");
@@ -100,16 +106,27 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
         router.push("/auth/login");
         break;
       case "VALIDATION_ERROR":
-        setError({
-          message: "Please correct the following errors:",
-          validationErrors: err.details,
-        });
+        if (Array.isArray(err.details) && err.details.every(detail => 
+          typeof detail === 'object' && 
+          'field' in detail && 
+          'message' in detail)) {
+          setError({
+            message: "Please correct the following errors:",
+            validationErrors: err.details as ValidationError[],
+          });
+        }
         break;
       case "INVALID_FILES":
-        setError({
-          message: "File upload errors:",
-          fileErrors: err.details,
-        });
+        if (Array.isArray(err.details) && err.details.every(detail => typeof detail === 'string')) {
+          setError({
+            message: "File upload errors:",
+            fileErrors: err.details,
+          });
+        } else {
+          setError({
+            message: "Invalid file error format",
+          });
+        }
         break;
       case "NETWORK_ERROR":
         setError({

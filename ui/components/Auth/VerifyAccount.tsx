@@ -33,8 +33,8 @@ export const VerifyAccount = () => {
 
         toast.success('Account verified successfully');
         router.push('/auth/login');
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to verify account');
+      } catch {
+        toast.error('Failed to verify account');
         router.push('/auth/login');
       } finally {
         setIsVerifying(false);

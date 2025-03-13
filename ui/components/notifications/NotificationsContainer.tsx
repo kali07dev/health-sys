@@ -1,10 +1,10 @@
 'use client';
 // app/notifications/components/NotificationsContainer.tsx
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import NotificationItem from './NotificationItem';
-import NotificationDetailsSidebar from './NotificationDetailsSidebar';
-import PaginationControls from './PaginationControls';
+// import NotificationDetailsSidebar from './NotificationDetailsSidebar';
+// import PaginationControls from './PaginationControls';
 
 interface Notification {
   id: string;
@@ -25,58 +25,78 @@ interface NotificationsContainerProps {
 
 
 export default function NotificationsContainer({ userId, userRole  }: NotificationsContainerProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [totalNotifications, setTotalNotifications] = useState(0);
+  const [, setTotalNotifications] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, ] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, ] = useState('created_at');
+  const [sortOrder, ] = useState('desc');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [, setSidebarOpen] = useState(false);
 
    // Check if user has admin or safety_officer role
    const canViewSystemNotifications = userRole === 'admin' || userRole === 'safety_officer';
 
    // Function to navigate to system notifications
-   const navigateToSystemNotifications = () => {
-     router.push('/alerts/system');
-   };
+  //  const navigateToSystemNotifications = () => {
+  //    router.push('/alerts/system');
+  //  };
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/notifications/user/${userId}?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications');
+        }
+        
+        const data = await response.json();
+        setNotifications(data.notifications);
+        setTotalNotifications(data.total);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchNotifications();
   }, [userId, currentPage, pageSize, sortBy, sortOrder]);
 
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/notifications/user/${userId}?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-      );
+  // const fetchNotifications = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `/api/notifications/user/${userId}?page=${currentPage}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+  //     );
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch notifications');
+  //     }
       
-      const data = await response.json();
-      setNotifications(data.notifications);
-      setTotalNotifications(data.total);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     setNotifications(data.notifications);
+  //     setTotalNotifications(data.total);
+  //   } catch (error) {
+  //     console.error('Error fetching notifications:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleNotificationClick = (notification: Notification) => {
     setSelectedNotification(notification);
     setSidebarOpen(true);
   };
 
-  const handleCloseSidebar = () => {
-    setSidebarOpen(false);
-  };
+  // const handleCloseSidebar = () => {
+  //   setSidebarOpen(false);
+  // };
 
   const markAsRead = async (notificationId: string) => {
     try {

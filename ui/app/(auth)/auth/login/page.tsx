@@ -3,16 +3,19 @@ import LoginForm from '@/components/Auth/loginForm';
 import GoogleSignIn from '@/components/Auth/GoogleSignIn';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const LoginPage: React.FC = () => {
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <img
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <Image
             className="mx-auto h-12 w-auto"
             src="/logo.png"
-            alt="Your App Logo"
+            alt="App Logo"
+            width={48}
+            height={48}
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
@@ -23,7 +26,7 @@ const LoginPage: React.FC = () => {
             <LoginForm />
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Sign up
                 </Link>

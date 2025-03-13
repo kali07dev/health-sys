@@ -40,7 +40,7 @@ const LoginForm: React.FC = () => {
       toast.success('Signed in successfully');
       router.push('/');
       router.refresh();
-    } catch (err: any) {
+    } catch {
       toast.error('An error occurred during sign in');
     } finally {
       setIsLoading(false);

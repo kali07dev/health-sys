@@ -1,13 +1,20 @@
 // components/Investigation/CreateInvestigationModal.tsx
 import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import { SearchEmployee } from '@/components/SearchEmployee'; 
+import { SearchEmployee, Employee } from '@/components/SearchEmployee'; 
+
+interface InvestigationPayload {
+  incident_id: string;
+  description: string;
+  lead_investigator_id: string;
+  started_at: string;
+}
 
 interface CreateInvestigationModalProps {
   incidentId: string;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
+  onSubmit: (formData: InvestigationPayload) => void;
 }
 
 export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> = ({
@@ -20,10 +27,10 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
     leadInvestigator: '',
     startDate: '',
   });
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null); // State for selected employee details
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);// State for selected employee details
   const [loading, setLoading] = useState(false);
 
-  const handleEmployeeSelect = (employee: any) => {
+  const handleEmployeeSelect = (employee: Employee) => {
     setSelectedEmployee(employee); // Store the selected employee's details
     setFormData({ ...formData, leadInvestigator: employee.ID }); // Update the form data with the employee's ID
   };

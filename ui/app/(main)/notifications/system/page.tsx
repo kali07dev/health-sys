@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import NotificationsList from '@/components/notification/NotificationsList';
 import NotificationFilter from '@/components/notification/NotificationFilter';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/auth-options";
 // import { Toaster } from '@/components/ui/toaster';
 
 interface Session {

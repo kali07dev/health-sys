@@ -3,18 +3,24 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
-import { SearchEmployee } from '../SearchEmployee';
+import { SearchEmployee, Employee } from '../SearchEmployee';
 
-export const ScheduleInterview: React.FC<any> = ({ incidentId, onClose, onSchedule }) => {
+interface ScheduleInterviewProps {
+  incidentId: string;
+  onClose: () => void;
+  onSchedule: () => void;
+}
+
+export const ScheduleInterview: React.FC<ScheduleInterviewProps> = ({ incidentId, onClose, onSchedule }) => {
     const [formData, setFormData] = useState({
       intervieweeId: '',
       scheduledFor: '',
       location: '',
     });
     const [loading, setLoading] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+    const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-    const handleEmployeeSelect = (employee: any) => {
+    const handleEmployeeSelect = (employee: Employee) => {
       setSelectedEmployee(employee); // Store the selected employee's details
       setFormData({ ...formData, intervieweeId: employee.ID }); // Update the form data with the employee's ID
     };

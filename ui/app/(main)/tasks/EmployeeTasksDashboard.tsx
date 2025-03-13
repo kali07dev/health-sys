@@ -21,10 +21,25 @@ export default function EmployeeTasksDashboard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewingAction, setViewingAction] = useState<CorrectiveAction | null>(null);
-  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [selectedAction, setSelectedAction] = useState<CorrectiveAction | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchActions = async () => {
+      try {
+        setLoading(true);
+        const response = await incidentAPI.getCorrectiveActionsByUserID(userId);
+        setActions(response);
+        setError(null);
+      } catch (error) {
+        console.error(error);
+        setError('Failed to fetch your assigned corrective actions');
+        toast.error('Failed to fetch your assigned corrective actions');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
     fetchActions();
   }, [userId]);
 
@@ -254,7 +269,7 @@ export default function EmployeeTasksDashboard({
           <div className="text-center">
             <p className="text-lg font-medium">No corrective actions assigned</p>
             <p className="text-sm text-gray-500">
-              You don't have any corrective actions assigned to you at this time.
+              You don&apos;t have any corrective actions assigned to you at this time.
             </p>
           </div>
         </div>
@@ -275,6 +290,7 @@ export default function EmployeeTasksDashboard({
           action={viewingAction}
           onClose={() => setViewingAction(null)}
           userRole={userRole}
+          userID={userId}
           refreshActions={fetchActions}
         />
       )}

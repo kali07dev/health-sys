@@ -2,8 +2,7 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { Toaster } from 'react-hot-toast';
 import IncidentReviewPage from '@/components/Invest/IncidentReviewPage';
-import { incidentAPI } from '@/utils/api';
-import type { Incident } from '@/interfaces/incidents';
+
 
 interface PageProps {
   params: Promise<{
@@ -11,15 +10,6 @@ interface PageProps {
   }>;
 }
 
-// async function getIncident(id: string): Promise<Incident> {
-//   try {
-//     const response = await incidentAPI.getIncident(id);
-//     return response;
-//   } catch (error) {
-//     console.error('Failed to fetch incident:', error);
-//     throw new Error('Failed to fetch incident');
-//   }
-// }
 
 export default async function Page({ params }: PageProps) {
   // Await the params object
@@ -40,10 +30,6 @@ export default async function Page({ params }: PageProps) {
   }
 
   try {
-    // Fetch incident data
-    // Uncomment if you need to fetch incident data
-    // const incident = await getIncident(id);
-
     return (
       <>
         <Toaster position="top-right" />
@@ -52,6 +38,5 @@ export default async function Page({ params }: PageProps) {
     );
   } catch (error) {
     console.error('Error fetching incident:', error);
-    // redirect('/incidents');
   }
 }
