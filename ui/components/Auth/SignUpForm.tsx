@@ -11,7 +11,7 @@ const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
     email: '',
     password: '',
-    ConfirmPassword: '', // Add confirm password field
+    confirmPassword: '', // Add confirm password field
     employeeNumber: '',
     firstName: '',
     lastName: '',
@@ -34,7 +34,7 @@ const SignUpForm: React.FC = () => {
 
     try {
       // Validate passwords match
-      if (userData.password !== userData.ConfirmPassword) {
+      if (userData.password !== userData.confirmPassword) {
         throw new Error('Passwords do not match');
       }
 
@@ -46,10 +46,12 @@ const SignUpForm: React.FC = () => {
       };
 
       // Call the sign-up API
-      const res = await signUp(formattedData);
+      await signUp(formattedData);
       router.push('/auth/login'); // Redirect to home page after successful sign-up
-    } catch (err: any) {
-      setError(err.message || 'Sign-up failed. Please try again.');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Sign-up failed. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -150,9 +152,9 @@ const SignUpForm: React.FC = () => {
         label="Confirm Password"
         id="ConfirmPassword"
         type="password"
-        value={userData.ConfirmPassword}
+        value={userData.confirmPassword}
         onChange={(e) =>
-          setUserData({ ...userData, ConfirmPassword: e.target.value })
+          setUserData({ ...userData, confirmPassword: e.target.value })
         }
         required
       />

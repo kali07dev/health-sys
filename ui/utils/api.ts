@@ -1,6 +1,6 @@
 // utils/api.ts
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
 import { useSession } from "next-auth/react";
 import { getSession } from "next-auth/react";
 import {
@@ -10,7 +10,7 @@ import {
   Interview,
   CorrectiveAction,
   ActionEvidence,
-  User,
+  // User,
 } from '@/interfaces/incidents';
 
 
@@ -134,8 +134,9 @@ export const incidentAPI = {
 };
 
 export const useAuthorization = () => {
+  const { data: session } = useSession();
+  
   const checkPermission = (requiredRole: string[]) => {
-    const { data: session } = useSession();
     return requiredRole.includes(session?.role as string);
   };
   return { checkPermission };

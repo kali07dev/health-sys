@@ -13,7 +13,7 @@ import {
   Calendar,
   X
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+// import { useToast } from "@/components/ui/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +66,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
   const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   
   // Sorting state
   const [sortField, setSortField] = useState<SortField>('occurredAt');
@@ -106,7 +106,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
   };
 
   // Filter handlers
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
+  const handleFilterChange = (key: keyof FilterState, value: string | { from: string | null; to: string | null }) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
@@ -181,8 +181,8 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
     
     // Then sort
     return result.sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
+      let valueA: string | number | undefined;
+      let valueB: string | number | undefined;
       
       switch (sortField) {
         case 'referenceNumber':
@@ -224,7 +224,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-    } catch (e) {
+    } catch {
       return 'Invalid date';
     }
   };

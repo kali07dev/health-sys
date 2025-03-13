@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Check, ChevronDown, Loader2, Search } from 'lucide-react';
 
-interface Employee {
+export interface Employee {
   ID: string
   FirstName: string
   LastName: string

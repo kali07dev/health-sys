@@ -34,9 +34,9 @@ const incidentSchema = z.object({
 
 export class IncidentApiError extends Error {
   code: string
-  details?: any
+  details?: unknown
 
-  constructor(message: string, code: string, details?: any) {
+  constructor(message: string, code: string, details?: unknown) {
     super(message)
     this.code = code
     this.details = details

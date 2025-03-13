@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export interface LoaderProps extends React.SVGProps<SVGSVGElement> {}
+export type LoaderProps = React.SVGProps<SVGSVGElement>
 
 export const Loader2 = React.forwardRef<SVGSVGElement, LoaderProps>(({ className, ...props }, ref) => (
   <svg

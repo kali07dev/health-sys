@@ -7,7 +7,7 @@ import { CreateDepartmentModal } from '@/components/departments/CreateDepartment
 import { UpdateDepartmentModal } from '@/components/departments/UpdateDepartmentModal';
 import { DeleteDepartmentModal } from '@/components/departments/DeleteDepartmentModal';
 
-interface DepartmentsPageProps {}
+type DepartmentsPageProps = object
 
 export default function DepartmentsPage({}: DepartmentsPageProps) {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -54,9 +54,7 @@ export default function DepartmentsPage({}: DepartmentsPageProps) {
 
     try {
       // Assuming the API supports deletion by ID
-      await fetchWithAuth(`/v1/departments/${selectedDepartment.id}`, {
-        method: 'DELETE',
-      });
+      await departmentService.deleteDepartment(selectedDepartment.ID);
       fetchDepartments();
       setIsDeleteModalOpen(false);
     } catch (error) {

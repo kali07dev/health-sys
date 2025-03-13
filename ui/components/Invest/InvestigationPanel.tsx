@@ -1,26 +1,40 @@
 // components/Investigation/InvestigationPanel.tsx
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { Loader2, Plus, FileText, Users, Check } from 'lucide-react';
+import { Loader2, Plus, FileText, Users } from 'lucide-react';
 import { AssignInvestigator } from './AssignInvestigator';
 import { ScheduleInterview } from './ScheduleInterview';
 import { InvestigationFindings } from './InvestigationFindings';
 import { CreateInvestigationModal } from './CreateInvestigationModal'; // Import the new modal
 import { ViewInvestigation } from './ViewInvestigation'; // Import the ViewInvestigation modal
 import { incidentAPI } from '@/utils/api';
-
+import {
+  Investigation,
+} from '@/interfaces/incidents';
 interface InvestigationPanelProps {
   incidentId: string;
 }
 
 export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incidentId }) => {
-  const [investigation, setInvestigation] = useState<any>(null);
+  const [investigation, setInvestigation] = useState<Investigation | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // State for Create Investigation Modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false); // State for View Investigation Modal
 
   useEffect(() => {
+    const fetchInvestigation = async () => {
+      try {
+        const response = await incidentAPI.getInvestigation(incidentId);
+        setInvestigation(response);
+      } catch (error) {
+        toast.error('No Investigation Exists for this Incident, Please Create One');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
     fetchInvestigation();
   }, [incidentId]);
 
@@ -36,7 +50,7 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
     }
   };
 
-  const handleCreateInvestigation = async (formData: any) => {
+  const handleCreateInvestigation = async (formData: Partial<Investigation>) => {
     try {
       await incidentAPI.createInvestigation(incidentId, formData);
       toast.success('Investigation created successfully');
@@ -96,7 +110,7 @@ export const InvestigationPanel: React.FC<InvestigationPanelProps> = ({ incident
             title="View Investigation"
             icon={<FileText className="w-6 h-6 text-red-600" />}
             onClick={() => setIsViewModalOpen(true)} // Open the View Investigation modal
-            status={investigation?.Recommendations ? 'completed' : 'pending'}
+            status={investigation?.recommendations ? 'completed' : 'pending'}
           />
         </div>
       )}

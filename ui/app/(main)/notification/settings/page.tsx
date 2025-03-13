@@ -1,5 +1,7 @@
-import type React from "react"
-import { NotificationSettings } from "@/components/notifications/NotificationSettings"  
+'use client'; // Mark this component as a Client Component
+
+import type React from "react";
+import { NotificationSettings } from "@/components/notifications/NotificationSettings";
 
 const NotificationSettingsPage: React.FC = () => {
   return (
@@ -7,8 +9,7 @@ const NotificationSettingsPage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6">Notification Settings</h1>
       <NotificationSettings />
     </div>
-  )
-}
+  );
+};
 
-export default NotificationSettingsPage
-
+export default NotificationSettingsPage;

@@ -2,6 +2,7 @@
 import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Session } from "next-auth";
+import Image from "next/image";
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -38,7 +39,7 @@ export default function Navbar({
       <div className="flex items-center">
         <IconButton icon={Bell} color="blue" className="mr-4" />
         <div className="flex items-center">
-          <img
+          <Image
             src="/placeholder.svg?height=32&width=32"
             alt="User"
             className="w-8 h-8 rounded-full"

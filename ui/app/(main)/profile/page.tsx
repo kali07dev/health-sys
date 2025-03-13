@@ -2,13 +2,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { userService, EmployeeUpdateData } from '@/utils/userAPI';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function UserProfile() {
-  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<EmployeeUpdateData>({
@@ -33,7 +31,7 @@ export default function UserProfile() {
     try {
       const data = await userService.getUserProfile();
       setProfile(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load profile');
     } finally {
       setLoading(false);
@@ -46,7 +44,7 @@ export default function UserProfile() {
     try {
       await userService.updateUserProfile(profile);
       toast.success('Profile updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
@@ -65,7 +63,7 @@ export default function UserProfile() {
         }
       }));
     } else {
-      setProfile((prev: any) => ({
+      setProfile((prev: EmployeeUpdateData) => ({
         ...prev,
         [name]: value
       }));

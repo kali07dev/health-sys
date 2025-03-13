@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { IncidentsTable } from "@/components/Incidents/landing";
 import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { incidentAPI } from '@/utils/api';
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/auth-options";
 
 // Define types for better type safety
 interface Session {

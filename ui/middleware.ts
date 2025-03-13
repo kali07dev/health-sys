@@ -1,9 +1,20 @@
-// middleware.ts
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { withAuth, NextAuthMiddlewareOptions } from "next-auth/middleware";
+import { NextResponse, NextRequest } from "next/server";
+
+// Define the shape of the token object
+interface Token {
+  role?: string;
+}
+
+// Define the shape of the request object for the middleware
+interface MiddlewareRequest extends NextRequest {
+  nextauth?: {
+    token: Token | null;
+  };
+}
 
 // This function will handle unauthenticated requests
-function middleware(req: { nextauth: { token: any; }; nextUrl: { pathname: any; }; url: string | URL | undefined; }) {
+function middleware(req: MiddlewareRequest) {
   const token = req.nextauth?.token;
   const path = req.nextUrl.pathname;
 
@@ -40,7 +51,7 @@ export default withAuth(middleware, {
       return !!token;
     },
   },
-});
+} as NextAuthMiddlewareOptions);
 
 // Update the matcher to include all routes except those we want to exclude
 export const config = {

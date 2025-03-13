@@ -23,12 +23,35 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
   const [actions, setActions] = useState<CorrectiveAction[] | null>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [selectedAction, setSelectedAction] = useState<CorrectiveAction | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewingAction, setViewingAction] = useState<CorrectiveAction | null>(null);
 
   useEffect(() => {
+    const fetchActions = async () => {
+      try {
+        setLoading(true);
+        let response;
+        
+        // If user is admin or safety officer, fetch by incident ID
+        // Otherwise, fetch only actions assigned to the current user
+        if (['admin', 'safety_officer'].includes(userRole)) {
+          response = await incidentAPI.getCorrectiveActionsByIncidentID(incidentId);
+        } else {
+          response = await incidentAPI.getCorrectiveActionsByUserID(userID);
+        }
+        
+        setActions(response);
+        setError(null);
+      } catch (error) {
+        console.error(error);
+        setError('Failed to fetch actions');
+        toast.error('Failed to fetch actions');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchActions();
   }, [incidentId, userID, userRole]);
 
@@ -67,7 +90,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
     fetchActions(); // Refresh actions after submission
   };
 
-  const handleCreateAction = async (formData: any) => {
+  const handleCreateAction = async (formData: Partial<CorrectiveAction>) => {
     try {
       await incidentAPI.createCorrectiveAction(formData);
       toast.success('Corrective action created successfully');

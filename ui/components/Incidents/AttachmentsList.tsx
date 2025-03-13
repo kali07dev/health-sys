@@ -2,6 +2,7 @@
 import React from 'react';
 import { IncidentAttachment } from '@/interfaces/incidents';
 import { FileIcon, Download } from 'lucide-react';
+import Image from 'next/image';
 
 interface AttachmentsListProps {
   attachments: IncidentAttachment[];
@@ -31,7 +32,7 @@ export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments })
           >
             {isImage(attachment.fileType) ? (
               <div className="aspect-w-16 aspect-h-9 mb-3">
-                <img
+                <Image
                   src={`${BE_URL}/${attachment.StoragePath}`}
                   alt={attachment.fileName}
                   className="object-cover rounded-md"

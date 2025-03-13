@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import Image from "next/image"
 
 export function AppHeader() {
   const { data: session } = useSession()
@@ -28,7 +29,7 @@ export function AppHeader() {
           <span className="sr-only">Notifications</span>
         </Button>
         <Button variant="ghost" className="gap-2 text-gray-700 hover:text-red-600 hover:bg-red-50">
-          <img src="/user.svg" alt="User" className="h-6 w-6 rounded-full" />
+          <Image src="/user.svg" alt="User" className="h-6 w-6 rounded-full" />
           <span className="hidden text-sm font-normal md:inline-block">{session?.user?.email}</span>
           <ChevronDown className="h-4 w-4" />
         </Button>

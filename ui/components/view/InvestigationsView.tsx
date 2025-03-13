@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { InvestigationCard } from './InvestigationCard';
 import { InvestigationDetailsSidebar } from './InvestigationDetailsSidebar';
 import { ScheduleInterviewModal } from './ScheduleInterviewModal';
@@ -16,7 +16,7 @@ interface InvestigationsViewProps {
   userRole: string;
 }
 
-export default function InvestigationsView({ userId, userRole }: InvestigationsViewProps) {
+export default function InvestigationsView({ userId }: InvestigationsViewProps) {
   const [investigations, setInvestigations] = useState<Investigation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

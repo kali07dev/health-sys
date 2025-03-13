@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/auth-options';
 import InvestigationsView from '@/components/view/InvestigationsView';
 import { InvestigationsSkeleton } from '@/components/view/InvestigationsSkeleton';
 

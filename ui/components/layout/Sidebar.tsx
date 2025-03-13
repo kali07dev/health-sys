@@ -10,6 +10,7 @@ import {
   CogIcon,
   BellAlertIcon
 } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
@@ -25,7 +26,7 @@ const Sidebar: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-100 border-r border-gray-200">
       <div className="flex items-center justify-center h-16 bg-white">
-        <img className="h-8 w-auto" src="/logo.png" alt="Your logo" />
+        <Image className="h-8 w-auto" src="/logo.png" alt="Your logo" />
       </div>
       <nav className="mt-5 flex-1 px-2 space-y-1">
         {navItems.map((item) => {

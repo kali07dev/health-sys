@@ -31,28 +31,29 @@ const NotificationSettingsComponent: React.FC<NotificationSettingsProps> = ({ us
   ];
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/notification-settings/${userId}`, {
+          credentials: 'include',
+        });
+        if (!response.ok) throw new Error('Failed to fetch settings');
+        const data = await response.json();
+        setSettings(data);
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to load notification settings",
+          variant: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchSettings();
-  }, [userId]);
+  }, [userId, toast]);
 
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/notification-settings/${userId}`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch settings');
-      const data = await response.json();
-      setSettings(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load notification settings",
-        variant: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const updateSettings = async (frequency: string) => {
     try {
@@ -75,7 +76,7 @@ const NotificationSettingsComponent: React.FC<NotificationSettingsProps> = ({ us
         title: "Success",
         description: "Notification settings updated successfully",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update notification settings",

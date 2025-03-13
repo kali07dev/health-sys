@@ -21,6 +21,20 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    const fetchUserActions = async () => {
+      try {
+        setLoading(true);
+        const response = await incidentAPI.getCorrectiveActionsByUserID(userId);
+        setActions(response);
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load your corrective actions');
+        toast.error('Failed to load your corrective actions');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUserActions();
   }, [userId]);
 
@@ -74,7 +88,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
     return (
       <div className="bg-gray-50 rounded-lg p-8 text-center border border-gray-200">
         <h3 className="text-lg font-medium text-gray-700 mb-2">No corrective actions assigned</h3>
-        <p className="text-gray-500">You don't have any corrective actions assigned to you at the moment.</p>
+        <p className="text-gray-500">You don&apos;t have any corrective actions assigned to you at the moment.</p>
       </div>
     );
   }

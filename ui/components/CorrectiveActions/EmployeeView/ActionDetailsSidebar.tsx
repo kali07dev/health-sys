@@ -10,7 +10,6 @@ import {
   CheckCircle2, 
   Upload,
   FileText,
-  PlusCircle,
   ChevronDown,
   ChevronUp,
   Loader2
@@ -19,6 +18,7 @@ import { CorrectiveAction } from '@/interfaces/incidents';
 import { incidentAPI } from '@/utils/api';
 import FeedbackForm from './FeedbackForm';
 import EvidenceUploader from './EvidenceUploader';
+import Image from 'next/image';
 
 interface ActionDetailsSidebarProps {
   action: CorrectiveAction;
@@ -272,7 +272,7 @@ export default function ActionDetailsSidebar({
                           {/* Check file extension instead of fileType */}
                           {evidence.fileName.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
                             <div className="w-full h-auto rounded-lg border border-gray-200 overflow-hidden">
-                              <img
+                              <Image
                                 src={`${BE_URL}/${evidence.fileURL}`}
                                 alt={evidence.fileName}
                                 className="w-full h-auto object-cover max-h-48"

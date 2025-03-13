@@ -28,8 +28,8 @@ export default function HomePage() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">Welcome back, {session.user?.name || "User"}</h2>
-        <p className="text-gray-600">Here's what's happening with your projects today.</p>
+        <h2 className="text-3xl font-bold text-gray-800">Welcome back, {session.user?.email || "User"}</h2>
+        <p className="text-gray-600">Here&apos;s what&apos;s happening with your projects today.</p>
       </div>
       <h1>Dashboard</h1>
       <p>Welcome, {session.user?.email}</p>

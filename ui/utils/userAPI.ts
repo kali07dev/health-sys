@@ -72,7 +72,7 @@ export const userService = {
       body: JSON.stringify(data),
     });
   },
-  async bulkcreateUserWithEmployee(data: any) {
+  async bulkcreateUserWithEmployee(data: unknown) {
     return fetchWithAuth('/auth/signup/employees/bulk', {
       method: 'POST',
       body: JSON.stringify(data),

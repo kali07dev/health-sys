@@ -30,7 +30,7 @@ export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
   const {
     data: employees,
     isLoading,
-    error,
+    
   } = useQuery({
     queryKey: ["employees", value],
     queryFn: () => searchEmployees(value),

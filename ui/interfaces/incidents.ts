@@ -44,6 +44,7 @@ export interface Investigation {
     Location: string;
     SeverityLevel: string;
   };
+  interviews: [];
 }
 
 export interface Interview {

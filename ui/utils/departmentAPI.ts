@@ -24,4 +24,10 @@ export const departmentService = {
           body: JSON.stringify(data),
         });
       },
+
+      async deleteDepartment(id: string) {
+        return fetchWithAuth(`/v1/departments/${id}`, {
+          method: 'DELETE',
+        });
+      }
 }

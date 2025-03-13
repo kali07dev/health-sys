@@ -48,7 +48,7 @@ const DepartmentDropdown: React.FC<DepartmentDropdownProps> = ({
     };
 
     fetchDepartments();
-  }, []);
+  }, [BASE_URL]);
 
   // Filter departments based on search input
   const filteredDepartments = departments.filter((dept) =>

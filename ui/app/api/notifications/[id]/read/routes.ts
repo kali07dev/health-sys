@@ -1,7 +1,7 @@
 // app/api/notifications/[id]/read/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/auth-options';
 
 export async function POST(
   request: NextRequest,
