@@ -31,6 +31,12 @@ type Config struct {
 	Sentry struct {
 		DSN string `yaml:"dsn"`
 	} `yaml:"sentry"`
+	CORS struct {
+		AllowedOrigins   string `yaml:"allowed_origins"`
+		AllowCredentials bool   `yaml:"allow_credentials"`
+		AllowedHeaders   string `yaml:"allowed_headers"`
+		AllowedMethods   string `yaml:"allowed_methods"`
+	} `yaml:"cors"`
 }
 
 func LoadConfig(path string) (*Config, error) {

@@ -71,10 +71,10 @@ func RunServer() {
 	})
 	app.Use(middleware.Recovery())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000, https://d327-105-234-166-33.ngrok-free.app",
-		AllowCredentials: true,
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
+		AllowOrigins:     cfg.CORS.AllowedOrigins,
+		AllowCredentials: cfg.CORS.AllowCredentials,
+		AllowHeaders:     cfg.CORS.AllowedHeaders,
+		AllowMethods:     cfg.CORS.AllowedMethods,
 	}))
 	app.Use(middleware.LoggingMiddleware())
 
