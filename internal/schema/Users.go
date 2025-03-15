@@ -51,29 +51,30 @@ type CreateUserWithEmployeeRequest struct {
 	MicrosoftID     string `json:"microsoft_id,omitempty"`
 
 	// Employee fields
-	EmployeeNumber     string    `json:"employee_number" validate:"required"`
-	FirstName          string    `json:"firstname" validate:"required"`
-	LastName           string    `json:"lastname" validate:"required"`
-	Department         string    `json:"department" validate:"required"`
-	Position           string    `json:"position" validate:"required"`
-	Role               string    `json:"role" validate:"required,oneof=admin safety_officer manager employee"`
+	EmployeeNumber     string     `json:"employee_number"`
+	FirstName          string     `json:"firstname" validate:"required"`
+	LastName           string     `json:"lastname" validate:"required"`
+	Department         string     `json:"department" validate:"required"`
+	Position           string     `json:"position" validate:"required"`
+	Role               string     `json:"role" validate:"required,oneof=admin safety_officer manager employee"`
 	ReportingManagerID *uuid.UUID `json:"reporting_manager_id"`
-	StartDate          time.Time `json:"start_date" validate:"required"`
-	EndDate            time.Time `json:"end_date"`
-	EmergencyContact   string    `json:"emergency_contact"` // JSONB is a custom type for JSON data
-	ContactNumber      string    `json:"contactnumber" validate:"required"`
-	OfficeLocation     string    `json:"officelocation" validate:"required"`
-	IsSafetyOfficer    bool      `json:"is_safety_officer"`
+	StartDate          time.Time  `json:"start_date" validate:"required"`
+	EndDate            time.Time  `json:"end_date"`
+	EmergencyContact   string     `json:"emergency_contact"` // JSONB is a custom type for JSON data
+	ContactNumber      string     `json:"contactnumber" validate:"required"`
+	OfficeLocation     string     `json:"officelocation" validate:"required"`
+	IsSafetyOfficer    bool       `json:"is_safety_officer"`
 }
 
 // Add these methods to your CreateUserWithEmployeeRequest struct
 func (c CreateUserWithEmployeeRequest) GetPassword() string {
-    return c.Password
+	return c.Password
 }
 
 func (c CreateUserWithEmployeeRequest) GetConfirmPassword() string {
-    return c.ConfirmPassword
+	return c.ConfirmPassword
 }
+
 // UpdateUserRoleRequest represents the request body for updating a user's role
 type UpdateUserRoleRequest struct {
 	Role string `json:"role" binding:"required"`

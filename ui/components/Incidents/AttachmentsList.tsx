@@ -35,7 +35,11 @@ export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments })
                 <Image
                   src={`${BE_URL}/${attachment.StoragePath}`}
                   alt={attachment.fileName}
-                  className="object-cover rounded-md"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="w-full h-auto object-cover rounded-md"
+                  style={{ width: '100%', height: 'auto' }}
                 />
               </div>
             ) : (

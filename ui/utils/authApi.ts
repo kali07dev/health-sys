@@ -21,7 +21,7 @@ interface UserData {
   email: string,
   password: string,
   confirmPassword: string, // Add confirm password field
-  employeeNumber: string,
+  // employeeNumber: string,
   firstName: string,
   lastName: string,
   department: string,

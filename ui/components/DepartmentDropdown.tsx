@@ -28,8 +28,10 @@ const DepartmentDropdown: React.FC<DepartmentDropdownProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+  // const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
+  const app_url = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const BASE_URL = `${app_url}/api/v1`;
   // Fetch departments on component mount
   useEffect(() => {
     const fetchDepartments = async () => {

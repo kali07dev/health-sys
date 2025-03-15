@@ -29,15 +29,17 @@ type NewUserResponse struct {
 	ID       string            `json:"id"`
 	Email    string            `json:"email"`
 	Role     string            `json:"role"`
+	IsActive bool              `json:"IsActive"`
 	Employee *EmployeeResponse `json:"employee,omitempty"`
 }
 
 // ToResponse converts a User model to a UserResponse
 func ToEmployeeWithUserResponse(u *models.Employee) NewUserResponse {
 	response := NewUserResponse{
-		ID:    u.UserID.String(),
-		Email: u.User.Email,
-		Role:  u.Role, // Default role if no employee record exists
+		ID:       u.UserID.String(),
+		Email:    u.User.Email,
+		Role:     u.Role, // Default role if no employee record exists
+		IsActive: u.User.IsActive,
 	}
 
 	// If there's an associated employee record
@@ -52,7 +54,7 @@ func ToEmployeeWithUserResponse(u *models.Employee) NewUserResponse {
 	}
 
 	response.Employee = &EmployeeResponse{
-		ID: u.ID.String(),
+		ID:               u.ID.String(),
 		FirstName:        u.FirstName,
 		LastName:         u.LastName,
 		Department:       u.Department,

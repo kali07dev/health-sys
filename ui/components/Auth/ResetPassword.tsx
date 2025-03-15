@@ -15,7 +15,9 @@ export const RequestPasswordReset = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/reset-password/request', {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const response = await fetch(`${BASE_URL}/api/auth/reset-password/request`, {
+      // const response = await fetch('http://127.0.0.1:8000/api/auth/reset-password/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -77,7 +79,9 @@ export const CompletePasswordReset = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/reset-password/complete', {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const response = await fetch(`${BASE_URL}/api/auth/reset-password/complete`, {
+      // const response = await fetch('http://127.0.0.1:8000/api/auth/reset-password/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password, confirmPassword }),

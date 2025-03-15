@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Loader2, Plus, Trash2 } from 'lucide-react';
 import { userService } from '@/utils/userAPI';
+import DepartmentDropdown from '@/components/DepartmentDropdown';
+import { locationOptions } from '@/utils/locations';
 
 // Define the updated UserRow interface to match backend requirements
 export interface UserRow {
@@ -13,7 +15,7 @@ export interface UserRow {
   contactNumber: string;
   password: string;
   confirmPassword: string;
-  employeeNumber: string;
+  // employeeNumber: string;
   role: 'admin' | 'safety_officer' | 'manager' | 'employee';
   startDate: string; // Using string format for date inputs
   officeLocation: string;
@@ -41,7 +43,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
     contactNumber: '',
     password: '',
     confirmPassword: '',
-    employeeNumber: '',
+    // employeeNumber: '',
     role: 'employee',
     startDate: new Date().toISOString().split('T')[0], // Current date as default
     officeLocation: '',
@@ -52,7 +54,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
   const addNewRow = () => {
     const lastRow = userRows[userRows.length - 1];
     const requiredFields = ['email', 'firstName', 'lastName', 'department', 'position', 
-      'contactNumber', 'password', 'confirmPassword', 'employeeNumber', 'role', 'startDate', 'officeLocation'];
+      'contactNumber', 'password', 'confirmPassword', 'role', 'startDate', 'officeLocation'];
     
     if (requiredFields.some((field) => !lastRow[field as keyof UserRow])) {
       alert('Please fill out all required fields in the current row before adding a new one.');
@@ -68,7 +70,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       contactNumber: '',
       password: '',
       confirmPassword: '',
-      employeeNumber: '',
+      // employeeNumber: '',
       role: 'employee',
       startDate: new Date().toISOString().split('T')[0],
       officeLocation: '',
@@ -102,7 +104,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       department: user.department,
       position: user.position,
       contactnumber: user.contactNumber,
-      employee_number: user.employeeNumber,
+      // employee_number: user.employeeNumber,
       role: user.role,
       start_date: new Date(user.startDate).toISOString(),
       officelocation: user.officeLocation,
@@ -118,7 +120,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
     
     // Validate required fields
     const requiredFields = ['email', 'firstName', 'lastName', 'department', 'position', 
-      'contactNumber', 'password', 'confirmPassword', 'employeeNumber', 'role', 'startDate', 'officeLocation'];
+      'contactNumber', 'password', 'confirmPassword', 'role', 'startDate', 'officeLocation'];
     
     for (const row of userRows) {
       for (const field of requiredFields) {
@@ -166,7 +168,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             required
           />
         </div>
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number*</label>
           <input
             type="text"
@@ -175,7 +177,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
             required
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,12 +239,10 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Department*</label>
-          <input
-            type="text"
+          <DepartmentDropdown
             value={row.department}
-            onChange={(e) => handleInputChange(index, 'department', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-            required
+            onChange={(value) => handleInputChange(index, 'department', value)}
+            disabled={loading}
           />
         </div>
         <div>
@@ -257,13 +257,19 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Office Location*</label>
-          <input
-            type="text"
+          <select
             value={row.officeLocation}
             onChange={(e) => handleInputChange(index, 'officeLocation', e.target.value)}
             className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
             required
-          />
+          >
+            <option value="">Select Location</option>
+            {locationOptions.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

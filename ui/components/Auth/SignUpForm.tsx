@@ -12,7 +12,7 @@ const SignUpForm: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '', // Add confirm password field
-    employeeNumber: '',
+    // employeeNumber: '',
     firstName: '',
     lastName: '',
     department: '',
@@ -60,16 +60,16 @@ const SignUpForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Employee Number */}
-      <Input
+      {/* <Input
         label="Employee Number"
-        id="employeeNumber"
+        // id="employeeNumber"
         type="text"
-        value={userData.employeeNumber}
+        // value={userData.employeeNumber}
         onChange={(e) =>
-          setUserData({ ...userData, employeeNumber: e.target.value })
+          // setUserData({ ...userData, employeeNumber: e.target.value })
         }
         required
-      />
+      /> */}
 
       {/* First Name */}
       <Input

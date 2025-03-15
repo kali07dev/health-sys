@@ -67,7 +67,7 @@ type FilterState = {
 };
 
 export const IncidentsTable = ({ incidents: initialIncidents, userRole }: IncidentsTableProps) => {
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  const [incidents, ] = useState<Incident[]>(initialIncidents);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [loading] = useState(false);
@@ -94,9 +94,13 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
   };
 
   const handleCreateSuccess = (newIncident: Incident) => {
-    setIncidents([...incidents, newIncident]);
-    setIsCreateModalOpen(false);
+    console.log(newIncident)
     toast.success("Incident Successfully Created");
+    window.location.reload();
+    
+    // setIncidents([...incidents, newIncident]);
+    // setIsCreateModalOpen(false);
+    // toast.success("Incident Successfully Created");
   };
 
     // Enhanced formatting helpers

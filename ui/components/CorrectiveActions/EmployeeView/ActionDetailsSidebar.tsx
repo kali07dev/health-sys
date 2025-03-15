@@ -275,7 +275,11 @@ export default function ActionDetailsSidebar({
                               <Image
                                 src={`${BE_URL}/${evidence.fileURL}`}
                                 alt={evidence.fileName}
-                                className="w-full h-auto object-cover max-h-48"
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                className="w-full h-auto object-cover rounded-md"
+                                style={{ width: '100%', height: 'auto' }}
                               />
                             </div>
                           ) : (

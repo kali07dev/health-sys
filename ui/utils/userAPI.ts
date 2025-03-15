@@ -109,7 +109,7 @@ export interface UserRow {
   // Additional required fields
   password: string;
   confirmPassword: string;
-  employeeNumber: string;
+  // employeeNumber: string;
   role: 'admin' | 'safety_officer' | 'manager' | 'employee';
   startDate: Date;
   officeLocation: string;

@@ -13,13 +13,13 @@ import (
 )
 
 type UserService struct {
-	db *gorm.DB
+	db                  *gorm.DB
 	VerificationService *VerificationService
 }
 
 func NewUserService(db *gorm.DB, vc *VerificationService) *UserService {
 	return &UserService{
-		db: db,
+		db:                  db,
 		VerificationService: vc,
 	}
 }
@@ -125,7 +125,7 @@ func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmp
 	employee := models.Employee{
 		ID:                 uuid.New(),
 		UserID:             user.ID, // Link to the created user
-		EmployeeNumber:     request.EmployeeNumber,
+		EmployeeNumber:     fmt.Sprintf("EMP%s", uuid.New().String()[:8]),
 		FirstName:          request.FirstName,
 		LastName:           request.LastName,
 		Department:         request.Department,
@@ -341,7 +341,7 @@ func (svc *UserService) BulkCreateUsersWithEmployees(requests []schema.CreateUse
 		employee := models.Employee{
 			ID:                 uuid.New(),
 			UserID:             user.ID,
-			EmployeeNumber:     request.EmployeeNumber,
+			EmployeeNumber:     fmt.Sprintf("EMP%s", uuid.New().String()[:8]),
 			FirstName:          request.FirstName,
 			LastName:           request.LastName,
 			Department:         request.Department,

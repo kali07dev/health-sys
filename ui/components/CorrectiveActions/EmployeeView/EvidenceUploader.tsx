@@ -176,7 +176,11 @@ export default function EvidenceUploader({
                 <li key={id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                   <div className="flex items-center space-x-2">
                     {preview ? (
-                      <Image src={preview} alt="Preview" className="h-10 w-10 object-cover rounded" />
+                      <Image src={preview} alt="Preview" width={0}
+                      height={0}
+                      sizes="100vw"
+                      className="w-full h-auto object-cover rounded-md"
+                      style={{ width: '100%', height: 'auto' }}/>
                     ) : (
                       getFileIcon(file)
                     )}
