@@ -1,1 +1,1 @@
-export const locationOptions = ["Blantyre", "Limbe"]
+export const locationOptions = ["makata", "lunzu", "balaka"]

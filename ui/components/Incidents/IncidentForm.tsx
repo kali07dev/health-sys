@@ -214,13 +214,19 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="location" className="text-base">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                className="h-12 text-base"
-              />
+              <Select 
+                value={formData.location} 
+                onValueChange={(value) => handleSelectChange("location", value)}
+              >
+                <SelectTrigger className="h-12 text-base bg-white">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="balaka">Balaka</SelectItem>
+                  <SelectItem value="lunzu">lunzu</SelectItem>
+                  <SelectItem value="makata">Makata</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

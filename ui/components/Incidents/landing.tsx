@@ -101,10 +101,11 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
 
     // Enhanced formatting helpers
     const formatIncidentType = (type: string) => {
-        return type
-          .split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+          if (!type) return 'Unknown'; // Handle undefined or null type
+          return type
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
       };
     
       const getTimeAgo = (dateString: string) => {
