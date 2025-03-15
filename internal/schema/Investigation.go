@@ -9,22 +9,22 @@ import (
 )
 
 type FlexibleInvestigationForm struct {
-	RootCause            *string        `json:"rootCause"`  // Note the camelCase
-    // ContributingFactors  []string       `json:"contributingFactors"`  // Specify string type
-    Findings             *string        `json:"findings"`
-    Recommendations      *string        `json:"recommendations"`
+	RootCause *string `json:"rootCause"` // Note the camelCase
+	// ContributingFactors  []string       `json:"contributingFactors"`  // Specify string type
+	Findings        *string `json:"findings"`
+	Recommendations *string `json:"recommendations"`
 
-	IncidentID           *uuid.UUID     `json:"incident_id"`
-	LeadInvestigatorID   *uuid.UUID     `json:"lead_investigator_id"`
+	IncidentID         *uuid.UUID `json:"incident_id"`
+	LeadInvestigatorID *uuid.UUID `json:"lead_investigator_id"`
 
-	Description          *string        `json:"description"`
-	ContributingFactors  []interface{}  `json:"contributingFactors"`
-	InvestigationMethods []interface{}  `json:"investigationMethods"`
+	Description          *string       `json:"description"`
+	ContributingFactors  []interface{} `json:"contributingFactors"`
+	InvestigationMethods []interface{} `json:"investigationMethods"`
 	// Findings             *string        `json:"findings"`
 	// Recommendations      *string        `json:"recommendations"`
-	StartedAt            *time.Time     `json:"started_at"`
-	CompletedAt          *time.Time     `json:"completed_at,omitempty"`
-	Status               *string        `json:"status"`
+	StartedAt   *time.Time `json:"started_at"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	Status      *string    `json:"status"`
 }
 
 type InvestigationForm struct {
@@ -173,9 +173,9 @@ func ConvertToInvestigationResponse(investigation *models.Investigation) *Invest
 		UpdatedAt:            investigation.UpdatedAt.Format(time.RFC3339),
 		LeadInvestigatorName: investigation.LeadInvestigator.FirstName + investigation.LeadInvestigator.LastName,
 		Incident: &Inv_IncidentResponse{
-			Title:       investigation.Incident.Title,
-			Description: investigation.Incident.Description,
-			Location: investigation.Incident.Location,
+			Title:         investigation.Incident.Title,
+			Description:   investigation.Incident.Description,
+			Location:      investigation.Incident.Location,
 			SeverityLevel: investigation.Incident.SeverityLevel,
 		},
 	}
@@ -183,7 +183,7 @@ func ConvertToInvestigationResponse(investigation *models.Investigation) *Invest
 
 // Convert an array of Investigation models to an array of response objects
 func ConvertToInvestigationResponses(investigations []models.Investigation) []*InvestigationResponse {
-	var responses []*InvestigationResponse
+	responses := make([]*InvestigationResponse, 0) // Initialize with empty slice instead of nil
 	for _, investigation := range investigations {
 		responses = append(responses, ConvertToInvestigationResponse(&investigation))
 	}
