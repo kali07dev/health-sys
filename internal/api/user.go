@@ -222,11 +222,18 @@ func (app *UserHandler) RegisterUser(ctx *fiber.Ctx) error {
 func (app *UserHandler) RegisterUserWithEmployeeAcc(ctx *fiber.Ctx) error {
 	var user schema.CreateUserWithEmployeeRequest
 
-	// This will now return immediately if validation fails
-	if err := validation.ParseAndValidate(ctx, &user); err != nil {
-		// The error response is already handled by ParseAndValidate
+	// // This will now return immediately if validation fails
+	// if err := validation.ParseAndValidate(ctx, &user); err != nil {
+	// 	log.Println("Error at validation: %v", err)
+	// 	// The error response is already handled by ParseAndValidate
+	// 	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"error": err,
+	// 	})
+	// }
+	err := ctx.BodyParser(&user)
+	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err,
+			"error": "Invalid request body",
 		})
 	}
 

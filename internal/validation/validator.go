@@ -78,7 +78,7 @@ func ParseAndValidate(ctx *fiber.Ctx, data interface{}) error {
 	}
 
 	// Log parsed data
-	fmt.Printf("Parsed data: %+v\n", data)
+	// fmt.Printf("Parsed data: %+v\n", data)
 
 	// Validate struct
 	validationErrors, err := ValidateStruct(data)

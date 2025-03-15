@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, Loader2 } from 'lucide-react';
 import { userService } from '@/utils/userAPI';
+import DepartmentDropdown from '@/components/DepartmentDropdown';
+import { locationOptions } from '@/utils/locations';
+
 
 interface User {
   id: string;
@@ -39,6 +42,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
     department: user.employee?.Department || '',
     position: user.employee?.Position || '',
     contactNumber: user.employee?.ContactNumber || '',
+    officeLocation: user.employee?.officeLocation || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,14 +113,10 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Department</label>
-              <input
-                type="text"
+              <DepartmentDropdown
                 value={formData.department}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, department: e.target.value }))
-                }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                required
+                onChange={(value) => setFormData((prev) => ({ ...prev, department: value }))}
+                disabled={loading}
               />
             </div>
             <div>
@@ -142,6 +142,22 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Office Location</label>
+              <select
+                value={formData.officeLocation}
+                onChange={(e) => setFormData((prev) => ({ ...prev, officeLocation: e.target.value }))}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Location</option>
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex justify-end">
               <button
