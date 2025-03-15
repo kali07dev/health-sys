@@ -72,7 +72,7 @@ export default function SafetyDashboard() {
     }));
   };
 
-  const formatTimeSeriesData = (data: TimeSeriesPoint[] | null) => {
+  const formatTimeSeriesData = (data: TimeSeriesPoint[] | null | undefined) => {
     if (!data) return [];
     return data.map(point => ({
       ...point,
@@ -266,7 +266,7 @@ export default function SafetyDashboard() {
             className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Departments</option>
-            {dashboardData?.departmentMetrics.map(dept => (
+            {dashboardData?.departmentMetrics?.map(dept => (
               <option key={dept.departmentName} value={dept.departmentName}>
                 {dept.departmentName}
               </option>
@@ -439,7 +439,7 @@ export default function SafetyDashboard() {
       )}
 
       {/* Department Metrics */}
-      {dashboardData && dashboardData.departmentMetrics.length > 0 && (
+      {dashboardData && dashboardData.departmentMetrics && dashboardData.departmentMetrics.length > 0 && (
         <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md mb-6 sm:mb-8">
           <div className="flex items-center mb-3 sm:mb-4">
             <Building2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
