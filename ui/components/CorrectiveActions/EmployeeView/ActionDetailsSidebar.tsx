@@ -42,7 +42,7 @@ export default function ActionDetailsSidebar({
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
 
-  const BE_URL = process.env.Go_API_URL || "http://localhost:8000"
+  const BE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
   const canAddEvidence = action.status !== 'completed' && action.status !== 'verified';
   const isAdminOrSafetyOfficer = userRole === 'admin' || userRole === 'safety_officer';

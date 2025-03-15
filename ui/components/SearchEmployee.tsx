@@ -27,7 +27,8 @@ export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/employees/search?query=${encodeURIComponent(query)}`);
+      // const response = await fetch(`http://localhost:8000/api/v1/employees/search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/employees/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) throw new Error('Failed to fetch employees');
       const data = await response.json();
       setEmployees(data);

@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { AdminDashboardResponse, DashboardFilters } from '@/interfaces/dashboard';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,12 +17,12 @@ export const dashboardAPI = {
         if (value) params.append(key, value.toString());
       });
     }
-    const response = await api.get<AdminDashboardResponse>(`/dashboard/admin${params.toString() ? `?${params.toString()}` : ''}`);
+    const response = await api.get<AdminDashboardResponse>(`/api/v1/dashboard/admin${params.toString() ? `?${params.toString()}` : ''}`);
     return response.data;
   },
 
   getEmployeeDashboard: async (employeeId: string, timeRange: string = 'month') => {
-    const response = await api.get(`/dashboard/employee/${employeeId}?timeRange=${timeRange}`);
+    const response = await api.get(`/api/v1/dashboard/employee/${employeeId}?timeRange=${timeRange}`);
     return response.data;
   }
 };

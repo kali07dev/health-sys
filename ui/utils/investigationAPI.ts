@@ -7,8 +7,9 @@ import {
   ActionEvidence,
 } from '@/interfaces/incidents';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = `${BASE_URL}/api/v1`;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -20,7 +21,7 @@ api.interceptors.response.use(
   (error) => {
     // const message = error.response?.data?.message || 'An error occurred';
     // toast.error(message);
-    console.log(error)
+    console.log(error);
     return Promise.reject(error);
   }
 );
@@ -36,7 +37,7 @@ export const InvestigationAPI = {
     api.post<{ message: string }>(`/interview/schedule`, data).then(res => res.data),
 
   addFindings: (id: string, findings: Partial<Investigation>) => 
-    api.put< Investigation>(`/investigations/${id}`, findings).then(res => res.data),
+    api.put<Investigation>(`/investigations/${id}`, findings).then(res => res.data),
 
   getInvestigation: (id: string) => 
     api.get<Investigation>(`/investigations/incident/${id}`).then(res => res.data),

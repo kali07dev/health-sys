@@ -8,12 +8,11 @@ interface NotificationSettings {
   reminderFrequency: number;
 }
 
-const BASE_URL = 'http://localhost:8000/api/notifications';
-
-
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = `${BASE_URL}/api/notifications`;
 
 export const fetchNotifications = async (): Promise<Notification[]> => {
-  const response = await axios.get<Notification[]>(`${BASE_URL}`);
+  const response = await axios.get<Notification[]>(`${API_BASE_URL}`);
   return response.data;
 };
 
@@ -21,7 +20,7 @@ export const updateNotificationSettings = async (
   settings: NotificationSettings
 ): Promise<NotificationSettings> => {
   const response = await axios.put<NotificationSettings>(
-    `${BASE_URL}/settings`,
+    `${API_BASE_URL}/settings`,
     settings
   );
   return response.data;

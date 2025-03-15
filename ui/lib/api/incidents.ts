@@ -90,7 +90,7 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
     })
 
     // Submit to backend with auth header
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
     const response = await fetch(`${apiBaseUrl}/api/v1/incidents/with-attachments`, {
       method: 'POST',
       body: formDataToSend,
@@ -153,7 +153,7 @@ export async function submitIncidentWithoutAttachments(formData: IncidentFormDat
     const validatedData = incidentSchema.parse(formData);
 
     // Submit to backend with auth header
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const response = await fetch(`${apiBaseUrl}/api/v1/incidents`, {
       method: 'POST',
       headers: {

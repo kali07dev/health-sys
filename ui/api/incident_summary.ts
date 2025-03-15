@@ -1,6 +1,6 @@
 // src/api/incidents.ts
-import { useSession } from "next-auth/react";
-import { cookies } from 'next/headers';
+// import { useSession } from "next-auth/react";
+// import { cookies } from 'next/headers';
 
 export interface IncidentSummary {
   incident: {

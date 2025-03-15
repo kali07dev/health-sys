@@ -10,7 +10,7 @@ interface AttachmentsListProps {
 
 export const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
 
-  const BE_URL = process.env.Go_API_URL || "http://localhost:8000"
+  const BE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
