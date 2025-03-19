@@ -11,7 +11,22 @@ import (
 type CompletionNoted struct {
 	Notes string `json:"completionNotes"`
 }
-
+type CreateCorrectiveActionRequest struct {
+	IncidentID           string `json:"incident_id" validate:"required,uuid4"`
+	CompletedBy          string
+	Description          string `json:"description" validate:"required"`
+	ActionType           string `json:"actiontype" validate:"required,max=50"`
+	Priority             string `json:"priority" validate:"required,oneof=low medium high critical"`
+	Status               string `json:"status" validate:"omitempty,oneof=pending in_progress completed verified overdue"`
+	AssignedTo           string `json:"assignedto" validate:"required,uuid4"`
+	AssignedBy           string `json:"assignedby" validate:"required,uuid4"`
+	DueDate              string `json:"duedate" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	CompletedAt          string `json:"completedat" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	CompletionNotes      string `json:"completionnotes" validate:"omitempty"`
+	VerificationRequired bool   `json:"verificationrequired"`
+	VerifiedBy           string `json:"verifiedby" validate:"omitempty,uuid4"`
+	VerifiedAt           string `json:"verifiedat" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+}
 type CorrectiveActionRequest struct {
 	IncidentID           string `json:"incident_id" validate:"required,uuid4"`
 	CompletedBy          string

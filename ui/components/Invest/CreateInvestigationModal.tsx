@@ -54,12 +54,12 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-        <h2 className="text-xl font-bold mb-4">Create Investigation</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg">
+        <h2 className="text-2xl font-medium mb-6 text-gray-900">Create Investigation</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Description
             </label>
             <textarea
@@ -67,34 +67,27 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               rows={3}
               required
+              placeholder="Enter investigation description"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Lead Investigator
             </label>
-            {/* <input
-              type="text"
-              value={formData.leadInvestigator}
-              onChange={(e) =>
-                setFormData({ ...formData, leadInvestigator: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            /> */}
-            {/* Integrate the SearchEmployee component */}
-             <SearchEmployee onSelect={handleEmployeeSelect} />
+            <div className="bg-gray-50 rounded-lg border border-gray-300 p-3">
+              <SearchEmployee onSelect={handleEmployeeSelect} />
               {selectedEmployee && (
-                 <div className="mt-2 text-sm text-gray-500">
-                    Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
-                  </div>
+                <div className="mt-3 text-sm text-gray-700 bg-blue-50 p-2 rounded-md">
+                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                </div>
               )}
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Start Date
             </label>
             <input
@@ -103,22 +96,22 @@ export const CreateInvestigationModal: React.FC<CreateInvestigationModalProps> =
               onChange={(e) =>
                 setFormData({ ...formData, startDate: e.target.value })
               }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               required
             />
           </div>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-6 py-3 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+              disabled={loading || !selectedEmployee}
+              className={`px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 flex items-center justify-center min-w-24 transition-colors ${loading || !selectedEmployee ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Save

@@ -71,12 +71,12 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-        <h2 className="text-xl font-bold mb-4">Add Corrective Action</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg">
+        <h2 className="text-2xl font-medium mb-6 text-gray-900">Add Corrective Action</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Description
             </label>
             <textarea
@@ -84,56 +84,83 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               rows={3}
               required
+              placeholder="Enter description"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Action Type
             </label>
-            <input
-              type="text"
-              value={formData.actionType}
-              onChange={(e) =>
-                setFormData({ ...formData, actionType: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <select
+                value={formData.actionType}
+                onChange={(e) =>
+                  setFormData({ ...formData, actionType: e.target.value })
+                }
+                className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
+                required
+              >
+                <option value="">Select action type</option>
+                <option value="Process Improvement">Process Improvement</option>
+                <option value="Training Required">Training Required</option>
+                <option value="Equipment Repair">Equipment Repair</option>
+                <option value="Policy Update">Policy Update</option>
+                <option value="Safety Measure">Safety Measure</option>
+                <option value="Documentation Update">Documentation Update</option>
+                <option value="System Configuration">System Configuration</option>
+                <option value="Root Cause Analysis">Root Cause Analysis</option>
+                <option value="Preventive Maintenance">Preventive Maintenance</option>
+                <option value="Personnel Action">Personnel Action</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Priority
             </label>
-            <select
-              value={formData.priority}
-              onChange={(e) =>
-                setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
+            <div className="relative">
+              <select
+                value={formData.priority}
+                onChange={(e) =>
+                  setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' })
+                }
+                className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Assigned To
             </label>
-            {/* Integrate the SearchEmployee component */}
-            <SearchEmployee onSelect={handleEmployeeSelect} />
-            {selectedEmployee && (
-              <div className="mt-2 text-sm text-gray-500">
-                Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
-              </div>
-            )}
+            <div className="bg-gray-50 rounded-lg border border-gray-300 p-3">
+              <SearchEmployee onSelect={handleEmployeeSelect} />
+              {selectedEmployee && (
+                <div className="mt-3 text-sm text-gray-700 bg-blue-50 p-2 rounded-md">
+                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                </div>
+              )}
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Due Date
             </label>
             <input
@@ -142,22 +169,22 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, dueDate: e.target.value })
               }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               required
             />
           </div>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-6 py-3 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.assignedTo} // Disable if no employee is selected
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+              disabled={loading || !formData.assignedTo}
+              className={`px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 flex items-center justify-center min-w-24 transition-colors ${loading || !formData.assignedTo ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Save

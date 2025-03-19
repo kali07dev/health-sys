@@ -99,7 +99,7 @@ func (r *CorrectiveActionService) GetEmployeeByUserID(userID uuid.UUID) (*models
 }
 
 // Create a new corrective action
-func (s *CorrectiveActionService) Create(ctx context.Context, req schema.CorrectiveActionRequest, empID uuid.UUID) (*models.CorrectiveAction, error) {
+func (s *CorrectiveActionService) Create(ctx context.Context, req schema.CreateCorrectiveActionRequest, empID uuid.UUID) (*models.CorrectiveAction, error) {
 	// Start a database transaction
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {

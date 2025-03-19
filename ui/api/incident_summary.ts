@@ -4,84 +4,105 @@
 
 export interface IncidentSummary {
   incident: {
-    id: string;
-    reference_number: string;
-    type: string;
-    severity_level: string;
-    status: string;
-    title: string;
-    description: string;
-    location: string;
-    occurred_at: string;
-    reported_by: {
-      id: string;
-      full_name: string;
+    ID: string; // Changed from id
+    ReferenceNumber: string; // Changed from reference_number
+    Type: string; // Changed from type
+    SeverityLevel: string; // Changed from severity_level
+    Status: string; // Changed from status
+    Title: string; // Changed from title
+    Description: string; // Changed from description
+    Location: string; // Changed from location
+    OccurredAt: string; // Changed from occurred_at
+    ReportedBy: { // Changed from reported_by
+      ID: string; // Changed from id
+      FullName: string; // Changed from full_name
     };
-    assigned_to?: {
-      id: string;
-      full_name: string;
+    Reporter: {
+      ID: string;
+      UserID: string;
+      EmployeeNumber: string;
+      FirstName: string;
+      LastName: string;
+      Department: string;
+      Position: string;
+      Role: string;
+      ReportingManagerID: string | null;
+      StartDate: string;
+      EndDate: string;
+      EmergencyContact: string | null;
+      ContactNumber: string;
+      OfficeLocation: string;
+      IsSafetyOfficer: boolean;
+      IsActive: boolean;
+      CreatedAt: string;
+      UpdatedAt: string;
+      DeletedAt: string | null;
     };
-    immediate_actions_taken: string;
-    witnesses: any;
-    environmental_conditions: any;
-    equipment_involved: any;
-    created_at: string;
-    updated_at: string;
-    closed_at?: string;
-    attachments: Array<{
-      id: string;
-      file_name: string;
-      file_type: string;
-      file_size: number;
-      uploaded_by: {
-        id: string;
-        full_name: string;
+    AssignedTo?: { // Changed from assigned_to
+      ID: string; // Changed from id
+      FullName: string; // Changed from full_name
+    };
+    ImmediateActionsTaken: string; // Changed from immediate_actions_taken
+    Witnesses: any; // Changed from witnesses
+    EnvironmentalConditions: any; // Changed from environmental_conditions
+    EquipmentInvolved: any; // Changed from equipment_involved
+    CreatedAt: string; // Changed from created_at
+    UpdatedAt: string; // Changed from updated_at
+    ClosedAt?: string; // Changed from closed_at
+    Attachments: Array<{ // Changed from attachments
+      ID: string; // Changed from id
+      FileName: string; // Changed from file_name
+      FileType: string; // Changed from file_type
+      FileSize: number; // Changed from file_size
+      UploadedBy: { // Changed from uploaded_by
+        ID: string; // Changed from id
+        FullName: string; // Changed from full_name
       };
-      created_at: string;
+      CreatedAt: string; // Changed from created_at
     }>;
   };
   investigation?: {
-    root_cause: string;
-    contributing_factors: any;
-    investigation_methods: any;
-    findings: string;
-    recommendations: string;
-    started_at: string;
-    completed_at?: string;
-    status: string;
-    lead_investigator: {
-      id: string;
-      full_name: string;
+    RootCause: string; // Changed from root_cause
+    ContributingFactors: any; // Changed from contributing_factors
+    InvestigationMethods: any; // Changed from investigation_methods
+    Findings: string; // Changed from findings
+    Recommendations: string; // Changed from recommendations
+    StartedAt: string; // Changed from started_at
+    CompletedAt?: string; // Changed from completed_at
+    Status: string; // Changed from status
+    LeadInvestigator: { // Changed from lead_investigator
+      ID: string; // Changed from id
+      FullName: string; // Changed from full_name
     };
   };
-  corrective_actions: Array<{
-    id: string;
-    description: string;
-    action_type: string;
-    priority: string;
-    status: string;
-    assigned_to: {
-      id: string;
-      full_name: string;
+  corrective_actions: Array<{ // Corrective actions remains in lowercase as per JSON
+    ID: string; // Changed from id
+    Description: string; // Changed from description
+    ActionType: string; // Changed from action_type
+    Priority: string; // Changed from priority
+    Status: string; // Changed from status
+    AssignedTo: { // Changed from assigned_to
+      ID: string; // Changed from id
+      FullName: string; // Changed from full_name
     };
-    due_date: string;
-    completed_at?: string;
-    completion_notes?: string;
+    DueDate: string; // Changed from due_date
+    CompletedAt?: string; // Changed from completed_at
+    CompletionNotes?: string; // Changed from completion_notes
   }>;
-  timeline: Array<{
-    date: string;
-    event_type: string;
-    description: string;
-    user_name: string;
+  timeline: Array<{ // Timeline remains in lowercase as per JSON
+    date: string; // No change
+    event_type: string; // No change
+    description: string; // No change
+    user_name: string; // No change
   }>;
-  statistics: {
-    total_days_open: number;
-    days_in_investigation: number;
-    completed_actions_count: number;
-    total_actions_count: number;
-    interviews_count: number;
-    evidence_count: number;
-    verification_rate: number;
+  statistics: { // Statistics remains in lowercase as per JSON
+    total_days_open: number; // No change
+    days_in_investigation: number; // No change
+    completed_actions_count: number; // No change
+    total_actions_count: number; // No change
+    interviews_count: number; // No change
+    evidence_count: number; // No change
+    verification_rate: number; // No change
   };
 }
 

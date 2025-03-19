@@ -20,7 +20,7 @@ interface Session {
 const fetchIncidents = async () => {
   try {
     const response = await incidentAPI.getAllIncidents();
-    console.log(response)
+    // console.log(response)
     return response;
   } catch (error) {
     console.error("Failed to fetch incidents:", error);

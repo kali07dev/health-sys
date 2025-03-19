@@ -79,135 +79,135 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-8 text-3xl font-bold">My Profile</h1>
+        <h1 className="mb-8 text-3xl font-medium text-gray-900">My Profile</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-4 text-xl font-semibold">Personal Information</h2>
+          <div className="rounded-2xl bg-white p-6 shadow-lg">
+            <h2 className="mb-6 text-xl font-medium text-gray-900">Personal Information</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">First Name</label>
                 <input
                   type="text"
                   name="firstName"
                   value={profile.firstName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Last Name</label>
                 <input
                   type="text"
                   name="lastName"
                   value={profile.lastName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Department</label>
                 <input
                   type="text"
                   name="department"
                   value={profile.department}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Position</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Position</label>
                 <input
                   type="text"
                   name="position"
                   value={profile.position}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
               </div>
             </div>
           </div>
-
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-4 text-xl font-semibold">Contact Information</h2>
+  
+          <div className="rounded-2xl bg-white p-6 shadow-lg">
+            <h2 className="mb-6 text-xl font-medium text-gray-900">Contact Information</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Contact Number</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Contact Number</label>
                 <input
                   type="tel"
                   name="contactNumber"
                   value={profile.contactNumber}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Office Location</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Office Location</label>
                 <input
                   type="text"
                   name="officeLocation"
                   value={profile.officeLocation}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 />
               </div>
             </div>
           </div>
-
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-4 text-xl font-semibold">Emergency Contact</h2>
+  
+          <div className="rounded-2xl bg-white p-6 shadow-lg">
+            <h2 className="mb-6 text-xl font-medium text-gray-900">Emergency Contact</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Name</label>
                 <input
                   type="text"
                   name="emergency.name"
                   value={profile.emergencyContact.name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Relationship</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Relationship</label>
                 <input
                   type="text"
                   name="emergency.relationship"
                   value={profile.emergencyContact.relationship}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   name="emergency.phone"
                   value={profile.emergencyContact.phone}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 />
               </div>
             </div>
           </div>
-
-          <div className="flex justify-end space-x-4">
+  
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               type="button"
               onClick={() => loadProfile()}
-              className="rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="rounded-full bg-gray-200 px-6 py-3 text-gray-700 font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors"
             >
               Reset
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
               {saving ? (
                 <>
