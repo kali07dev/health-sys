@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/hopkali04/health-sys/internal/utils"
@@ -196,6 +197,19 @@ func (h *InvestigationHandler) Create(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	// Check if the incident is open
+	isOpen, err := h.Service.IsIncidentOpen(form.IncidentID)
+	if err != nil {
+		utils.LogError("Failed to check incident status", map[string]interface{}{
+			"incidentID": form.IncidentID,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check incident status"})
+	}
+	if !isOpen {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot create investigation for a closed incident"})
+	}
+
 	utils.LogDebug("Creating investigation", map[string]interface{}{
 		"request": form,
 	})
@@ -246,6 +260,29 @@ func (h *InvestigationHandler) Update(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Fetch the existing investigation to get the incident ID
+	var existingInvestigation models.Investigation
+	if err := h.Service.DB.Where("id = ?", id).First(&existingInvestigation).Error; err != nil {
+		utils.LogError("Failed to fetch existing investigation", map[string]interface{}{
+			"investigationID": id,
+			"error":           err.Error(),
+		})
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch existing investigation"})
+	}
+
+	// Check if the incident is open
+	isOpen, err := h.Service.IsIncidentOpen(existingInvestigation.IncidentID)
+	if err != nil {
+		utils.LogError("Failed to check incident status", map[string]interface{}{
+			"incidentID": existingInvestigation.IncidentID,
+			"error":      err.Error(),
+		})
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check incident status"})
+	}
+	if !isOpen {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Cannot update investigation for a closed incident"})
 	}
 
 	utils.LogDebug("Updating investigation", map[string]interface{}{
