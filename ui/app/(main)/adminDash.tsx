@@ -135,9 +135,9 @@ export default function SafetyDashboard() {
           <p className="text-xs text-gray-500">{incident.ReferenceNumber}</p>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-          incident.SeverityLevel === 'Critical' ? 'bg-red-100 text-red-800' :
-          incident.SeverityLevel === 'High' ? 'bg-orange-100 text-orange-800' :
-          incident.SeverityLevel === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+          incident.SeverityLevel === 'critical' ? 'bg-red-100 text-red-800' :
+          incident.SeverityLevel === 'high' ? 'bg-orange-100 text-orange-800' :
+          incident.SeverityLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
           'bg-green-100 text-green-800'
         }`}>
           {incident.SeverityLevel}
