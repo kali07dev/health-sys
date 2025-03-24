@@ -216,7 +216,7 @@ func (s *SafetyDashboardService) calculateTrendAnalysis(timeRange string) (model
 		intervalLabels[i], intervalLabels[j] = intervalLabels[j], intervalLabels[i]
 	}
 
-	// Add one more interval at the end (current time)
+
 	intervals = append(intervals, now.AddDate(0, 0, 1))
 
 	// Initialize trend analysis with time period
@@ -231,6 +231,11 @@ func (s *SafetyDashboardService) calculateTrendAnalysis(timeRange string) (model
 	for i := 0; i < len(intervalLabels); i++ {
 		startInterval := intervals[i]
 		endInterval := intervals[i+1]
+
+		// Ensure the intervals are valid
+		if startInterval.IsZero() || endInterval.IsZero() {
+			return models.TrendAnalysis{}, errors.New("invalid time interval")
+		}
 
 		// Count incidents in this interval
 		var incidentCount int64
@@ -275,15 +280,15 @@ func (s *SafetyDashboardService) calculateTrendAnalysis(timeRange string) (model
 				WeightedSeverity float64
 			}
 			if err := s.db.Raw(`
-				SELECT 
-					SUM(CASE 
-						WHEN severity_level = 'critical' THEN 3
-						WHEN severity_level = 'major' THEN 2
-						ELSE 1
-					END) / COUNT(*) as weighted_severity
-				FROM incidents
-				WHERE occurred_at >= ? AND occurred_at < ?
-			`, startInterval, endInterval).Scan(&result).Error; err != nil {
+                SELECT 
+                    SUM(CASE 
+                        WHEN severity_level = 'critical' THEN 3
+                        WHEN severity_level = 'major' THEN 2
+                        ELSE 1
+                    END) / COUNT(*) as weighted_severity
+                FROM incidents
+                WHERE occurred_at >= ? AND occurred_at < ?
+            `, startInterval, endInterval).Scan(&result).Error; err != nil {
 				return models.TrendAnalysis{}, err
 			}
 			severityValue = result.WeightedSeverity
@@ -298,17 +303,20 @@ func (s *SafetyDashboardService) calculateTrendAnalysis(timeRange string) (model
 		// Add data points to trends
 		trendAnalysis.IncidentTrend = append(trendAnalysis.IncidentTrend, models.TimeSeriesPoint{
 			Label: intervalLabels[i],
-			Value: float64(incidentCount),
+			Timestamp: startInterval, 
+			Value:     float64(incidentCount),
 		})
 
 		trendAnalysis.ResolutionTrend = append(trendAnalysis.ResolutionTrend, models.TimeSeriesPoint{
 			Label: intervalLabels[i],
-			Value: resolutionRate,
+			Timestamp: startInterval, 
+			Value:     resolutionRate,
 		})
 
 		trendAnalysis.SeverityTrend = append(trendAnalysis.SeverityTrend, models.TimeSeriesPoint{
 			Label: intervalLabels[i],
-			Value: severityValue,
+			Timestamp: startInterval, 
+			Value:     severityValue,
 		})
 	}
 
