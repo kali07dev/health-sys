@@ -158,6 +158,13 @@ func (s *InvestigationService) GetAllByEmployeeID(employeeID uuid.UUID) ([]model
     
     return investigations, nil
 }
+func (s *InvestigationService) IsIncidentOpen(incidentID uuid.UUID) (bool, error) {
+    var incident models.Incident
+    if err := s.DB.Where("id = ?", incidentID).First(&incident).Error; err != nil {
+        return false, err
+    }
+    return incident.Status != "closed", nil
+}
 // Create a new investigation
 func (s *InvestigationService) Create(form *schema.InvestigationForm) (*models.Investigation, error) {
 	// Start a transaction
