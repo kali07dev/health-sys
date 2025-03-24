@@ -32,10 +32,11 @@ interface UserData {
   officeLocation: string,
 }
 
-const AppURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const AppURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = `${AppURL}/api`;
 
 const api: AxiosInstance = axios.create({
-  baseURL: AppURL, 
+  baseURL: API_BASE_URL, 
   withCredentials: true 
 });
 // // Add response interceptor to handle 401 errors
