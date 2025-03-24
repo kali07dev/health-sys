@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2/log"
@@ -29,6 +31,7 @@ func (r *SafetyDashboardService) GetEmployeeByUserID(userID uuid.UUID) (*models.
 	// Return the retrieved employee
 	return &employee, nil
 }
+
 // GetEmployeeDashboard returns incidents and metrics relevant to a specific employee
 func (s *SafetyDashboardService) GetEmployeeDashboard(userID uuid.UUID, timeRange string) (*models.DashboardResponse, error) {
 	var employee models.Employee
@@ -107,11 +110,209 @@ func (s *SafetyDashboardService) GetAdminDashboard(filters models.DashboardFilte
 		Scan(&departmentMetrics).Error; err != nil {
 		return nil, err
 	}
+
+	// Get top hazards
+	// Get top hazards
+	var topHazards []models.HazardSummary
+	if err := s.db.Raw(`
+    SELECT 
+        type,
+        COUNT(*) as frequency,
+        AVG(CASE 
+            WHEN severity_level = 'critical' THEN 4
+            WHEN severity_level = 'high' THEN 3
+            WHEN severity_level = 'medium' THEN 2
+            WHEN severity_level = 'low' THEN 1
+            ELSE 0
+        END) as average_severity,
+        MAX(occurred_at) as last_reported_at,
+        STRING_AGG(DISTINCT e.department, ',') as affected_departments
+    FROM incidents
+    JOIN employees e ON incidents.reported_by = e.id
+    WHERE incidents.occurred_at >= ?
+    GROUP BY type
+    ORDER BY frequency DESC
+    LIMIT 5`, timeFilter).
+		Scan(&topHazards).Error; err != nil {
+		return nil, err
+	}
+	for i := range topHazards {
+		if topHazards[i].AffectedDepartments != "" {
+			topHazards[i].Departments = strings.Split(topHazards[i].AffectedDepartments, ",")
+		} else {
+			topHazards[i].Departments = []string{}
+		}
+	}
+
+	// Get trend analysis
+	trendAnalysis, err := s.calculateTrendAnalysis(filters.TimeRange)
+	if err != nil {
+		return nil, err
+	}
+
 	return &models.AdminDashboardResponse{
 		SystemMetrics:     s.calculateMetrics(incidents),
 		DepartmentMetrics: s.calculateResolutionRate(departmentMetrics),
 		RecentIncidents:   incidents,
+		TopHazards:        topHazards,
+		TrendAnalysis:     trendAnalysis,
 	}, nil
+}
+
+// calculateTrendAnalysis calculates incident trends over time
+func (s *SafetyDashboardService) calculateTrendAnalysis(timeRange string) (models.TrendAnalysis, error) {
+	// Determine time period based on the filter
+	timePeriod := "monthly" // Default
+	if timeRange == "week" {
+		timePeriod = "weekly"
+	} else if timeRange == "quarter" {
+		timePeriod = "quarterly"
+	} else if timeRange == "year" {
+		timePeriod = "monthly"
+	}
+
+	// Get the starting point for our analysis
+	startDate := s.getTimeFilter(timeRange)
+	now := time.Now()
+
+	// Determine how to split the period
+	var intervals []time.Time
+	var intervalLabels []string
+
+	switch timePeriod {
+	case "weekly":
+		// Create weekly intervals
+		numWeeks := int(now.Sub(startDate).Hours()/(24*7)) + 1
+		for i := 0; i < numWeeks; i++ {
+			intervalDate := now.AddDate(0, 0, -7*i)
+			intervals = append(intervals, intervalDate)
+			intervalLabels = append(intervalLabels, intervalDate.Format("Jan 02"))
+		}
+	case "monthly":
+		// Create monthly intervals
+		numMonths := int(now.Sub(startDate).Hours()/(24*30)) + 1
+		for i := 0; i < numMonths; i++ {
+			intervalDate := now.AddDate(0, -i, 0)
+			intervals = append(intervals, intervalDate)
+			intervalLabels = append(intervalLabels, intervalDate.Format("Jan 2006"))
+		}
+	case "quarterly":
+		// Create quarterly intervals
+		numQuarters := int(now.Sub(startDate).Hours()/(24*30*3)) + 1
+		for i := 0; i < numQuarters; i++ {
+			intervalDate := now.AddDate(0, -3*i, 0)
+			intervals = append(intervals, intervalDate)
+
+			// Format quarter label (e.g., "Q1 2023")
+			quarter := (int(intervalDate.Month())-1)/3 + 1
+			quarterLabel := fmt.Sprintf("Q%d %d", quarter, intervalDate.Year())
+			intervalLabels = append(intervalLabels, quarterLabel)
+		}
+	}
+
+	// Reverse intervals and labels to have chronological order
+	for i, j := 0, len(intervals)-1; i < j; i, j = i+1, j-1 {
+		intervals[i], intervals[j] = intervals[j], intervals[i]
+		intervalLabels[i], intervalLabels[j] = intervalLabels[j], intervalLabels[i]
+	}
+
+	// Add one more interval at the end (current time)
+	intervals = append(intervals, now.AddDate(0, 0, 1))
+
+	// Initialize trend analysis with time period
+	trendAnalysis := models.TrendAnalysis{
+		TimePeriod:      timePeriod,
+		IncidentTrend:   make([]models.TimeSeriesPoint, 0, len(intervalLabels)),
+		ResolutionTrend: make([]models.TimeSeriesPoint, 0, len(intervalLabels)),
+		SeverityTrend:   make([]models.TimeSeriesPoint, 0, len(intervalLabels)),
+	}
+
+	// For each interval, collect data
+	for i := 0; i < len(intervalLabels); i++ {
+		startInterval := intervals[i]
+		endInterval := intervals[i+1]
+
+		// Count incidents in this interval
+		var incidentCount int64
+		var resolvedCount int64
+		var criticalCount int64
+		var totalSeverity int64
+
+		// Get total incidents
+		if err := s.db.Model(&models.Incident{}).
+			Where("occurred_at >= ? AND occurred_at < ?", startInterval, endInterval).
+			Count(&incidentCount).Error; err != nil {
+			return models.TrendAnalysis{}, err
+		}
+
+		// Get resolved incidents
+		if err := s.db.Model(&models.Incident{}).
+			Where("occurred_at >= ? AND occurred_at < ? AND status IN ('resolved', 'closed')",
+				startInterval, endInterval).
+			Count(&resolvedCount).Error; err != nil {
+			return models.TrendAnalysis{}, err
+		}
+
+		// Get critical incidents
+		if err := s.db.Model(&models.Incident{}).
+			Where("occurred_at >= ? AND occurred_at < ?", startInterval, endInterval).
+			Count(&totalSeverity).Error; err != nil {
+			return models.TrendAnalysis{}, err
+		}
+
+		if err := s.db.Model(&models.Incident{}).
+			Where("occurred_at >= ? AND occurred_at < ? AND severity_level = 'critical'",
+				startInterval, endInterval).
+			Count(&criticalCount).Error; err != nil {
+			return models.TrendAnalysis{}, err
+		}
+
+		// Calculate severity value based on defined severity levels
+		var severityValue float64
+		if incidentCount > 0 {
+			// Query to calculate weighted severity
+			var result struct {
+				WeightedSeverity float64
+			}
+			if err := s.db.Raw(`
+				SELECT 
+					SUM(CASE 
+						WHEN severity_level = 'critical' THEN 3
+						WHEN severity_level = 'major' THEN 2
+						ELSE 1
+					END) / COUNT(*) as weighted_severity
+				FROM incidents
+				WHERE occurred_at >= ? AND occurred_at < ?
+			`, startInterval, endInterval).Scan(&result).Error; err != nil {
+				return models.TrendAnalysis{}, err
+			}
+			severityValue = result.WeightedSeverity
+		}
+
+		// Calculate resolution rate
+		resolutionRate := 0.0
+		if incidentCount > 0 {
+			resolutionRate = float64(resolvedCount) / float64(incidentCount) * 100
+		}
+
+		// Add data points to trends
+		trendAnalysis.IncidentTrend = append(trendAnalysis.IncidentTrend, models.TimeSeriesPoint{
+			Label: intervalLabels[i],
+			Value: float64(incidentCount),
+		})
+
+		trendAnalysis.ResolutionTrend = append(trendAnalysis.ResolutionTrend, models.TimeSeriesPoint{
+			Label: intervalLabels[i],
+			Value: resolutionRate,
+		})
+
+		trendAnalysis.SeverityTrend = append(trendAnalysis.SeverityTrend, models.TimeSeriesPoint{
+			Label: intervalLabels[i],
+			Value: severityValue,
+		})
+	}
+
+	return trendAnalysis, nil
 }
 
 func (s *SafetyDashboardService) getTimeFilter(timeRange string) time.Time {
@@ -141,11 +342,11 @@ func (s *SafetyDashboardService) calculateMetrics(incidents []models.Incident) m
 	total := len(incidents)
 	resolved := 0
 	critical := 0
-	
+
 	// Initialize maps
 	incidentsByType := make(map[string]int)
 	incidentsBySeverity := make(map[string]int)
-	
+
 	// For calculating average resolution time
 	var totalResolutionTime time.Duration
 	resolvedCount := 0
@@ -154,7 +355,7 @@ func (s *SafetyDashboardService) calculateMetrics(incidents []models.Incident) m
 		// Count resolved and critical incidents
 		if incident.Status == "resolved" || incident.Status == "closed" {
 			resolved++
-			
+
 			// Calculate resolution time for resolved incidents
 			if !incident.ClosedAt.IsZero() {
 				resolutionTime := incident.ClosedAt.Sub(incident.CreatedAt)
