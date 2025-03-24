@@ -12,6 +12,7 @@ type DashboardFilters struct {
 	StartDate      time.Time `query:"startDate"`
 	EndDate        time.Time `query:"endDate"`
 }
+
 // DashboardResponse represents the employee dashboard data
 type DashboardResponse struct {
 	Incidents         []Incident         `json:"incidents"`
@@ -56,7 +57,8 @@ type HazardSummary struct {
 	Frequency           int       `json:"frequency"`
 	AverageSeverity     float64   `json:"averageSeverity"`
 	LastReportedAt      time.Time `json:"lastReportedAt"`
-	AffectedDepartments []string  `json:"affectedDepartments"`
+	AffectedDepartments string    `json:"-"`                  
+	Departments         []string  `json:"affectedDepartments"` 
 }
 
 // TrendAnalysis contains trend-related data
