@@ -4,11 +4,10 @@ import {
   AlertTriangle, 
   FileBarChart, 
   Bell, 
-  ClipboardList, 
+  // ClipboardList, 
   Settings,
-  // LogOut,
-  Search, // Icon for Investigations
-  ListChecks, // Icon for Assigned Actions
+  Search, 
+  ListChecks, 
   Shield
 } from "lucide-react"
 import Link from "next/link"
@@ -27,21 +26,29 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
-  { icon: Search, label: "Investigations", href: "/investigation" }, // New route for Investigations
-  { icon: ListChecks, label: "Assigned Actions", href: "/actions" }, // New route for Assigned Actions
-  { icon: FileBarChart, label: "Reports", href: "/reports" },
-  { icon: Bell, label: "Alerts", href: "/alerts" },
-  { icon: ClipboardList, label: "Tasks", href: "/tasks" },
-  { icon: Settings, label: "Profile", href: "/profile" },
-  { icon: Shield, label: "Admin", href: "/admin" },
-]
-
 export function AppSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  
+  // Check if user has admin privileges
+  const isAdminUser = session?.role === 'admin' || session?.role === 'safety_officer' || session?.role === 'manager'
+  
+  const sidebarItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+    { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
+
+    { icon: Search, label: "Investigations", href: "/investigation" },
+    { icon: ListChecks, label: "Assigned Actions", href: "/actions" },
+    // Only show Reports for admin, safety_officer, or manager
+
+    ...(isAdminUser ? [{ icon: FileBarChart, label: "Reports", href: "/reports" }] : []),
+    { icon: Bell, label: "Alerts", href: "/alerts" },
+    // ...(isAdminUser ? [{ icon: ClipboardList, label: "Tasks", href: "/tasks" }] : []),
+
+    { icon: Settings, label: "Profile", href: "/profile" },
+    // Only show Admin for admin, safety_officer, or manager
+    ...(isAdminUser ? [{ icon: Shield, label: "Admin", href: "/admin" }] : []),
+  ]
 
   return (
     <Sidebar>
@@ -64,19 +71,18 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-3 px-3 py-2">
-        <Image
-          src="/user.svg"
-          alt="User"
-          width={36} // Set the width to match your design (h-9 = 36px)
-          height={36} // Set the height to match your design (w-9 = 36px)
-          className="rounded-full"
-        />
+          <Image
+            src="/user.svg"
+            alt="User"
+            width={36}
+            height={36}
+            className="rounded-full"
+          />
           <div className="flex-1 truncate">
             <div className="truncate text-sm font-medium text-gray-900">{session?.role}</div>
             <div className="truncate text-sm text-gray-500">{session?.user?.email}</div>
           </div>
         </div>
-        {/* Add LogoutButton to the SidebarFooter */}
         <LogoutButton variant="ghost" className="w-full justify-start" />
       </SidebarFooter>
     </Sidebar>
