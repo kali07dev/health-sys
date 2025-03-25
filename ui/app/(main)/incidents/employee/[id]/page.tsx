@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
-import { IncidentsTable } from "@/components/Incidents/landing";
+import { IncidentsTable } from "@/components/Incidents/empTable";
 import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { incidentAPI } from '@/utils/api';
 import { authOptions } from "@/app/api/auth/auth-options";

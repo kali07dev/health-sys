@@ -25,16 +25,10 @@ import IncidentDetails from "./IncidentDetails"
 import { toast } from "react-hot-toast"
 import InfoPanel from "@/components/ui/InfoPanel"
 import { CalendarClock, Plus, FileText } from "lucide-react"
-import { incidentAPI } from '@/utils/api';
-
 
 interface IncidentsTableProps {
-  initialIncidents: Incident[];
-  userRole: string;
-  totalIncidents: number;
-  initialPage: number;
-  totalPages: number;
-  pageSize: number;
+  incidents: Incident[]
+  userRole: string
 }
 
 // Type definitions for sorting and filtering
@@ -51,58 +45,11 @@ type FilterState = {
   }
 }
 
-export const IncidentsTable = ({ 
-  initialIncidents, 
-  userRole, 
-  totalIncidents,
-  initialPage,
-  totalPages: initialTotalPages,
-  pageSize: initialPageSize 
-}: IncidentsTableProps) => {
-  // const [incidents] = useState<Incident[]>(initialIncidents)
+export const IncidentsTable = ({ incidents: initialIncidents, userRole }: IncidentsTableProps) => {
+  const [incidents] = useState<Incident[]>(initialIncidents)
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  // const [loading] = useState(false)
-
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents)
-  const [currentPage, setCurrentPage] = useState(initialPage)
-  const [pageSize, setPageSize] = useState(initialPageSize)
-  const [totalPages, setTotalPages] = useState(initialTotalPages)
-  const [loading, setLoading] = useState(false)
-
-  // Fetch incidents when page or page size changes
-  const fetchIncidents = async (page: number, pageSize: number) => {
-    setLoading(true)
-    try {
-      const response = await incidentAPI.getAllIncidentsFiltered({ page, pageSize })
-      setIncidents(response.data)
-      setCurrentPage(response.page)
-      setTotalPages(response.totalPages)
-      setPageSize(response.pageSize)
-    } catch  {
-      toast.error("Failed to load incidents")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-   // Page change handler
-   const handlePageChange = (newPage: number) => {
-    if (newPage !== currentPage) {
-      fetchIncidents(newPage, pageSize)
-    }
-  }
-
-  // Page size change handler
-  const handlePageSizeChange = (newPageSize: number) => {
-    fetchIncidents(1, newPageSize) // Reset to first page
-  }
-  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} incidents`;
-
-    // Render method remains similar to previous implementation
-  // Use `incidents` instead of filtering entire dataset
-  // Add loading state handling
-
+  const [loading] = useState(false)
 
   // Sorting state
   const [sortField, setSortField] = useState<SortField>("occurredAt")
@@ -497,11 +444,6 @@ export const IncidentsTable = ({
         <>
           {/* Mobile Card View */}
           <div className="mt-8 grid gap-4 md:hidden">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/50">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          )}
             {filteredAndSortedIncidents.map((incident) => (
               <Card
                 key={incident.id}
@@ -810,63 +752,6 @@ export const IncidentsTable = ({
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>
       )}
-
-      {/* Pagination component */}
-      <div className="w-full bg-gray-50 dark:bg-gray-900 p-4">
-            <div className="text-sm text-gray-500">
-                {paginationInfo}
-              </div>
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          {/* Page Size Selector */}
-          <div className="w-full sm:w-auto">
-            <Select 
-              value={pageSize.toString()} 
-              onValueChange={(value) => handlePageSizeChange(Number(value))}
-            >
-              <SelectTrigger className="w-full sm:w-[140px] bg-white border-red-300 focus:ring-red-200">
-                <SelectValue placeholder={`${pageSize} entries`} />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size} entries
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            {/* Pagination Info */}
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 sm:mb-0">
-              Page {currentPage} of {totalPages}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
-              >
-                Previous
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

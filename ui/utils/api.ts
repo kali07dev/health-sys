@@ -87,6 +87,18 @@ export const incidentAPI = {
   getAllIncidents: () => 
     api.get<{ data: Incident[]; total: number }>(`/incidents`).then((res) => res.data.data),
 
+  getAllIncidentsFiltered: (params?: { 
+      page?: number; 
+      pageSize?: number; 
+    }) => 
+  api.get<{ 
+    data: Incident[]; 
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>(`/incidents`, { params }).then((res) => res.data),
+
   getIncidentsByEmployee: (employeeId: string) => 
     api.get<Incident[]>(`/incidents/employee/${employeeId}`).then((res) => res.data),
 
