@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/hopkali04/health-sys/internal/services/user"
+	"github.com/hopkali04/health-sys/internal/utils"
 )
 
 type NotificationHandler struct {
@@ -48,18 +49,24 @@ type NotificationsListResponse struct {
 
 // SendNotification handles the notification request
 func (h *NotificationHandler) SendNotification(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to send notification", map[string]interface{}{
+		"path": c.Path(),
+	})
+
 	var request NotificationRequest
 	if err := c.BodyParser(&request); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request payload",
+		utils.LogError("Failed to parse request body", map[string]interface{}{
+			"error": err.Error(),
 		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
 	}
 
 	// Validate that the notification type is valid
 	if !isValidNotificationType(request.Type) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid notification type",
+		utils.LogError("Invalid notification type", map[string]interface{}{
+			"type": request.Type,
 		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid notification type"})
 	}
 
 	// Send the notification
@@ -72,14 +79,27 @@ func (h *NotificationHandler) SendNotification(c *fiber.Ctx) error {
 		request.ReferenceType,
 	)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		utils.LogError("Failed to send notification", map[string]interface{}{
+			"userID":        request.UserID,
+			"type":          request.Type,
+			"title":         request.Title,
+			"message":       request.Message,
+			"referenceID":   request.ReferenceID,
+			"referenceType": request.ReferenceType,
+			"error":         err.Error(),
 		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Notification sent successfully",
+	utils.LogInfo("Successfully sent notification", map[string]interface{}{
+		"userID":        request.UserID,
+		"type":          request.Type,
+		"title":         request.Title,
+		"message":       request.Message,
+		"referenceID":   request.ReferenceID,
+		"referenceType": request.ReferenceType,
 	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Notification sent successfully"})
 }
 
 // Helper function to validate notification type
@@ -95,11 +115,17 @@ func isValidNotificationType(notificationType string) bool {
 	return false
 }
 func (h *NotificationHandler) GetUserNotifications(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to fetch user notifications", map[string]interface{}{
+		"path": c.Path(),
+	})
+
 	userID, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID",
+		utils.LogError("Invalid user ID format", map[string]interface{}{
+			"userID": c.Params("userId"),
+			"error":  err.Error(),
 		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
 	filter := services.NotificationFilter{
@@ -112,9 +138,11 @@ func (h *NotificationHandler) GetUserNotifications(c *fiber.Ctx) error {
 
 	notifications, total, err := h.notificationService.GetUserNotifications(userID, filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch notifications",
+		utils.LogError("Failed to fetch user notifications", map[string]interface{}{
+			"userID": userID,
+			"error":  err.Error(),
 		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch notifications"})
 	}
 
 	// Convert to response format
@@ -133,6 +161,10 @@ func (h *NotificationHandler) GetUserNotifications(c *fiber.Ctx) error {
 		}
 	}
 
+	utils.LogInfo("Successfully fetched user notifications", map[string]interface{}{
+		"userID": userID,
+		"total":  total,
+	})
 	return c.JSON(NotificationsListResponse{
 		Notifications: response,
 		Total:         total,
@@ -140,12 +172,17 @@ func (h *NotificationHandler) GetUserNotifications(c *fiber.Ctx) error {
 }
 
 func (h *NotificationHandler) GetSystemNotifications(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to fetch system notifications", map[string]interface{}{
+		"path": c.Path(),
+	})
+
 	// Check user role from JWT token
 	role := c.Locals("role").(string)
 	if role != "admin" && role != "safety_officer" {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "Unauthorized access",
+		utils.LogError("Unauthorized access", map[string]interface{}{
+			"role": role,
 		})
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Unauthorized access"})
 	}
 
 	filter := services.NotificationFilter{
@@ -158,9 +195,10 @@ func (h *NotificationHandler) GetSystemNotifications(c *fiber.Ctx) error {
 
 	notifications, total, err := h.notificationService.GetSystemNotifications(filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch notifications",
+		utils.LogError("Failed to fetch system notifications", map[string]interface{}{
+			"error": err.Error(),
 		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch notifications"})
 	}
 
 	// Convert to response format
@@ -179,6 +217,9 @@ func (h *NotificationHandler) GetSystemNotifications(c *fiber.Ctx) error {
 		}
 	}
 
+	utils.LogInfo("Successfully fetched system notifications", map[string]interface{}{
+		"total": total,
+	})
 	return c.JSON(NotificationsListResponse{
 		Notifications: response,
 		Total:         total,
@@ -186,20 +227,29 @@ func (h *NotificationHandler) GetSystemNotifications(c *fiber.Ctx) error {
 }
 
 func (h *NotificationHandler) MarkAsRead(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to mark notification as read", map[string]interface{}{
+		"path": c.Path(),
+	})
+
 	notificationID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid notification ID",
+		utils.LogError("Invalid notification ID format", map[string]interface{}{
+			"notificationID": c.Params("id"),
+			"error":          err.Error(),
 		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid notification ID"})
 	}
 
 	if err := h.notificationService.MarkAsRead(notificationID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to mark notification as read",
+		utils.LogError("Failed to mark notification as read", map[string]interface{}{
+			"notificationID": notificationID,
+			"error":          err.Error(),
 		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to mark notification as read"})
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "Notification marked as read",
+	utils.LogInfo("Successfully marked notification as read", map[string]interface{}{
+		"notificationID": notificationID,
 	})
+	return c.JSON(fiber.Map{"message": "Notification marked as read"})
 }
