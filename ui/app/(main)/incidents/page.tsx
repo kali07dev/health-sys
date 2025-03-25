@@ -17,14 +17,13 @@ interface Session {
   role: string;
 }
 
-const fetchIncidents = async () => {
+const fetchIncidents = async (page = 1, pageSize = 10) => {
   try {
-    const response = await incidentAPI.getAllIncidents();
-    // console.log(response)
+    const response = await incidentAPI.getAllIncidentsFiltered({ page, pageSize });
     return response;
   } catch (error) {
     console.error("Failed to fetch incidents:", error);
-    return [];
+    return null;
   }
 };
 
@@ -42,11 +41,18 @@ export default async function IncidentsPage() {
     redirect(`/incidents/employee/${session.user.id}`);
   }
 
-  const incidents = await fetchIncidents();
+  const incidentsData = await fetchIncidents();
 
   return (
     <Suspense fallback={<TableSkeleton />}>
-      <IncidentsTable incidents={incidents} userRole={session.role} />
+      <IncidentsTable 
+        initialIncidents={incidentsData?.data || []} 
+        userRole={session.role}
+        totalIncidents={incidentsData?.total || 0}
+        initialPage={incidentsData?.page || 1}
+        totalPages={incidentsData?.totalPages || 1}
+        pageSize={incidentsData?.pageSize || 10}
+      />
     </Suspense>
   );
 }

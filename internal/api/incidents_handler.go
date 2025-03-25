@@ -320,6 +320,12 @@ func (h *IncidentsHandler) ListIncidentsHandler(c *fiber.Ctx) error {
 		})
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid page size"})
 	}
+	if pageSize > 100 {
+		pageSize = 100 // Max 100 items per page
+	}
+	if pageSize < 10 {
+		pageSize = 10 // Minimum 10 items per page
+	}
 
 	// Parse filters from query parameters
 	filters := make(map[string]interface{})
@@ -347,8 +353,11 @@ func (h *IncidentsHandler) ListIncidentsHandler(c *fiber.Ctx) error {
 		"total":    total,
 	})
 	return c.JSON(fiber.Map{
-		"data":  schema.ToIncidentResponses(incidents),
-		"total": total,
+		"data":       schema.ToIncidentResponses(incidents),
+		"total":      total,
+		"page":       page,
+		"pageSize":   pageSize,
+		"totalPages": (total + int64(pageSize) - 1) / int64(pageSize), // Ceiling division
 	})
 
 }
