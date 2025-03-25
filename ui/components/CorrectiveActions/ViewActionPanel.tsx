@@ -221,9 +221,9 @@ export const ViewActionPanel: React.FC<ViewActionPanelProps> = ({
                   className="w-full border rounded-md p-2 text-base text-gray-900"
                 />
               ) : (
-                <p className="text-base text-gray-900 break-words">{action.assignedTo}</p>
+                <p className="text-base text-gray-900 break-words">{action.assigneeName}</p>
               )}
-              <p className="text-xs text-gray-500">Assigned by {action.assignedBy}</p>
+              <p className="text-xs text-gray-500">Assigned by {action.assignerName}</p>
             </div>
           </div>
           

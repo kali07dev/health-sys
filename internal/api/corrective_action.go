@@ -258,6 +258,29 @@ func (h *CorrectiveActionHandler) UpdateCorrectiveAction(c *fiber.Ctx) error {
 	if req.Status == "completed" && req.CompletedAt != "" {
 		req.CompletedBy = userIDStr
 	}
+	if req.VerifiedBy != "" {
+
+		employeeIDStr := req.VerifiedBy
+
+		employeeID, err := uuid.Parse(employeeIDStr)
+		if err != nil {
+			utils.LogError("Invalid employee ID format", map[string]interface{}{
+				"employeeID": employeeIDStr,
+				"error":      err.Error(),
+			})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid employee ID"})
+		}
+		
+		emp, err := h.CorrectiveActionservice.GetEmployeeByUserID(employeeID)
+		if err != nil {
+			utils.LogError("Failed to fetch employee details", map[string]interface{}{
+				"employeeID": employeeID,
+				"error":      err.Error(),
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check user existence", "details": err.Error()})
+		}
+		req.VerifiedBy = emp.ID.String()
+	}
 
 	utils.LogDebug("Updating corrective action", map[string]interface{}{
 		"actionID": actionID,

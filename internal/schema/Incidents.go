@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hopkali04/health-sys/internal/models"
@@ -64,7 +65,7 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 		Description:             i.Description,
 		Location:                i.Location,
 		OccurredAt:              i.OccurredAt,
-		ReportedBy:              i.ReportedBy.String(),
+		ReportedBy:              fmt.Sprintf("%s %s", i.Reporter.FirstName, i.Reporter.LastName),
 		AssignedTo:              assignedTo,
 		ImmediateActionsTaken:   i.ImmediateActionsTaken,
 		Witnesses:               i.Witnesses,

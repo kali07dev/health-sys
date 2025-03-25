@@ -25,16 +25,15 @@ import IncidentDetails from "./IncidentDetails"
 import { toast } from "react-hot-toast"
 import InfoPanel from "@/components/ui/InfoPanel"
 import { CalendarClock, Plus, FileText } from "lucide-react"
-import { incidentAPI } from '@/utils/api';
-
+import { incidentAPI } from "@/utils/api"
 
 interface IncidentsTableProps {
-  initialIncidents: Incident[];
-  userRole: string;
-  totalIncidents: number;
-  initialPage: number;
-  totalPages: number;
-  pageSize: number;
+  initialIncidents: Incident[]
+  userRole: string
+  totalIncidents: number
+  initialPage: number
+  totalPages: number
+  pageSize: number
 }
 
 // Type definitions for sorting and filtering
@@ -51,13 +50,13 @@ type FilterState = {
   }
 }
 
-export const IncidentsTable = ({ 
-  initialIncidents, 
-  userRole, 
+export const IncidentsTable = ({
+  initialIncidents,
+  userRole,
   totalIncidents,
   initialPage,
   totalPages: initialTotalPages,
-  pageSize: initialPageSize 
+  pageSize: initialPageSize,
 }: IncidentsTableProps) => {
   // const [incidents] = useState<Incident[]>(initialIncidents)
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
@@ -79,15 +78,15 @@ export const IncidentsTable = ({
       setCurrentPage(response.page)
       setTotalPages(response.totalPages)
       setPageSize(response.pageSize)
-    } catch  {
+    } catch {
       toast.error("Failed to load incidents")
     } finally {
       setLoading(false)
     }
   }
 
-   // Page change handler
-   const handlePageChange = (newPage: number) => {
+  // Page change handler
+  const handlePageChange = (newPage: number) => {
     if (newPage !== currentPage) {
       fetchIncidents(newPage, pageSize)
     }
@@ -97,13 +96,10 @@ export const IncidentsTable = ({
   const handlePageSizeChange = (newPageSize: number) => {
     fetchIncidents(1, newPageSize) // Reset to first page
   }
-  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} incidents`;
-
-    // Render method remains similar to previous implementation
-  // Use `incidents` instead of filtering entire dataset
-  // Add loading state handling
+  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} incidents`
 
 
+  
   // Sorting state
   const [sortField, setSortField] = useState<SortField>("occurredAt")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
@@ -312,7 +308,15 @@ export const IncidentsTable = ({
             A list of all incidents in your organization including their reference number, type, severity, and status.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none">
+        <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
+          <Link href="/incidents/closed" passHref>
+          <Button
+          variant="outline"
+          className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
+        >
+              View Closed Incidents
+            </Button>
+          </Link>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"

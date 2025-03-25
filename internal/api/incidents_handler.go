@@ -76,7 +76,68 @@ func (h *IncidentsHandler) GetIncidentsByEmployeeID(c *fiber.Ctx) error {
 	})
 	return c.Status(fiber.StatusOK).JSON(schema.ToIncidentResponses(incidents))
 }
+func (h *IncidentsHandler) GetClosedIncidentsByEmployeeIDHandler(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to list closed incidents for employee", map[string]interface{}{
+		"path": c.Path(),
+	})
 
+	employeeID, err := uuid.Parse(c.Params("employeeID"))
+	if err != nil {
+		utils.LogError("Invalid employee ID", map[string]interface{}{
+			"employeeID": c.Params("employeeID"),
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid employee ID"})
+	}
+
+	// Parse query parameters
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil {
+		utils.LogError("Invalid page number", map[string]interface{}{
+			"page":  c.Query("page"),
+			"error": err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid page number"})
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("pageSize", "10"))
+	if err != nil {
+		utils.LogError("Invalid page size", map[string]interface{}{
+			"pageSize": c.Query("pageSize"),
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid page size"})
+	}
+	if pageSize > 100 {
+		pageSize = 100 // Max 100 items per page
+	}
+	if pageSize < 10 {
+		pageSize = 10 // Minimum 10 items per page
+	}
+
+	incidents, total, err := h.service.GetClosedIncidentsByEmployeeID(employeeID, page, pageSize)
+	if err != nil {
+		utils.LogError("Failed to get closed incidents for employee", map[string]interface{}{
+			"employeeID": employeeID,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	utils.LogInfo("Successfully listed closed incidents for employee", map[string]interface{}{
+		"employeeID": employeeID,
+		"page":       page,
+		"pageSize":   pageSize,
+		"total":      total,
+	})
+	return c.JSON(fiber.Map{
+		"data":       schema.ToIncidentResponses(incidents),
+		"total":      total,
+		"page":       page,
+		"pageSize":   pageSize,
+		"totalPages": (total + int64(pageSize) - 1) / int64(pageSize), // Ceiling division
+	})
+}
 func (h *IncidentsHandler) GetIncidentSummary(c *fiber.Ctx) error {
 	utils.LogInfo("Processing request to fetch incident summary", map[string]interface{}{
 		"path": c.Path(),
@@ -362,6 +423,69 @@ func (h *IncidentsHandler) ListIncidentsHandler(c *fiber.Ctx) error {
 
 }
 
+func (h *IncidentsHandler) ListClosedIncidentsHandler(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to list closed incidents", map[string]interface{}{
+		"path": c.Path(),
+	})
+
+	// Parse query parameters
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil {
+		utils.LogError("Invalid page number", map[string]interface{}{
+			"page":  c.Query("page"),
+			"error": err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid page number"})
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("pageSize", "10"))
+	if err != nil {
+		utils.LogError("Invalid page size", map[string]interface{}{
+			"pageSize": c.Query("pageSize"),
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid page size"})
+	}
+	if pageSize > 100 {
+		pageSize = 100 // Max 100 items per page
+	}
+	if pageSize < 10 {
+		pageSize = 10 // Minimum 10 items per page
+	}
+
+	// Parse filters from query parameters
+	filters := make(map[string]interface{})
+	for key, value := range c.Queries() {
+		if key != "page" && key != "pageSize" {
+			filters[key] = value
+		}
+	}
+
+	// Call the service method
+	incidents, total, err := h.service.ListClosedIncidents(page, pageSize, filters)
+	if err != nil {
+		utils.LogError("Failed to list closed incidents", map[string]interface{}{
+			"page":     page,
+			"pageSize": pageSize,
+			"filters":  filters,
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	utils.LogInfo("Successfully listed closed incidents", map[string]interface{}{
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    total,
+	})
+	return c.JSON(fiber.Map{
+		"data":       schema.ToIncidentResponses(incidents),
+		"total":      total,
+		"page":       page,
+		"pageSize":   pageSize,
+		"totalPages": (total + int64(pageSize) - 1) / int64(pageSize), // Ceiling division
+	})
+}
 // GetIncidentHandler retrieves a single incident by ID
 func (h *IncidentsHandler) GetIncidentHandler(c *fiber.Ctx) error {
 	utils.LogInfo("Processing request to fetch incident by ID", map[string]interface{}{

@@ -88,11 +88,13 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	apiIncidents.Post("/incidents/with-attachments", middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents), incidentImpl.CreateIncidentWithAttachments)
 	apiIncidents.Post("/incidents",middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents), incidentImpl.CreateIncident)
 	apiIncidents.Get("/incidents", incidentImpl.ListIncidentsHandler)
+	apiIncidents.Get("/incidents/closed", incidentImpl.ListClosedIncidentsHandler)
 	apiIncidents.Post("/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
 	apiIncidents.Get("/incidents/:id/view", incidentImpl.GetIncidentHandler)
 	apiIncidents.Post("/incidents/:id/assign", incidentImpl.AssignIncidentToUserHandler)
 	apiIncidents.Get("/incidents/:id/summary", incidentImpl.GetIncidentSummary)
 	apiIncidents.Get("/incidents/employee/:id", incidentImpl.GetIncidentsByEmployeeID)
+	apiIncidents.Get("/incidents/employee/:employeeID/closed", incidentImpl.GetClosedIncidentsByEmployeeIDHandler)
 
 
 	apiIncidents.Post("/incidents/:id/close", middleware.AuthMiddleware(),middleware.PermissionMiddleware(middleware.PermissionManageIncidents), incidentImpl.CloseIncidentHandler)
@@ -109,8 +111,8 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	app.Put("/api/v1/actions/:id", middleware.AuthMiddleware(), correctiveActionHandler.UpdateCorrectiveAction)
 	app.Delete("/api/v1/actions/:id", correctiveActionHandler.DeleteCorrectiveAction)
 
-	app.Post("/api/v1/actions/:id/complete", correctiveActionHandler.LabelAsCompleted)
-	app.Post("/api/v1/actions/:id/verify", correctiveActionHandler.VerifyCompletion)
+	app.Post("/api/v1/actions/:id/complete",middleware.AuthMiddleware(), correctiveActionHandler.LabelAsCompleted)
+	app.Post("/api/v1/actions/:id/verify",middleware.AuthMiddleware(), correctiveActionHandler.VerifyCompletion)
 
 	// Notification routes
 

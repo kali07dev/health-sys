@@ -34,10 +34,35 @@ func (r *IncidentService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employe
     // Return the retrieved employee
     return &employee, nil
 }
+func (s *IncidentService) GetClosedIncidentsByEmployeeID(employeeID uuid.UUID, page, pageSize int) ([]models.Incident, int64, error) {
+	var incidents []models.Incident
+	var total int64
+
+	query := s.db.Model(&models.Incident{}).
+		Where("status = ? AND (reported_by = ? OR assigned_to = ?)", "closed", employeeID, employeeID)
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count closed incidents for employee: %w", err)
+	}
+
+	// Get paginated results
+	err := query.Preload("Reporter").Preload("Assignee").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Order("closed_at DESC").
+		Find(&incidents).Error
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get closed incidents for employee: %w", err)
+	}
+
+	return incidents, total, nil
+}
 func (s *IncidentService) GetByEmployeeID(employeeID uuid.UUID) ([]models.Incident, error) {
 	var incidents []models.Incident
 	err := s.db.Preload("Reporter").Preload("Assignee").
-		Where("reported_by = ?", employeeID).
+		Where("reported_by = ? AND status != ?", employeeID, "closed").
 		Find(&incidents).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get incidents by employee ID: %w", err)
@@ -161,7 +186,7 @@ func (s *IncidentService) ListIncidents(page, pageSize int, filters map[string]i
 	var incidents []models.Incident
 	var total int64
 
-	query := s.db.Model(&models.Incident{})
+	query := s.db.Model(&models.Incident{}).Where("status != ?", "closed")
 
 	// Apply filters
 	for key, value := range filters {
@@ -182,6 +207,35 @@ func (s *IncidentService) ListIncidents(page, pageSize int, filters map[string]i
 
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list incidents: %w", err)
+	}
+
+	return incidents, total, nil
+}
+func (s *IncidentService) ListClosedIncidents(page, pageSize int, filters map[string]interface{}) ([]models.Incident, int64, error) {
+	var incidents []models.Incident
+	var total int64
+
+	query := s.db.Model(&models.Incident{}).Where("status = ?", "closed")
+
+	// Apply additional filters
+	for key, value := range filters {
+		query = query.Where(fmt.Sprintf("%s = ?", key), value)
+	}
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count closed incidents: %w", err)
+	}
+
+	// Get paginated results
+	err := query.Preload("Reporter").Preload("Assignee").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Order("closed_at DESC").
+		Find(&incidents).Error
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list closed incidents: %w", err)
 	}
 
 	return incidents, total, nil

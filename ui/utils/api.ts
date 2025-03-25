@@ -99,8 +99,30 @@ export const incidentAPI = {
     totalPages: number;
   }>(`/incidents`, { params }).then((res) => res.data),
 
+  getClosedIncidentsFiltered: (params?: { 
+    page?: number; 
+    pageSize?: number; 
+  }) => 
+api.get<{ 
+  data: Incident[]; 
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>(`/incidents/closed`, { params }).then((res) => res.data),
+
   getIncidentsByEmployee: (employeeId: string) => 
     api.get<Incident[]>(`/incidents/employee/${employeeId}`).then((res) => res.data),
+
+  getClosedIncidentsByEmployee: (employeeId: string,  params?: { 
+    page?: number; 
+    pageSize?: number; 
+  }) => 
+    api.get<{  data: Incident[]; 
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;}>(`/incidents/employee/${employeeId}/closed`, { params }).then((res) => res.data),
 
   getCorrectiveActions: (id: string) =>
     api.get<CorrectiveAction[]>(`/incidents/${id}`).then(res => res.data),

@@ -38,7 +38,7 @@ export function AppSidebar() {
     { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
 
     { icon: Search, label: "Investigations", href: "/investigation" },
-    { icon: ListChecks, label: "Assigned Actions", href: "/actions" },
+    { icon: ListChecks, label: "Assigned Tasks", href: "/actions" },
     // Only show Reports for admin, safety_officer, or manager
 
     ...(isAdminUser ? [{ icon: FileBarChart, label: "Reports", href: "/reports" }] : []),

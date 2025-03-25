@@ -29,6 +29,7 @@ import { CalendarClock, Plus, FileText } from "lucide-react"
 interface IncidentsTableProps {
   incidents: Incident[]
   userRole: string
+  userID: string
 }
 
 // Type definitions for sorting and filtering
@@ -45,7 +46,7 @@ type FilterState = {
   }
 }
 
-export const IncidentsTable = ({ incidents: initialIncidents, userRole }: IncidentsTableProps) => {
+export const IncidentsTable = ({ incidents: initialIncidents, userRole, userID }: IncidentsTableProps) => {
   const [incidents] = useState<Incident[]>(initialIncidents)
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -259,7 +260,15 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
             A list of all incidents in your organization including their reference number, type, severity, and status.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none">
+        <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
+        <Link href={`/incidents/employee/${userID}/closed`} passHref>
+        <Button
+          variant="outline"
+          className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
+        >
+              View Closed Incidents
+            </Button>
+        </Link>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"

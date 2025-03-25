@@ -57,7 +57,7 @@ export default async function EmployeeIncidentsPage({ params }: PageProps) {
             </p>
           </div>
         </div> */}
-        <IncidentsTable incidents={incidents} userRole={session?.role} />
+        <IncidentsTable incidents={incidents} userRole={session?.role} userID={id} />
       </div>
     </Suspense>
   );
