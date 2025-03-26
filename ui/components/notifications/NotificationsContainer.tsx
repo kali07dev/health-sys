@@ -1,9 +1,9 @@
 'use client';
 // app/notifications/components/NotificationsContainer.tsx
 import { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import NotificationItem from './NotificationItem';
-// import NotificationDetailsSidebar from './NotificationDetailsSidebar';
+import NotificationDetailsSidebar from './NotificationDetailsSidebar';
 // import PaginationControls from './PaginationControls';
 
 interface Notification {
@@ -25,7 +25,7 @@ interface NotificationsContainerProps {
 
 
 export default function NotificationsContainer({ userId, userRole  }: NotificationsContainerProps) {
-  // const router = useRouter();
+   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [, setTotalNotifications] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,15 +34,15 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
   const [sortBy, ] = useState('created_at');
   const [sortOrder, ] = useState('desc');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
    // Check if user has admin or safety_officer role
    const canViewSystemNotifications = userRole === 'admin' || userRole === 'safety_officer';
 
    // Function to navigate to system notifications
-  //  const navigateToSystemNotifications = () => {
-  //    router.push('/alerts/system');
-  //  };
+   const navigateToSystemNotifications = () => {
+     router.push('/alerts/system');
+   };
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -94,9 +94,9 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
     setSidebarOpen(true);
   };
 
-  // const handleCloseSidebar = () => {
-  //   setSidebarOpen(false);
-  // };
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+  };
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -143,7 +143,8 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
       <div className="px-4 py-5 sm:px-6 border-b">
         <h3 className="text-lg font-medium text-gray-900">Your Notifications</h3>
         {canViewSystemNotifications && (
-          <button className="mt-2 text-sm text-blue-600 hover:text-blue-800">
+          <button className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+          onClick={navigateToSystemNotifications}>
             View System Notifications
           </button>
         )}
@@ -184,6 +185,12 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
               />
             ))}
           </ul>
+          <NotificationDetailsSidebar
+             notification={selectedNotification}
+             isOpen={sidebarOpen}
+             onClose={handleCloseSidebar}
+             onMarkAsRead={markAsRead}
+           />
         </>
       )}
     </div>

@@ -6,6 +6,7 @@ import Input from '../Input';
 import Button from '../Button';
 import LocationDropdown from '@/components/locationDropDown';
 import DepartmentDropdown from '@/components/DepartmentDropdown'; // Import the DepartmentDropdown component
+import axios from 'axios';
 
 const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
@@ -49,9 +50,24 @@ const SignUpForm: React.FC = () => {
       await signUp(formattedData);
       router.push('/auth/login'); // Redirect to home page after successful sign-up
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : 'Sign-up failed. Please try again.'
-      );
+
+      // Add error logging for debugging
+    console.error('Sign-up error:', err);
+    
+    if (axios.isAxiosError(err)) {
+      // Handle backend error response
+      const backendError = err.response?.data?.error;
+      if (backendError) {
+        setError(backendError);
+      } else {
+        setError(`Request failed: ${err.response?.status} ${err.response?.statusText}`);
+      }
+    } else if (err instanceof Error) {
+      // Handle frontend validation errors
+      setError(err.message);
+    } else {
+      setError('Sign-up failed. Please try again.');
+    } 
     } finally {
       setIsLoading(false);
     }
