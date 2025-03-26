@@ -45,6 +45,14 @@ export const incidentAPI = {
         console.error('Error updating corrective action:', error);
         throw error;
       }),
+
+  AdminupdateCorrectiveAction: (actionId: string, data: Partial<CorrectiveAction>) => 
+        api.post(`/actions/${actionId}/admin`, data)
+          .then(res => res.data)
+          .catch(error => {
+            console.error('Error updating corrective action:', error);
+            throw error;
+    }),
     
   uploadActionEvidence: async (actionId: string, formData: FormData) => {
         // Create a modified FormData that matches backend expectations

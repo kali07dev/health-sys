@@ -78,7 +78,7 @@ export const ViewActionPanel: React.FC<ViewActionPanelProps> = ({
   const handleMarkAsCompleted = async (closeIncident: boolean) => {
     try {
       setIsSubmitting(true);
-      await incidentAPI.updateCorrectiveAction(action.id, {
+      await incidentAPI.AdminupdateCorrectiveAction(action.id, {
         ...action,
         status: 'verified',
         verifiedBy: userID, 
