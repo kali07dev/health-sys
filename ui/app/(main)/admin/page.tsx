@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { 
   UserCog,
   Building2,
@@ -14,9 +15,20 @@ import {
   Lock,
   LucideIcon
 } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  // AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  // AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 
 export default function AdminDashboard() {
-  // const { data: session } = useSession();
+  const [notImplementedRoute, setNotImplementedRoute] = useState<string | null>(null);
 
   const AdminAction = ({ 
     title, 
@@ -27,25 +39,48 @@ export default function AdminDashboard() {
   }: {
     title: string;
     description: string;
-    icon: LucideIcon ;
+    icon: LucideIcon;
     href: string;
     color: string;
-  }) => (
-    <Link 
-      href={href}
-      className="flex transform items-center rounded-lg bg-white p-6 shadow-md transition-all hover:scale-105 hover:shadow-lg"
-    >
-      <div className={`mr-4 rounded-full p-3 ${color}`}>
-        <Icon className="h-6 w-6 text-white" />
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600">{description}</p>
-      </div>
-    </Link>
-  );
+  }) => {
+    const handleClick = (e: React.MouseEvent) => {
+      const notImplementedRoutes = [
+        '/admin/backup',
+        '/admin/accounts', 
+        '/admin/logs', 
+        '/admin/settings', 
+        '/admin/security',
+        '/admin/access-control'
+      ];
 
+      if (notImplementedRoutes.includes(href)) {
+        e.preventDefault();
+        setNotImplementedRoute(href);
+      }
+    };
+
+    return (
+      <Link 
+        href={href}
+        onClick={handleClick}
+        className="flex transform items-center rounded-lg bg-white p-6 shadow-md transition-all hover:scale-105 hover:shadow-lg"
+      >
+        <div className={`mr-4 rounded-full p-3 ${color}`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <p className="text-sm text-gray-600">{description}</p>
+        </div>
+      </Link>
+    );
+  };
+
+  const closeNotImplementedDialog = () => {
+    setNotImplementedRoute(null);
+  };
   return (
+    <>
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Control Panel</h1>
@@ -68,7 +103,7 @@ export default function AdminDashboard() {
           title="Create New User"
           description="Add new users to the system"
           icon={UserPlus}
-          href="/admin/users/create"
+          href="/admin/user-management"
           color="bg-green-600"
         />
 
@@ -135,5 +170,23 @@ export default function AdminDashboard() {
         />
       </div>
     </div>
+    {notImplementedRoute && (
+      <AlertDialog open={!!notImplementedRoute} onOpenChange={closeNotImplementedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Not Implemented Yet</AlertDialogTitle>
+            <AlertDialogDescription>
+              The route {notImplementedRoute} is currently under development and not available.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={closeNotImplementedDialog}>
+              Understood
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )}
+    </>
   );
 }

@@ -144,7 +144,7 @@ func SetupEmployeeRoutes(app *fiber.App, employeeHandler *EmployeeHandler) {
 	apiEmp.Post("/employees/profile/update", middleware.AuthMiddleware(), employeeHandler.UpdateUserProfile)
 	apiEmp.Delete("/employees/:id", employeeHandler.DeleteEmployee)
 	apiEmp.Get("/employees", employeeHandler.ListEmployees)
-	apiEmp.Get("/api/v1/users/employees", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), employeeHandler.ListEmployees)
+	apiEmp.Get("/users/employees", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), employeeHandler.ListEmployees)
 
 }
 func SetupInvestigationRoutes(app *fiber.App, handler *InvestigationHandler) {
