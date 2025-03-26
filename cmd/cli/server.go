@@ -57,12 +57,12 @@ func RunServer() {
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Log the error
 			log.Printf("Error: %v", err)
-			
+
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 			}
-			
+
 			// Send JSON response
 			return c.Status(code).JSON(fiber.Map{
 				"error": err.Error(),
@@ -101,7 +101,7 @@ func RunServer() {
 		log.Fatalf("Failed to initialize notification service: %v", err)
 	}
 
-	VerSvc := user.NewVerificationService(dbConn, emailService, token.NewTokenService())
+	VerSvc := user.NewVerificationService(dbConn, emailService, token.NewTokenService(), cfg.Web.Domain)
 	userService := user.NewUserService(dbConn, VerSvc)
 	userHandler := api.NewUserHandler(userService, VerSvc)
 

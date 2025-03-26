@@ -17,13 +17,15 @@ type VerificationService struct {
 	db           *gorm.DB
 	emailService *services.EmailService
 	tokenService *token.TokenService
+	domain       string
 }
 
-func NewVerificationService(db *gorm.DB, es *services.EmailService, ts *token.TokenService) *VerificationService {
+func NewVerificationService(db *gorm.DB, es *services.EmailService, ts *token.TokenService, domain string) *VerificationService {
 	return &VerificationService{
 		db:           db,
 		emailService: es,
 		tokenService: ts,
+		domain:       domain,
 	}
 }
 
@@ -45,7 +47,7 @@ func (s *VerificationService) SendVerificationEmail(user *models.User) error {
 	}
 
 	// Send verification email
-	verificationLink := fmt.Sprintf("https://yourdomain.com/verify?token=%s", token)
+	verificationLink := fmt.Sprintf("%s/auth/verify?token=%s", s.domain, token)
 	return s.emailService.SendEmail(
 		[]string{user.Email},
 		"Verify Your Account",
@@ -94,7 +96,7 @@ func (s *VerificationService) InitiatePasswordReset(email string) error {
 	}
 
 	// Send reset email
-	resetLink := fmt.Sprintf("https://yourdomain.com/reset-password?token=%s", token)
+	resetLink := fmt.Sprintf("%s/auth/reset-password/complete?token=%s", s.domain, token)
 	return s.emailService.SendEmail(
 		[]string{user.Email},
 		"Reset Your Password",

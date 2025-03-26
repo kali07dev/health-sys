@@ -26,11 +26,14 @@ type Config struct {
 		Port     int    `yaml:"port"`
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
-		UseTLS bool `yaml:"use_tls"`
+		UseTLS   bool   `yaml:"use_tls"`
 	} `yaml:"smtp"`
 	Sentry struct {
 		DSN string `yaml:"dsn"`
 	} `yaml:"sentry"`
+	Web struct {
+		Domain string `yaml:"domain"`
+	} `yaml:"web"`
 	CORS struct {
 		AllowedOrigins   string `yaml:"allowed_origins"`
 		AllowCredentials bool   `yaml:"allow_credentials"`

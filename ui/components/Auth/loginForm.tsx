@@ -70,7 +70,7 @@ const LoginForm: React.FC = () => {
         />
         <div className="flex items-center justify-between">
           <Link
-            href="/reset-password"
+            href="/auth/reset-password"
             className="text-sm text-blue-600 hover:text-blue-500"
           >
             Forgot your password?

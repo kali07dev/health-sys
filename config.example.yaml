@@ -18,6 +18,9 @@ logging:
 sentry:
   dsn: 
 
+web:
+  domain: "http://localhost:3000"
+
 smtp:
   host: smtp.example.com
   port: 587
