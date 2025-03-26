@@ -9,6 +9,7 @@ import (
 
 type CreateIncidentRequest struct {
 	Type          string    `json:"type" validate:"required,oneof=injury near_miss property_damage environmental security"`
+	InjuryType    string    `json:"injuryType"`
 	SeverityLevel string    `json:"severityLevel" validate:"required,oneof=low medium high critical"`
 	Title         string    `json:"title" validate:"required,max=255"`
 	Description   string    `json:"description" validate:"required"`
@@ -26,6 +27,7 @@ type IncidentResponse struct {
 	ID                      string                 `json:"id"`
 	ReferenceNumber         string                 `json:"referenceNumber"`
 	Type                    string                 `json:"type"`
+	// InjuryType              string                 `json:"injuryType,omitempty"`
 	SeverityLevel           string                 `json:"severityLevel"`
 	Status                  string                 `json:"status"`
 	Title                   string                 `json:"title"`
@@ -51,14 +53,18 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 	}
 
 	var closedAt *time.Time
-	if !i.ClosedAt.IsZero() {
-		closedAt = &i.ClosedAt
+	if i.ClosedAt != nil && !i.ClosedAt.IsZero() {
+		closedAt = i.ClosedAt
+	}
+	if i.Type == "injury"{
+		i.Type = fmt.Sprintf("%s %s", i.Type, i.InjuryType)
 	}
 
 	return IncidentResponse{
 		ID:                      i.ID.String(),
 		ReferenceNumber:         i.ReferenceNumber,
 		Type:                    i.Type,
+		// InjuryType:              *i.InjuryType,
 		SeverityLevel:           i.SeverityLevel,
 		Status:                  i.Status,
 		Title:                   i.Title,

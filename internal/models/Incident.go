@@ -10,6 +10,7 @@ type Incident struct {
 	ID                      uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	ReferenceNumber         string    `gorm:"size:50;not null;unique"`
 	Type                    string    `gorm:"size:50;not null;check:type IN ('injury', 'near_miss', 'property_damage', 'environmental', 'security')"`
+	InjuryType              string    `gorm:"size:50"`
 	SeverityLevel           string    `gorm:"size:20;not null;check:severity_level IN ('low', 'medium', 'high', 'critical')"`
 	Status                  string    `gorm:"size:30;not null;default:'new';check:status IN ('new', 'investigating', 'action_required', 'resolved', 'closed')"`
 	Title                   string    `gorm:"size:255;not null"`
@@ -24,7 +25,7 @@ type Incident struct {
 	EquipmentInvolved       JSONB     `gorm:"type:jsonb"`
 	CreatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	ClosedAt                time.Time
+	ClosedAt                *time.Time
 
 	// Relationships
 	Reporter Employee `gorm:"foreignKey:ReportedBy"`

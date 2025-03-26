@@ -77,7 +77,7 @@ export default function UserManagement() {
             setSelectedUser(null)
             setIsCreateModalOpen(true)
           }}
-          className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+          className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-red-600 px-6 py-3 text-sm font-medium text-white hover:bg-red-700 shadow-sm"
         >
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
@@ -104,7 +104,7 @@ export default function UserManagement() {
               >
                 <div className="p-4">
                   <div className="flex items-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium text-lg">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 font-medium text-lg">
                       {user.employee?.FirstName?.[0]?.toUpperCase() || user.email[0]?.toUpperCase() || "-"}
                     </div>
                     <div className="ml-4">
@@ -118,7 +118,7 @@ export default function UserManagement() {
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     <div>
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Role</p>
-                      <span className="mt-1 inline-flex rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1 text-xs font-semibold leading-5 text-blue-800 dark:text-blue-300">
+                      <span className="mt-1 inline-flex rounded-full bg-red-100 dark:bg-red-900 px-3 py-1 text-xs font-semibold leading-5 text-red-800 dark:text-red-300">
                         {user.role || "-"}
                       </span>
                     </div>
@@ -213,7 +213,7 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 font-medium">
                               {user.employee?.FirstName?.[0]?.toUpperCase() || user.email[0]?.toUpperCase() || "-"}
                             </div>
                           </div>
@@ -226,7 +226,7 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1 text-xs font-semibold leading-5 text-blue-800 dark:text-blue-300">
+                        <span className="inline-flex rounded-full bg-red-100 dark:bg-red-900 px-3 py-1 text-xs font-semibold leading-5 text-red-800 dark:text-red-300">
                           {user.role || "-"}
                         </span>
                       </td>

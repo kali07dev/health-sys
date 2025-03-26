@@ -144,14 +144,14 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
   return (
     <div className="flex flex-col h-full pb-6">
       {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant="destructive" className="mb-4 bg-red-100">
+          <AlertCircle className="h-4 w-4 text-red-500" />
           <AlertDescription>
-            <p className="font-medium">{error.message}</p>
+            <p className="font-medium text-red-800">{error.message}</p>
             {error.validationErrors && (
-              <ul className="mt-2 text-sm">
+              <ul className="mt-2 text-sm text-red-700">
                 {error.validationErrors.map((err: ValidationError, index: number) => (
-                  <li key={index}>{`${err.field}: ${err.message}`}</li>
+                  <li key={index} className="text-red-700">{`${err.field}: ${err.message}`}</li>
                 ))}
               </ul>
             )}

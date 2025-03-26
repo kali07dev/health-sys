@@ -23,16 +23,16 @@ func NewIncidentService(db *gorm.DB) *IncidentService {
 }
 
 func (r *IncidentService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employee, error) {
-    var employee models.Employee
+	var employee models.Employee
 
-    // Query the database for the employee with the given UserID
-    result := r.db.Where("user_id = ?", userID).First(&employee)
-    if result.Error != nil {
-        return nil, result.Error
-    }
+	// Query the database for the employee with the given UserID
+	result := r.db.Where("user_id = ?", userID).First(&employee)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 
-    // Return the retrieved employee
-    return &employee, nil
+	// Return the retrieved employee
+	return &employee, nil
 }
 func (s *IncidentService) GetClosedIncidentsByEmployeeID(employeeID uuid.UUID, page, pageSize int) ([]models.Incident, int64, error) {
 	var incidents []models.Incident
@@ -69,20 +69,25 @@ func (s *IncidentService) GetByEmployeeID(employeeID uuid.UUID) ([]models.Incide
 	}
 	return incidents, nil
 }
+
 // CreateIncident creates a new incident record
 func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userID uuid.UUID) (*models.Incident, error) {
 	refNumber := generateReferenceNumber()
 
+	if req.Type == "injury" && req.InjuryType == "" {
+		return nil, fmt.Errorf("injury type is required for injury incidents")
+	}
 	incident := &models.Incident{
-		ReferenceNumber:         refNumber,
-		Type:                    req.Type,
-		SeverityLevel:           req.SeverityLevel,
-		Status:                  "new",
-		Title:                   req.Title,
-		Description:             req.Description,
-		Location:                req.Location,
-		OccurredAt:              req.OccurredAt,
-		ReportedBy:              userID,
+		ReferenceNumber: refNumber,
+		Type:            req.Type,
+		InjuryType:      req.InjuryType,
+		SeverityLevel:   req.SeverityLevel,
+		Status:          "new",
+		Title:           req.Title,
+		Description:     req.Description,
+		Location:        req.Location,
+		OccurredAt:      req.OccurredAt,
+		ReportedBy:      userID,
 		// AssignedTo:              req.AssignedTo,
 		ImmediateActionsTaken:   req.ImmediateActionsTaken,
 		Witnesses:               req.Witnesses,
@@ -171,6 +176,7 @@ func (s *IncidentService) CreateIncidentWithAttachment(
 
 	return incident, nil
 }
+
 // GetIncident retrieves an incident by ID
 func (s *IncidentService) GetIncident(id uuid.UUID) (*models.Incident, error) {
 	var incident models.Incident
@@ -346,7 +352,8 @@ func (s *IncidentService) CloseIncident(id uuid.UUID) (*models.Incident, error) 
 	}
 
 	incident.Status = "closed"
-	incident.ClosedAt = time.Now()
+	now := time.Now()
+	incident.ClosedAt = &now
 
 	err = s.db.Save(&incident).Error
 	if err != nil {
@@ -423,7 +430,8 @@ func (s *IncidentService) UpdateIncidentStatus(id uuid.UUID, status string) (*mo
 
 	incident.Status = status
 	if status == "closed" {
-		incident.ClosedAt = time.Now()
+		now := time.Now()
+		incident.ClosedAt = &now
 	}
 
 	err = s.db.Save(&incident).Error

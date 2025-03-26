@@ -15,6 +15,7 @@ const ALLOWED_FILE_TYPES = [
 
 const incidentSchema = z.object({
   type: z.enum(['injury', 'near_miss', 'property_damage', 'environmental', 'security']),
+  injuryType: z.string().optional(),
   severityLevel: z.enum(['low', 'medium', 'high', 'critical']),
   title: z.string().max(255),
   description: z.string(),

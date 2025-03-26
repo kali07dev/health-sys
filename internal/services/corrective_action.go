@@ -460,7 +460,8 @@ func (s *CorrectiveActionService) VerifyCompletion(ctx context.Context, actionID
 
 	// Update the incident status
 	incident.Status = "resolved"
-	incident.ClosedAt = time.Now()
+	now = time.Now()
+	incident.ClosedAt = &now
 
 	if err := tx.Save(&incident).Error; err != nil {
 		tx.Rollback() // Rollback in case of an error

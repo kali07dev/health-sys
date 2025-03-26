@@ -20,7 +20,7 @@ export interface IncidentFormData {
   }>;
   environmentalConditions?: Record<string, unknown>;
   equipmentInvolved?: Record<string, unknown>;
-  injuryType?: string;
+  injuryType: string;
   reporterFullName?: string;
 }
 export interface Investigation {
