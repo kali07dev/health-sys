@@ -219,6 +219,60 @@ func (s *CorrectiveActionService) GetByEmployeeID(ctx context.Context, employeeI
 
 	return responses, nil
 }
+func (s *CorrectiveActionService) AdminCompleteActionAndVerify(ctx context.Context, actionID uuid.UUID, verifierID uuid.UUID) error {
+	// Begin a transaction
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Fetch the corrective action by ID
+	action, err := s.InuseGetByID(ctx, actionID)
+	if err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return err
+	}
+
+	now := time.Now()
+	// Update the corrective action status
+	action.Status = "completed"
+	action.CompletedAt = &now
+	
+	// if notes != nil {
+	// 	action.CompletionNotes = *notes
+	// }
+
+	if err := tx.Save(action).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to complete corrective action: %w", err)
+	}
+
+	// Fetch the associated incident
+	var incident models.Incident
+	if err := tx.First(&incident, "id = ?", action.IncidentID).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to find incident: %w", err)
+	}
+
+	// Update the incident status
+	incident.Status = "resolved"
+
+	// incident.ClosedAt = time.Now()
+
+	if err := tx.Save(&incident).Error; err != nil {
+		tx.Rollback() // Rollback in case of an error
+		return fmt.Errorf("failed to update incident: %w", err)
+	}
+
+	// Commit the transaction if everything is successful
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
 
 // Update existing corrective action
 func (s *CorrectiveActionService) Update(ctx context.Context, id uuid.UUID, req schema.UpdateCorrectiveActionRequest) (*models.CorrectiveAction, error) {

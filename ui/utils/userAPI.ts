@@ -1,6 +1,15 @@
 // services/api.ts
 import { getSession } from "next-auth/react";
-
+export type ProfileUpdateRequest = {
+  ID: string;
+  FirstName: string;
+  LastName: string;
+  EmergencyContact: Record<string, string>;
+  ContactNumber: string;
+  Password: string;
+  ConfirmPassword: string;
+  UserID: string;
+};
 const app_url = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const BASE_URL = `${app_url}/api`;
 
@@ -58,11 +67,11 @@ export const userService = {
   },
 
   async getUserProfile() {
-    return fetchWithAuth('/users/profile');
+    return fetchWithAuth('/v1/profile/employee');
   },
 
-  async updateUserProfile(data: Partial<EmployeeUpdateData>) {
-    return fetchWithAuth('/users/profile', {
+  async updateUserProfile(data: Partial<ProfileUpdateRequest>) {
+    return fetchWithAuth('/v1/employees/profile/update', {
       method: 'POST',
       body: JSON.stringify(data),
     });

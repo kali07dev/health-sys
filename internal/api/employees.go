@@ -8,6 +8,7 @@ import (
 	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services"
+	"github.com/hopkali04/health-sys/internal/utils"
 )
 
 type EmployeeHandler struct {
@@ -68,6 +69,119 @@ func (h *EmployeeHandler) GetEmployee(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(employee)
 }
 
+// get employee details for profile editing without Id Parma
+func (h *EmployeeHandler) GetEmployeeProfile(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	if userID == nil {
+		utils.LogError("Unauthorized access attempt", map[string]interface{}{
+			"Get Employee Profile Details": "Get Employee Profile Details",
+		})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		utils.LogError("Invalid user ID format in context", map[string]interface{}{
+			"userID": userID,
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	employeeID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		utils.LogError("Invalid employee ID format", map[string]interface{}{
+			"employeeID": userIDStr,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid employee ID"})
+	}
+	emp, err := h.employeeService.GetEmployeeByUserID(employeeID)
+	if err != nil {
+		utils.LogError("Failed to fetch employee details", map[string]interface{}{
+			"employeeID": employeeID,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check user existence", "details": err.Error()})
+	}
+
+	employee, err := h.employeeService.GetEmployeeByID(c.Context(), emp.ID)
+	if err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Employee not found"})
+	}
+
+	return c.Status(http.StatusOK).JSON(schema.EmployeeProfileToResponse(employee))
+}
+func (h *EmployeeHandler) UpdateUserProfile(c *fiber.Ctx) error {
+	// Get user ID from path parameters
+	userID := c.Locals("userID")
+	if userID == nil {
+		utils.LogError("Unauthorized access attempt", map[string]interface{}{
+			"Get Employee Profile Details": "Get Employee Profile Details",
+		})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		utils.LogError("Invalid user ID format in context", map[string]interface{}{
+			"userID": userID,
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Parse request body
+	var req schema.ProfileUpateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+			"details": err.Error(),
+		})
+	}
+
+	// Set the UserID from path parameter
+	req.UserID = userIDStr
+
+	// Validate request
+	if req.FirstName == "" || req.LastName == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "First name and last name are required",
+		})
+	}
+
+
+	// Call the service
+	err := h.employeeService.UpdateUserProfile(c.Context(), req)
+	if err != nil {
+		// Handle specific error types
+		switch {
+		case err.Error() == "user not found":
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		case err.Error() == "employee not found":
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Employee profile not found",
+			})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to update profile",
+				"details": err.Error(),
+			})
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Profile updated successfully",
+	})
+}
 // UpdateEmployee handles updating an existing employee
 func (h *EmployeeHandler) UpdateEmployee(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))

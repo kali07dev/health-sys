@@ -59,18 +59,18 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 
 	// User routes group
 	userRoutes := app.Group("/api/users")
-	
+
 	// Apply auth middleware to all user routes
 	// userRoutes.Use(middleware.AuthMiddleware)
 
 	// Route for updating user role
-	userRoutes.Put("/:userId/role",  middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserRole)
-	
+	userRoutes.Put("/:userId/role", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserRole)
+
 	// Route for updating user information
-	userRoutes.Put("/:userId",  middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUser)
-	
+	userRoutes.Put("/:userId", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUser)
+
 	// Route for updating user status (active/inactive)
-	userRoutes.Put("/:userId/status",  middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserStatus)
+	userRoutes.Put("/:userId/status", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserStatus)
 
 	// Incident routes
 	// app.Post("/api/incidents", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
@@ -86,7 +86,7 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	// apiIncidents.Use(middleware.AuthMiddleware)
 
 	apiIncidents.Post("/incidents/with-attachments", middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents), incidentImpl.CreateIncidentWithAttachments)
-	apiIncidents.Post("/incidents",middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents), incidentImpl.CreateIncident)
+	apiIncidents.Post("/incidents", middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents), incidentImpl.CreateIncident)
 	apiIncidents.Get("/incidents", incidentImpl.ListIncidentsHandler)
 	apiIncidents.Get("/incidents/closed", incidentImpl.ListClosedIncidentsHandler)
 	apiIncidents.Post("/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
@@ -96,11 +96,9 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	apiIncidents.Get("/incidents/employee/:id", incidentImpl.GetIncidentsByEmployeeID)
 	apiIncidents.Get("/incidents/employee/:employeeID/closed", incidentImpl.GetClosedIncidentsByEmployeeIDHandler)
 
-
-	apiIncidents.Post("/incidents/:id/close", middleware.AuthMiddleware(),middleware.PermissionMiddleware(middleware.PermissionManageIncidents), incidentImpl.CloseIncidentHandler)
+	apiIncidents.Post("/incidents/:id/close", middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionManageIncidents), incidentImpl.CloseIncidentHandler)
 
 	app.Post("/api/v1/actions/:id/evidence", middleware.AuthMiddleware(), correctiveActionHandler.CreateActionEvidenceWithAttachments)
-
 
 	// Corrective action routes
 	// Define routes
@@ -109,10 +107,11 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	app.Post("/api/v1/actions", correctiveActionHandler.CreateCorrectiveAction)
 	app.Get("/api/v1/actions/:id", correctiveActionHandler.GetCorrectiveActionByID)
 	app.Put("/api/v1/actions/:id", middleware.AuthMiddleware(), correctiveActionHandler.UpdateCorrectiveAction)
+	app.Post("/api/v1/actions/:id/admin", middleware.AuthMiddleware(), correctiveActionHandler.AdminCompleteActionAndVerify)
 	app.Delete("/api/v1/actions/:id", correctiveActionHandler.DeleteCorrectiveAction)
 
-	app.Post("/api/v1/actions/:id/complete",middleware.AuthMiddleware(), correctiveActionHandler.LabelAsCompleted)
-	app.Post("/api/v1/actions/:id/verify",middleware.AuthMiddleware(), correctiveActionHandler.VerifyCompletion)
+	app.Post("/api/v1/actions/:id/complete", middleware.AuthMiddleware(), correctiveActionHandler.LabelAsCompleted)
+	app.Post("/api/v1/actions/:id/verify", middleware.AuthMiddleware(), correctiveActionHandler.VerifyCompletion)
 
 	// Notification routes
 
@@ -136,13 +135,16 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 }
 
 func SetupEmployeeRoutes(app *fiber.App, employeeHandler *EmployeeHandler) {
-	app.Post("/employees", employeeHandler.CreateEmployee)
-	app.Get("/api/v1/employees/search", employeeHandler.SearchEmployees)
-	app.Get("/employees/:id", employeeHandler.GetEmployee)
-	app.Put("/employees/:id", employeeHandler.UpdateEmployee)
-	app.Delete("/employees/:id", employeeHandler.DeleteEmployee)
-	app.Get("/employees", employeeHandler.ListEmployees)
-	app.Get("/api/v1/users/employees", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), employeeHandler.ListEmployees)
+	apiEmp := app.Group("/api/v1")
+	apiEmp.Post("/employees", employeeHandler.CreateEmployee)
+	apiEmp.Get("/employees/search", employeeHandler.SearchEmployees)
+	apiEmp.Get("/employees/:id", employeeHandler.GetEmployee)
+	apiEmp.Get("/profile/employee", middleware.AuthMiddleware(), employeeHandler.GetEmployeeProfile)
+	apiEmp.Put("/employees/:id", middleware.AuthMiddleware(), employeeHandler.UpdateEmployee)
+	apiEmp.Post("/employees/profile/update", middleware.AuthMiddleware(), employeeHandler.UpdateUserProfile)
+	apiEmp.Delete("/employees/:id", employeeHandler.DeleteEmployee)
+	apiEmp.Get("/employees", employeeHandler.ListEmployees)
+	apiEmp.Get("/api/v1/users/employees", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), employeeHandler.ListEmployees)
 
 }
 func SetupInvestigationRoutes(app *fiber.App, handler *InvestigationHandler) {
@@ -211,17 +213,17 @@ func SetupNotificationSettingsRoutes(app *fiber.App, handler *NotificationSettin
 }
 
 func SetupInterViewRoutes(app *fiber.App, handler *InterviewHandler) {
-    interview := app.Group("/api/v1/interview", middleware.AuthMiddleware())
+	interview := app.Group("/api/v1/interview", middleware.AuthMiddleware())
 
-    // Route to schedule an interview
-    interview.Post("/schedule", handler.ScheduleInterviewHandler)
+	// Route to schedule an interview
+	interview.Post("/schedule", handler.ScheduleInterviewHandler)
 
-    // Route to update the status of an interview
-    interview.Put("/:id/status", handler.UpdateInterviewStatus)
+	// Route to update the status of an interview
+	interview.Put("/:id/status", handler.UpdateInterviewStatus)
 
-    // Route to get details of a specific interview
-    interview.Get("/:id", handler.GetInterviewDetails)
+	// Route to get details of a specific interview
+	interview.Get("/:id", handler.GetInterviewDetails)
 
-    // Route to get evidence details for a specific interview
-    interview.Get("/:id/evidence", handler.GetEvidenceDetails)
+	// Route to get evidence details for a specific interview
+	interview.Get("/:id/evidence", handler.GetEvidenceDetails)
 }

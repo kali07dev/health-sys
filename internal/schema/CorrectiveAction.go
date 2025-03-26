@@ -125,81 +125,81 @@ func ToActionEvidenceResponse(evidence *models.ActionEvidence) ActionEvidenceRes
 
 // Enhanced converter function for CorrectiveAction to Response
 func ToCActionResponse(ca *models.CorrectiveAction) CorrectiveActionResponse {
-    // Convert time fields to ISO 8601 formatted strings
-    dueDate := ca.DueDate.Format(time.RFC3339)
-    var verifiedAt *string
-    if ca.VerifiedAt != nil && !ca.VerifiedAt.IsZero() {
-        verifiedAtStr := ca.VerifiedAt.Format(time.RFC3339)
-        verifiedAt = &verifiedAtStr
-    }
+	// Convert time fields to ISO 8601 formatted strings
+	dueDate := ca.DueDate.Format(time.RFC3339)
+	var verifiedAt *string
+	if ca.VerifiedAt != nil && !ca.VerifiedAt.IsZero() {
+		verifiedAtStr := ca.VerifiedAt.Format(time.RFC3339)
+		verifiedAt = &verifiedAtStr
+	}
 
-    // Convert UUID fields to strings
-    var verifiedBy string
-    if ca.VerifiedBy != nil {
-        verifiedBy = ca.VerifiedBy.String()
-    }
+	// Convert UUID fields to strings
+	var verifiedBy string
+	if ca.VerifiedBy != nil {
+		verifiedBy = ca.VerifiedBy.String()
+	}
 
-    // Calculate days remaining until due date
-    daysRemaining := int(time.Until(ca.DueDate).Hours() / 24)
-    isOverdue := daysRemaining < 0 && ca.Status != "completed" && ca.Status != "verified"
+	// Calculate days remaining until due date
+	daysRemaining := int(time.Until(ca.DueDate).Hours() / 24)
+	isOverdue := daysRemaining < 0 && ca.Status != "completed" && ca.Status != "verified"
 
-    // Handle potentially nil relationships
-    var assigneeName, assignerName string
-    var verifierName *string
-    var incidentTitle, incidentLocation string
+	// Handle potentially nil relationships
+	var assigneeName, assignerName string
+	var verifierName *string
+	var incidentTitle, incidentLocation string
 
-    // Safely access Assignee
-    if ca.Assignee.ID != uuid.Nil {
-        assigneeName = fmt.Sprintf("%s %s", ca.Assignee.FirstName, ca.Assignee.LastName)
-    }
+	// Safely access Assignee
+	if ca.Assignee.ID != uuid.Nil {
+		assigneeName = fmt.Sprintf("%s %s", ca.Assignee.FirstName, ca.Assignee.LastName)
+	}
 
-    // Safely access Assigner
-    if ca.Assigner.ID != uuid.Nil {
-        assignerName = fmt.Sprintf("%s %s", ca.Assigner.FirstName, ca.Assigner.LastName)
-    }
+	// Safely access Assigner
+	if ca.Assigner.ID != uuid.Nil {
+		assignerName = fmt.Sprintf("%s %s", ca.Assigner.FirstName, ca.Assigner.LastName)
+	}
 
-    // Safely access Verifier
-    if ca.VerifiedBy != nil && ca.Verifier.ID != uuid.Nil {
-        name := fmt.Sprintf("%s %s", ca.Verifier.FirstName, ca.Verifier.LastName)
-        verifierName = &name
-    }
+	// Safely access Verifier
+	if ca.VerifiedBy != nil && ca.Verifier.ID != uuid.Nil {
+		name := fmt.Sprintf("%s %s", ca.Verifier.FirstName, ca.Verifier.LastName)
+		verifierName = &name
+	}
 
-    // Safely access Incident
-    // This is the most problematic part - add a complete nil check
-    if ca.Incident.ID != uuid.Nil {
-        incidentTitle = ca.Incident.Title
-        incidentLocation = ca.Incident.Location
-    }
+	// Safely access Incident
+	// This is the most problematic part - add a complete nil check
+	if ca.Incident.ID != uuid.Nil {
+		incidentTitle = ca.Incident.Title
+		incidentLocation = ca.Incident.Location
+	}
 
-    // Create completion notes pointer
-    completionNotes := ca.CompletionNotes
-    
-    return CorrectiveActionResponse{
-        ID:                   ca.ID.String(),
-        IncidentID:           ca.IncidentID.String(),
-        IncidentTitle:        incidentTitle,
-        IncidentLocation:     incidentLocation,
-        Description:          ca.Description,
-        ActionType:           ca.ActionType,
-        Priority:             ca.Priority,
-        Status:               ca.Status,
-        AssignedTo:           ca.AssignedTo.String(),
-        AssigneeName:         assigneeName,
-        AssignedBy:           ca.AssignedBy.String(),
-        AssignerName:         assignerName,
-        DueDate:              dueDate,
-        DaysRemaining:        daysRemaining,
-        IsOverdue:            isOverdue,
-        CompletedAt:          ca.CompletedAt,
-        CompletionNotes:      &completionNotes,
-        VerificationRequired: ca.VerificationRequired,
-        VerifiedBy:           &verifiedBy,
-        VerifierName:         verifierName,
-        VerifiedAt:           verifiedAt,
-        CreatedAt:            ca.CreatedAt,
-        UpdatedAt:            ca.UpdatedAt,
-        Evidence:             []ActionEvidenceResponse{},
-    }
+	// Create completion notes pointer
+	completionNotes := ca.CompletionNotes
+
+	return CorrectiveActionResponse{
+		ID:                   ca.ID.String(),
+		IncidentID:           ca.IncidentID.String(),
+		IncidentTitle:        incidentTitle,
+		IncidentLocation:     incidentLocation,
+		Description:          ca.Description,
+		ActionType:           ca.ActionType,
+		Priority:             ca.Priority,
+		Status:               ca.Status,
+		AssignedTo:           ca.AssignedTo.String(),
+		AssigneeName:         assigneeName,
+		AssignedBy:           ca.AssignedBy.String(),
+		AssignerName:         assignerName,
+		DueDate:              dueDate,
+		DaysRemaining:        daysRemaining,
+		IsOverdue:            isOverdue,
+		CompletedAt:          ca.CompletedAt,
+		CompletionNotes:      &completionNotes,
+		VerificationRequired: ca.VerificationRequired,
+		VerifiedBy:           &verifiedBy,
+		VerifierName:         verifierName,
+		VerifiedAt:           verifiedAt,
+		CreatedAt:            ca.CreatedAt,
+		UpdatedAt:            ca.UpdatedAt,
+		Evidence:             []ActionEvidenceResponse{},
+	}
 }
 
 // Update ToCActionResponseArray to use the new response type

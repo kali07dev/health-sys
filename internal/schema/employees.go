@@ -55,6 +55,29 @@ type EmployeeResponse struct {
 	UpdatedAt          string            `json:"updatedAt"`
 	DeletedAt          *string           `json:"deletedAt,omitempty"`
 }
+type EmployeeProfileResponse struct {
+	ID               string            `json:"ID"`
+	FirstName        string            `json:"FirstName"`
+	LastName         string            `json:"LastName"`
+	Department       string            `json:"Department"`
+	Position         string            `json:"Position"`
+	Role             string            `json:"Role"`
+	EmergencyContact map[string]string `json:"EmergencyContact,omitempty"`
+	ContactNumber    string            `json:"ContactNumber"`
+	OfficeLocation   string            `json:"OfficeLocation"`
+
+	Email string `json:"Email"`
+}
+type ProfileUpateRequest struct {
+	ID               string            `json:"ID"`
+	FirstName        string            `json:"FirstName"`
+	LastName         string            `json:"LastName"`
+	EmergencyContact map[string]string `json:"EmergencyContact,omitempty"`
+	ContactNumber    string            `json:"ContactNumber"`
+
+	Password string `json:"Password"`
+	UserID   string
+}
 
 func EmployeeToResponse(e *models.Employee) EmployeeResponse {
 	// First check if the employee pointer is nil
@@ -128,6 +151,38 @@ func EmployeeToResponse(e *models.Employee) EmployeeResponse {
 		CreatedAt:          createdAt,
 		UpdatedAt:          updatedAt,
 		DeletedAt:          deletedAt,
+	}
+}
+func EmployeeProfileToResponse(e *models.Employee) EmployeeProfileResponse {
+	// First check if the employee pointer is nil
+	if e == nil {
+		return EmployeeProfileResponse{}
+	}
+
+	// Convert EmergencyContact JSONB to a map[string]string
+	var emergencyContact map[string]string
+	if e.EmergencyContact != nil {
+		emergencyContact = make(map[string]string)
+		jsonMap := *e.EmergencyContact
+		for k, v := range jsonMap {
+			if v != nil { // Add nil check for map values
+				emergencyContact[k] = fmt.Sprintf("%v", v)
+			}
+		}
+	}
+
+	return EmployeeProfileResponse{
+		ID:         e.ID.String(),
+		Email:      e.User.Email,
+		FirstName:  e.FirstName,
+		LastName:   e.LastName,
+		Department: e.Department,
+		Position:   e.Position,
+		Role:       e.Role,
+
+		EmergencyContact: emergencyContact,
+		ContactNumber:    e.ContactNumber,
+		OfficeLocation:   e.OfficeLocation,
 	}
 }
 

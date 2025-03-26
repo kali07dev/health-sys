@@ -204,6 +204,78 @@ func (h *CorrectiveActionHandler) GetCorrectiveActionByID(c *fiber.Ctx) error {
 	})
 	return c.Status(fiber.StatusOK).JSON(action)
 }
+func (h *CorrectiveActionHandler) AdminCompleteActionAndVerify(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to complete and verify corrective action", map[string]interface{}{
+		"path": c.Path(),
+		"id":   c.Params("id"),
+	})
+
+	actionIDStr := c.Params("id")
+	if actionIDStr == "" {
+		utils.LogError("Missing action ID in request", map[string]interface{}{
+			"error": "Action ID is required",
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Action ID is required"})
+	}
+
+	actionID, err := uuid.Parse(actionIDStr)
+	if err != nil {
+		utils.LogError("Invalid corrective action ID format", map[string]interface{}{
+			"actionID": actionIDStr,
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid action ID format"})
+	}
+
+	var req schema.UpdateCorrectiveActionRequest
+	if err := c.BodyParser(&req); err != nil {
+		utils.LogError("Failed to parse request body", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Failed to parse request body",
+			"details": err.Error(),
+		})
+	}
+
+	utils.LogDebug("Completing and verifying corrective action", map[string]interface{}{
+		"actionID": actionID,
+		"request":  req,
+	})
+
+	employeeIDStr := req.VerifiedBy
+
+	employeeID, err := uuid.Parse(employeeIDStr)
+	if err != nil {
+		utils.LogError("Invalid employee ID format", map[string]interface{}{
+			"employeeID": employeeIDStr,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid employee ID"})
+	}
+
+	emp, err := h.CorrectiveActionservice.GetEmployeeByUserID(employeeID)
+	if err != nil {
+		utils.LogError("Failed to fetch employee details", map[string]interface{}{
+			"employeeID": employeeID,
+			"error":      err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check user existence", "details": err.Error()})
+	}
+
+	if err := h.CorrectiveActionservice.AdminCompleteActionAndVerify(c.Context(), actionID, emp.ID); err != nil {
+		utils.LogError("Failed to complete and verify corrective action", map[string]interface{}{
+			"actionID": actionID,
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	utils.LogInfo("Successfully completed and verified corrective action", map[string]interface{}{
+		"actionID": actionID,
+	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Action completed and verified successfully"})
+}
 
 // UpdateCorrectiveAction updates an existing corrective action
 func (h *CorrectiveActionHandler) UpdateCorrectiveAction(c *fiber.Ctx) error {
@@ -270,7 +342,7 @@ func (h *CorrectiveActionHandler) UpdateCorrectiveAction(c *fiber.Ctx) error {
 			})
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid employee ID"})
 		}
-		
+
 		emp, err := h.CorrectiveActionservice.GetEmployeeByUserID(employeeID)
 		if err != nil {
 			utils.LogError("Failed to fetch employee details", map[string]interface{}{
