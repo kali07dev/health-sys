@@ -27,7 +27,7 @@ export default async function NotificationsPage() {
         <h1 className="text-3xl font-semibold text-gray-900 mb-6">Notifications</h1>
         <InfoPanel 
             title="System Alerts & Reminders"
-            icon={<Bell className="h-5 w-5 text-blue-600" />}
+            icon={<Bell className="h-5 w-5 text-red-600" />}
           >
             <p>
               Your notifications include: <strong>investigation reminders</strong>, 
@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+                className="bg-white text-red-700 border-red-200 hover:bg-red-50"
               >
                 <Check className="h-4 w-4 mr-1" />
                 Dismiss All

@@ -88,6 +88,7 @@ func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userI
 		Location:        req.Location,
 		OccurredAt:      req.OccurredAt,
 		ReportedBy:      userID,
+		UserReported:    req.ReporterFullName,
 		// AssignedTo:              req.AssignedTo,
 		ImmediateActionsTaken:   req.ImmediateActionsTaken,
 		Witnesses:               req.Witnesses,
@@ -441,6 +442,7 @@ func (s *IncidentService) UpdateIncidentStatus(id uuid.UUID, status string) (*mo
 
 	return &incident, nil
 }
+
 // Helper function to generate a unique reference number
 func generateReferenceNumber() string {
 	timestamp := time.Now().Format("20060102")

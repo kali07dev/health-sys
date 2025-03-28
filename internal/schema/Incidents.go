@@ -17,6 +17,7 @@ type CreateIncidentRequest struct {
 	OccurredAt    time.Time `json:"occurredAt" validate:"required"`
 	// ReportedBy              uuid.UUID
 	// AssignedTo              uuid.UUID      `json:"assignedTo"`
+	ReporterFullName        string         `json:"reporterFullName"`
 	ImmediateActionsTaken   string         `json:"immediateActionsTaken"`
 	Witnesses               map[string]any `json:"witnesses"`               // JSONB field
 	EnvironmentalConditions map[string]any `json:"environmentalConditions"` // JSONB field
@@ -24,9 +25,10 @@ type CreateIncidentRequest struct {
 }
 
 type IncidentResponse struct {
-	ID                      string                 `json:"id"`
-	ReferenceNumber         string                 `json:"referenceNumber"`
-	Type                    string                 `json:"type"`
+	ID              string `json:"id"`
+	ReferenceNumber string `json:"referenceNumber"`
+	Type            string `json:"type"`
+	UserReported    string `json:"userReported"`
 	// InjuryType              string                 `json:"injuryType,omitempty"`
 	SeverityLevel           string                 `json:"severityLevel"`
 	Status                  string                 `json:"status"`
@@ -56,15 +58,16 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 	if i.ClosedAt != nil && !i.ClosedAt.IsZero() {
 		closedAt = i.ClosedAt
 	}
-	if i.Type == "injury"{
+	if i.Type == "injury" {
 		i.Type = fmt.Sprintf("%s %s", i.Type, i.InjuryType)
 	}
 
 	return IncidentResponse{
-		ID:                      i.ID.String(),
-		ReferenceNumber:         i.ReferenceNumber,
-		Type:                    i.Type,
+		ID:              i.ID.String(),
+		ReferenceNumber: i.ReferenceNumber,
+		Type:            i.Type,
 		// InjuryType:              *i.InjuryType,
+		UserReported:            i.UserReported,
 		SeverityLevel:           i.SeverityLevel,
 		Status:                  i.Status,
 		Title:                   i.Title,

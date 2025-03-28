@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/hopkali04/health-sys/internal/schema"
@@ -219,6 +220,7 @@ func (h *IncidentsHandler) CreateIncident(c *fiber.Ctx) error {
 		})
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+	log.Info("Parsed request body", req)
 
 	employee, err := h.service.GetEmployeeByUserID(uuidUserID)
 	if err != nil {

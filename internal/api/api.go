@@ -37,6 +37,7 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	app.Post("/api/auth/login", userSVC.LoginUser)
 	app.Post("/api/auth/logout", userSVC.LogoutUser)
 	app.Post("/api/auth/verify", userSVC.VerifyAccount)
+	app.Post("/api/auth/google/signup", userSVC.VerifyAccount)
 	app.Post("/api/auth/reset-password/request", userSVC.RequestPasswordReset)
 	app.Post("/api/auth/reset-password/complete", userSVC.CompletePasswordReset)
 

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import type { Incident } from "../../utils/dummyData"
+import type { Incident } from "@/interfaces/incidents"
 import type { IncidentAttachment } from "@/interfaces/incidents"
 import { AttachmentsList } from "./AttachmentsList"
 
@@ -29,7 +29,8 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, attachments
           <DetailItem label="Description" value={incident.description} className="whitespace-pre-wrap break-words" />
           <DetailItem label="Location" value={incident.location} />
           <DetailItem label="Occurred At" value={new Date(incident.occurredAt).toLocaleString()} />
-          <DetailItem label="Reported By" value={incident.reportedBy} />
+          <DetailItem label="Reported By Account" value={incident.reportedBy} />
+          <DetailItem label="Reported For" value={incident.userReported} />
 
           {incident.assignedTo && <DetailItem label="Assigned To" value={incident.assignedTo} />}
 

@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 // import { useRouter } from "next/navigation"
 import Router from "next/router"
-import type { Incident } from "../../utils/dummyData"
+import type { Incident } from "@/interfaces/incidents"
 
 interface IncidentReviewProps {
   incident: Incident

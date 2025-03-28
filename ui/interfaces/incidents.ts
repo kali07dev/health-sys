@@ -107,6 +107,7 @@ export interface Incident {
   location: string;
   occurredAt: string;
   reportedBy: string;
+  userReported: string
   assignedTo?: string;
   immediateActionsTaken?: string;
   witnesses?: string[];

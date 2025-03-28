@@ -24,7 +24,7 @@ export default async function CorrectiveActionsPage() {
   return (
     <div className="container mx-auto py-8 px-4 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">My Corrective Actions</h1>
-      <InfoPanel title="Open Corrective Actions" icon={<ShieldAlert className="h-5 w-5 text-blue-600" />}>
+      <InfoPanel title="Open Corrective Actions" icon={<ShieldAlert className="h-5 w-5 text-red-600" />}>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           These are safety improvements assigned to you. Each action has a priority level and deadline.
           <strong> High-priority items</strong> must be addressed within 24 hours.
@@ -33,7 +33,7 @@ export default async function CorrectiveActionsPage() {
           <Button
             size="sm"
             variant="outline"
-            className="bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700"
+            className="bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-gray-700"
           >
             <CheckCircle className="h-4 w-4 mr-1" />
             Mark Complete
@@ -41,7 +41,7 @@ export default async function CorrectiveActionsPage() {
           <Button
             size="sm"
             variant="outline"
-            className="bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700"
+            className="bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-gray-700"
           >
             <CalendarPlus className="h-4 w-4 mr-1" />
             Request Extension

@@ -23,6 +23,7 @@ const incidentSchema = z.object({
   occurredAt: z.string().transform(str => new Date(str)),
   immediateActionsTaken: z.string().optional(),
   reportedBy: z.string(),
+  reporterFullName: z.string().optional(),
   witnesses: z.array(
     z.object({
       name: z.string(),

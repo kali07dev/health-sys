@@ -1,5 +1,3 @@
-// import { useAuthStore } from '@/stores/authStore';
-// import { create } from 'zustand'
 import axios, { AxiosInstance } from 'axios';
 
 interface LoginResponse {
@@ -7,7 +5,9 @@ interface LoginResponse {
     id: string;
     email: string;
     role: string;
+    name?: string;
   };
+  token?: string;
 }
 
 interface User {
@@ -19,19 +19,28 @@ interface User {
 
 interface UserData {
   email: string,
-  password: string,
-  confirmPassword: string, // Add confirm password field
-  // employeeNumber: string,
-  firstName: string,
-  lastName: string,
-  department: string,
-  position: string,
-  role: string, // Always set to "employee"
-  startDate: string,
-  contactNumber: string,
-  officeLocation: string,
+  password?: string,
+  confirmPassword?: string,
+  firstName?: string,
+  lastName?: string,
+  department?: string,
+  position?: string,
+  role?: string,
+  startDate?: string,
+  contactNumber?: string,
+  officeLocation?: string,
+  googleId?: string,
+  name?: string,
 }
 
+interface GoogleSignupData {
+  credential: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+}
 const AppURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const API_BASE_URL = `${AppURL}/api`;
 
@@ -39,18 +48,6 @@ const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL, 
   withCredentials: true 
 });
-// // Add response interceptor to handle 401 errors
-// api.interceptors.response.use(
-//   response => response,
-//   error => {
-//     if (error.response?.status === 401) {
-//       // Clear user store and redirect to login
-//       useAuthStore.getState().setUser(null)
-//       window.location.href = '/login'
-//     }
-//     return Promise.reject(error)
-//   }
-// )
 
 api.interceptors.response.use(
   (response) => response,
@@ -58,6 +55,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export const login = async (
   email: string, 
   password: string
@@ -78,14 +76,18 @@ export const Users = async (): Promise<User[]> => {
 
 export const logout = async (): Promise<void> => {
   await api.post('/auth/logout');
-  // Access store directly without hook
-  // useAuthStore.getState().setUser(null);
 };
-// export const googleLogin = async (tokenId: string): Promise<LoginResponse> => {
-//   const response = await api.post<LoginResponse>('/auth/google', { tokenId });
-//   return response.data;
-// };
-export const googleLogin = async (credential: string): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/google', { credential });
-    return response.data;
+
+export const googleSignup = async (signupData: GoogleSignupData): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>('/auth/google/signup', signupData);
+  return response.data;
+};
+
+export const googleLogin = async (credential: string, email?: string, name?: string): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>('/auth/google', { 
+    credential, 
+    email, 
+    name 
+  });
+  return response.data;
 };

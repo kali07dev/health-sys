@@ -44,7 +44,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     immediateActionsTaken: "",
     reportedBy: session?.user?.id || "",
     injuryType: "",
-    // reporterFullName: "",
+    reporterFullName: "",
   })
 
   const [files, setFiles] = useState<File[]>([])
