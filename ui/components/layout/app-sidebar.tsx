@@ -4,7 +4,6 @@ import {
   AlertTriangle, 
   FileBarChart, 
   Bell, 
-  // ClipboardList, 
   Settings,
   Search, 
   ListChecks, 
@@ -24,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarCollapseButton
 } from "@/components/ui/sidebar"
 
 export function AppSidebar() {
@@ -36,24 +36,19 @@ export function AppSidebar() {
   const sidebarItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
-
     { icon: Search, label: "Investigations", href: "/investigation" },
     { icon: ListChecks, label: "Assigned Tasks", href: "/actions" },
-    // Only show Reports for admin, safety_officer, or manager
-
     ...(isAdminUser ? [{ icon: FileBarChart, label: "Reports", href: "/reports" }] : []),
     { icon: Bell, label: "Alerts", href: "/alerts" },
-    // ...(isAdminUser ? [{ icon: ClipboardList, label: "Tasks", href: "/tasks" }] : []),
-
     { icon: Settings, label: "Profile", href: "/profile" },
-    // Only show Admin for admin, safety_officer, or manager
     ...(isAdminUser ? [{ icon: Shield, label: "Admin", href: "/admin" }] : []),
   ]
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <h1 className="text-lg font-semibold text-red-600">Safety System</h1>
+        <h1 className="text-lg font-semibold text-red-600 truncate">Safety System</h1>
+        <SidebarCollapseButton />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

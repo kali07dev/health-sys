@@ -30,9 +30,9 @@ export function AppHeader() {
         </Button>
         <Button variant="ghost" className="gap-2 text-gray-700 hover:text-red-600 hover:bg-red-50">
           <Image src="/user.svg" alt="User" 
-            width={36} // Set the width to match design (h-9 = 36px)
-            height={36} // Set the height to match design (w-9 = 36px)                   
-          className="h-6 w-6 rounded-full" />
+            width={36}
+            height={36}                   
+            className="h-6 w-6 rounded-full" />
           <span className="hidden text-sm font-normal md:inline-block">{session?.user?.email}</span>
           <ChevronDown className="h-4 w-4" />
         </Button>
