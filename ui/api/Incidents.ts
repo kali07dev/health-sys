@@ -21,6 +21,7 @@ const incidentSchema = z.object({
   immediateActionsTaken: z.string().optional(),
   reportedBy: z.string().uuid(),
   reporterFullName: z.string().optional(),
+  userIncidentID: z.string().optional(),
   witnesses: z.array(
     z.object({
       name: z.string(),

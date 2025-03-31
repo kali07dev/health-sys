@@ -79,6 +79,7 @@ func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userI
 	}
 	incident := &models.Incident{
 		ReferenceNumber: refNumber,
+		UserIncidentID:  req.UserIncidentID,
 		Type:            req.Type,
 		InjuryType:      req.InjuryType,
 		SeverityLevel:   req.SeverityLevel,

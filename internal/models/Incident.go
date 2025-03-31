@@ -9,6 +9,7 @@ import (
 type Incident struct {
 	ID                      uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	ReferenceNumber         string     `gorm:"size:50;not null;unique"`
+	UserIncidentID          string     `gorm:"type:text;"`
 	Type                    string     `gorm:"size:50;not null;check:type IN ('injury', 'near_miss', 'property_damage', 'environmental', 'security')"`
 	InjuryType              string     `gorm:"size:50"`
 	SeverityLevel           string     `gorm:"size:20;not null;check:severity_level IN ('low', 'medium', 'high', 'critical')"`

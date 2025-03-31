@@ -18,6 +18,7 @@ type CreateIncidentRequest struct {
 	// ReportedBy              uuid.UUID
 	// AssignedTo              uuid.UUID      `json:"assignedTo"`
 	ReporterFullName        string         `json:"reporterFullName"`
+	UserIncidentID          string         `json:"userIncidentID"`
 	ImmediateActionsTaken   string         `json:"immediateActionsTaken"`
 	Witnesses               map[string]any `json:"witnesses"`               // JSONB field
 	EnvironmentalConditions map[string]any `json:"environmentalConditions"` // JSONB field
@@ -29,6 +30,7 @@ type IncidentResponse struct {
 	ReferenceNumber string `json:"referenceNumber"`
 	Type            string `json:"type"`
 	UserReported    string `json:"userReported"`
+	UserIncidentID  string `json:"userIncidentID"`
 	// InjuryType              string                 `json:"injuryType,omitempty"`
 	SeverityLevel           string                 `json:"severityLevel"`
 	Status                  string                 `json:"status"`
@@ -67,6 +69,7 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 		ReferenceNumber: i.ReferenceNumber,
 		Type:            i.Type,
 		// InjuryType:              *i.InjuryType,
+		UserIncidentID:          i.UserIncidentID,
 		UserReported:            i.UserReported,
 		SeverityLevel:           i.SeverityLevel,
 		Status:                  i.Status,

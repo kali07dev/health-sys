@@ -45,6 +45,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     reportedBy: session?.user?.id || "",
     injuryType: "",
     reporterFullName: "",
+    userIncidentID: "",
   })
 
   const [files, setFiles] = useState<File[]>([])
@@ -297,18 +298,34 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reporterFullName" className="text-base">
-              Reporter&apos;s Full Name
-            </Label>
-            <Input
-              id="reporterFullName"
-              name="reporterFullName"
-              value={formData.reporterFullName}
-              onChange={handleInputChange}
-              placeholder="Enter your full name"
-              className="h-12 text-base"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="reporterFullName" className="text-base">
+                Reporter&apos;s Full Name
+              </Label>
+              <Input
+                id="reporterFullName"
+                name="reporterFullName"
+                value={formData.reporterFullName}
+                onChange={handleInputChange}
+                placeholder="Enter your full name"
+                className="h-12 text-base"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="userIncidentID" className="text-base">
+                Incident ID
+              </Label>
+              <Input
+                id="userIncidentID"
+                name="userIncidentID"
+                value={formData.userIncidentID}
+                onChange={handleInputChange}
+                placeholder="Enter the Incident ID if available"
+                className="h-12 text-base"
+              />
+            </div>
+
           </div>
 
           <div className="space-y-3">

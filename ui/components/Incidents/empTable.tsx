@@ -464,7 +464,8 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole, userID }
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">{incident.title}</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                         <User className="h-3 w-3 opacity-50" />
-                        {incident.referenceNumber}
+                        {/* {incident.referenceNumber} */}
+                        {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
                       </p>
                     </div>
                     <Badge
@@ -650,7 +651,8 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole, userID }
                                 <div className="font-medium text-gray-900">{incident.title}</div>
                                 <div className="text-gray-500 text-xs flex items-center gap-1">
                                   <User className="h-3 w-3 opacity-50" />
-                                  {incident.referenceNumber}
+                                  {/* {incident.referenceNumber} */}
+                                  {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
                                 </div>
                               </div>
                             </div>

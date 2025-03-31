@@ -22,6 +22,7 @@ export interface IncidentFormData {
   equipmentInvolved?: Record<string, unknown>;
   injuryType: string;
   reporterFullName?: string;
+  userIncidentID?: string;
 }
 export interface Investigation {
   id: string;
@@ -113,6 +114,7 @@ export interface Incident {
   witnesses?: string[];
   environmentalConditions?: Record<string, string>;
   equipmentInvolved?: string[];
+  userIncidentID?: string;
   createdAt: string;
   updatedAt: string;
   closedAt?: string;
