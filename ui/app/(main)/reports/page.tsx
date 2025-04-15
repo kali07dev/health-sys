@@ -11,9 +11,9 @@ const reportTypes = [
 export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto">
         <h1 className="text-4xl font-medium text-gray-900 mb-2">Reports</h1>
-        <p className="text-gray-500 mb-8">Generate detailed safety reports with just a few clicks</p>
+        {/* <p className="text-gray-500 mb-8">Generate detailed safety reports with just a few clicks</p> */}
         <ReportForm reportTypes={reportTypes} />
       </div>
     </div>

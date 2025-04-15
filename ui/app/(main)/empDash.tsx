@@ -54,8 +54,8 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const data = await dashboardAPI.getEmployeeDashboard(userID);
-        setDashboardData(data);
+        const data = await dashboardAPI.getEmployeeDashboard(userID)
+        setDashboardData(data)
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error)
         toast({
@@ -141,7 +141,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
 
   // Card components
   const IncidentCard = ({ incident }: { incident: Incident }) => (
-    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100 dark:border-gray-700">
+    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-red-600 border-t border-r border-b border-gray-100 dark:border-gray-700">
       <div className="flex justify-between items-start">
         <div className="flex-1 mr-2">
           <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{incident.Title}</h3>
@@ -170,11 +170,11 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
                 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
                 : incident.Status === "action_required"
                   ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                : incident.Status === "investigating"
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                : incident.Status === "resolved"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  : incident.Status === "investigating"
+                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                    : incident.Status === "resolved"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
           }`}
         >
           {incident.Status}
@@ -191,7 +191,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
   )
 
   const ActionCard = ({ action }: { action: CorrectiveAction }) => (
-    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100 dark:border-gray-700">
+    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-blue-600 border-t border-r border-b border-red-100 dark:border-red-700">
       <div className="flex justify-between items-start">
         <div className="flex-1 mr-2">
           <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{action.Description}</h3>
@@ -217,7 +217,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
             action.Status === "pending"
               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
               : action.Status === "completed"
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"         
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                 : action.Status === "overdue"
                   ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
                   : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
@@ -236,10 +236,18 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header Section */}
+      <header className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-4">
+        <h1 className="text-3xl font-bold text-red-600 dark:text-red-500 mb-2">Employee Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Welcome back! Here&apos;s an overview of your safety incidents and tasks.
+        </p>
+      </header>
+
       {/* Quick Actions Section */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <Button
-          className="bg-blue-600 hover:bg-blue-700 text-white p-6 h-auto flex flex-col items-center gap-2"
+          className="bg-red-600 hover:bg-red-700 text-white p-6 h-auto flex flex-col items-center gap-2"
           onClick={() => (window.location.href = "/incidents")}
         >
           <PlusCircle size={24} />
@@ -247,7 +255,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
         </Button>
 
         <Button
-          className="bg-gray-600 hover:bg-gray-700 text-white p-6 h-auto flex flex-col items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white p-6 h-auto flex flex-col items-center gap-2"
           onClick={() => (window.location.href = "/actions")}
         >
           <ClipboardList size={24} />
@@ -287,13 +295,13 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
           title="Resolution Rate"
           value={dashboardData?.metrics.resolutionRate ? `${dashboardData.metrics.resolutionRate}%` : null}
           icon={TrendingUp}
-          color="bg-purple-600"
+          color="bg-black"
         />
       </section>
 
       {/* Corrective Actions Section */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Assigned Corrective Actions</h2>
+        <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-500">Assigned Corrective Actions</h2>
         {dashboardData?.correctiveActions && dashboardData.correctiveActions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dashboardData.correctiveActions.map((action) => (
@@ -312,7 +320,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
 
       {/* Recent Incidents Section */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Incidents</h2>
+        <h2 className="text-2xl font-bold text-red-600 dark:text-red-500">Recent Incidents</h2>
         {dashboardData?.incidents && dashboardData.incidents.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {dashboardData.incidents.map((incident) => (
@@ -321,7 +329,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
           </div>
         ) : (
           <div
-            className="mt-8 flex justify-center items-center p-6 border-2 border-dotted border-blue-500 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+            className="mt-8 flex justify-center items-center p-6 border-2 border-dotted border-red-500 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
             style={{ minHeight: "200px" }}
           >
             <p className="text-xl sm:text-2xl font-bold text-center">No Recent Incidents Found</p>
@@ -331,4 +339,3 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
     </div>
   )
 }
-
