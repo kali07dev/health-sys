@@ -1,77 +1,81 @@
-'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { signUp } from '../../utils/authApi';
-import Input from '../Input';
-import Button from '../Button';
-import LocationDropdown from '@/components/locationDropDown';
-import DepartmentDropdown from '@/components/DepartmentDropdown'; // Import the DepartmentDropdown component
-import axios from 'axios';
+"use client"
+import type React from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signUp } from "../../utils/authApi"
+import Input from "../Input"
+import Button from "../Button"
+import LocationDropdown from "@/components/locationDropDown"
+import DepartmentDropdown from "@/components/DepartmentDropdown" 
+import axios from "axios"
 
 const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '', // Add confirm password field
+    email: "",
+    password: "",
+    confirmPassword: "", // Add confirm password field
     // employeeNumber: '',
-    firstName: '',
-    lastName: '',
-    department: '',
-    position: '',
-    role: 'employee', // Always set to "employee"
-    startDate: '',
-    contactNumber: '',
-    officeLocation: '',
-  });
+    firstName: "",
+    lastName: "",
+    department: "",
+    position: "",
+    role: "employee", // Always set to "employee"
+    startDate: "",
+    contactNumber: "",
+    officeLocation: "",
+  })
 
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
 
     try {
       // Validate passwords match
       if (userData.password !== userData.confirmPassword) {
-        throw new Error('Passwords do not match');
+        throw new Error("Passwords do not match")
+      }
+
+      // Validate company email domain
+      if (!userData.email.endsWith("@huaxincem.com")) {
+        throw new Error("Your Email is not allowed to create an account on the system, use a company email")
       }
 
       // Convert start date to ISO format
       const formattedData = {
         ...userData,
         startDate: new Date(userData.startDate).toISOString(),
-        role: 'employee', // Ensure role is always "employee"
-      };
+        role: "employee", 
+      }
 
       // Call the sign-up API
-      await signUp(formattedData);
-      router.push('/auth/login'); // Redirect to home page after successful sign-up
+      await signUp(formattedData)
+      router.push("/auth/login") // Redirect to home page after successful sign-up
+      
     } catch (err: unknown) {
 
-      // Add error logging for debugging
-    console.error('Sign-up error:', err);
-    
-    if (axios.isAxiosError(err)) {
-      // Handle backend error response
-      const backendError = err.response?.data?.error;
-      if (backendError) {
-        setError(backendError);
+      if (axios.isAxiosError(err)) {
+        // Handle backend error response
+        const backendError = err.response?.data?.error
+        if (backendError) {
+          setError(backendError)
+        } else {
+          setError(`Request failed: ${err.response?.status} ${err.response?.statusText}`)
+        }
+      } else if (err instanceof Error) {
+        // Handle frontend validation errors
+        setError(err.message)
       } else {
-        setError(`Request failed: ${err.response?.status} ${err.response?.statusText}`);
+        setError("Sign-up failed. Please try again.")
       }
-    } else if (err instanceof Error) {
-      // Handle frontend validation errors
-      setError(err.message);
-    } else {
-      setError('Sign-up failed. Please try again.');
-    } 
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -93,9 +97,7 @@ const SignUpForm: React.FC = () => {
         id="firstName"
         type="text"
         value={userData.firstName}
-        onChange={(e) =>
-          setUserData({ ...userData, firstName: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
         required
       />
 
@@ -105,9 +107,7 @@ const SignUpForm: React.FC = () => {
         id="lastName"
         type="text"
         value={userData.lastName}
-        onChange={(e) =>
-          setUserData({ ...userData, lastName: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
         required
       />
 
@@ -118,9 +118,7 @@ const SignUpForm: React.FC = () => {
         </label>
         <DepartmentDropdown
           value={userData.department}
-          onChange={(value) =>
-            setUserData({ ...userData, department: value })
-          }
+          onChange={(value) => setUserData({ ...userData, department: value })}
           placeholder="Select Department"
         />
       </div>
@@ -131,9 +129,7 @@ const SignUpForm: React.FC = () => {
         id="position"
         type="text"
         value={userData.position}
-        onChange={(e) =>
-          setUserData({ ...userData, position: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, position: e.target.value })}
         required
       />
 
@@ -143,9 +139,7 @@ const SignUpForm: React.FC = () => {
         id="email"
         type="email"
         value={userData.email}
-        onChange={(e) =>
-          setUserData({ ...userData, email: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, email: e.target.value })}
         required
         autoComplete="email"
       />
@@ -156,9 +150,7 @@ const SignUpForm: React.FC = () => {
         id="password"
         type="password"
         value={userData.password}
-        onChange={(e) =>
-          setUserData({ ...userData, password: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, password: e.target.value })}
         required
         autoComplete="new-password"
       />
@@ -169,9 +161,7 @@ const SignUpForm: React.FC = () => {
         id="ConfirmPassword"
         type="password"
         value={userData.confirmPassword}
-        onChange={(e) =>
-          setUserData({ ...userData, confirmPassword: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, confirmPassword: e.target.value })}
         required
       />
 
@@ -181,9 +171,7 @@ const SignUpForm: React.FC = () => {
         id="startDate"
         type="date"
         value={userData.startDate}
-        onChange={(e) =>
-          setUserData({ ...userData, startDate: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, startDate: e.target.value })}
         required
       />
 
@@ -193,9 +181,7 @@ const SignUpForm: React.FC = () => {
         id="contactNumber"
         type="tel"
         value={userData.contactNumber}
-        onChange={(e) =>
-          setUserData({ ...userData, contactNumber: e.target.value })
-        }
+        onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
         required
       />
 
@@ -208,9 +194,7 @@ const SignUpForm: React.FC = () => {
           id="officeLocation"
           name="officeLocation"
           value={userData.officeLocation}
-          onChange={(e) =>
-            setUserData({ ...userData, officeLocation: e.target.value })
-          }
+          onChange={(e) => setUserData({ ...userData, officeLocation: e.target.value })}
           required
         />
       </div>
@@ -220,10 +204,10 @@ const SignUpForm: React.FC = () => {
 
       {/* Submit Button */}
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? 'Signing up...' : 'Sign Up'}
+        {isLoading ? "Signing up..." : "Sign Up"}
       </Button>
     </form>
-  );
-};
+  )
+}
 
 export default SignUpForm;
