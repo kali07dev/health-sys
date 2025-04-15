@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import type { ChangeEvent, FormEvent } from "react";
-import { submitIncident, IncidentApiError, submitIncidentWithoutAttachments } from "@/lib/api/incidents";
-import { IncidentFormData, Incident } from "@/interfaces/incidents";
-import { AlertCircle, Upload, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format } from "date-fns";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import type { ChangeEvent, FormEvent } from "react"
+import { submitIncident, IncidentApiError, submitIncidentWithoutAttachments } from "@/lib/api/incidents"
+import type { IncidentFormData, Incident } from "@/interfaces/incidents"
+import { AlertCircle, Upload, Trash2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { format } from "date-fns"
 
 interface ValidationError {
   field: string
@@ -182,10 +182,10 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 Type
               </Label>
               <Select value={formData.type} onValueChange={(value) => handleSelectChange("type", value)}>
-                <SelectTrigger className="h-12 text-base bg-white">
+                <SelectTrigger className="h-12 text-base bg-white text-black">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="injury">Injury</SelectItem>
                   <SelectItem value="near_miss">Near Miss</SelectItem>
                   <SelectItem value="property_damage">Property Damage</SelectItem>
@@ -201,10 +201,10 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                   Injury Type
                 </Label>
                 <Select value={formData.injuryType} onValueChange={(value) => handleSelectChange("injuryType", value)}>
-                  <SelectTrigger className="h-12 text-base bg-white">
+                  <SelectTrigger className="h-12 text-base bg-white text-black">
                     <SelectValue placeholder="Select injury type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white text-black">
                     <SelectItem value="injury-fa">Injury-FA</SelectItem>
                     <SelectItem value="injury-lti">Injury-LTI</SelectItem>
                     <SelectItem value="injury-mwd">Injury-MWD</SelectItem>
@@ -223,10 +223,10 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 value={formData.severityLevel}
                 onValueChange={(value) => handleSelectChange("severityLevel", value)}
               >
-                <SelectTrigger className="h-12 text-base bg-white">
+                <SelectTrigger className="h-12 text-base bg-white text-black">
                   <SelectValue placeholder="Select severity" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="low">Low</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>
@@ -242,10 +242,10 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 Location
               </Label>
               <Select value={formData.location} onValueChange={(value) => handleSelectChange("location", value)}>
-                <SelectTrigger className="h-12 text-base bg-white">
+                <SelectTrigger className="h-12 text-base bg-white text-black">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="balaka">Balaka</SelectItem>
                   <SelectItem value="lunzu">lunzu</SelectItem>
                   <SelectItem value="makata">Makata</SelectItem>
@@ -325,7 +325,6 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 className="h-12 text-base"
               />
             </div>
-
           </div>
 
           <div className="space-y-3">
@@ -382,4 +381,3 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
 }
 
 export default IncidentForm
-
