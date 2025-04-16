@@ -95,7 +95,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
       <div className={`transition-all duration-300 ${step === 1 ? "block" : "hidden"}`}>
         <div className="px-8 py-6">
           <h2 className="text-2xl font-bold text-[#0A1A2F] mb-6">Choose Report Type</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-5">
             {reportTypes.map((type) => (
               <button
                 key={type.id}
