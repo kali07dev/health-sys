@@ -95,7 +95,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
       <div className={`transition-all duration-300 ${step === 1 ? "block" : "hidden"}`}>
         <div className="px-8 py-6">
           <h2 className="text-2xl font-bold text-[#0A1A2F] mb-6">Choose Report Type</h2>
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {reportTypes.map((type) => (
               <button
                 key={type.id}
@@ -106,26 +106,24 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
                     : "hover:bg-gray-50 border border-gray-200"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3
-                      className={`font-semibold text-lg mb-1 ${
-                        selectedReport === type.id ? "text-[#E63946]" : "text-[#0A1A2F]"
-                      }`}
-                    >
-                      {type.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">{type.description}</p>
-                  </div>
+                <div className="flex flex-col items-start">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                      selectedReport === type.id
-                        ? "bg-[#E63946] text-white"
-                        : "bg-gray-100 text-gray-400 group-hover:bg-gray-200"
+                    className={`w-14 h-14 rounded-full mb-3 flex items-center justify-center ${
+                      selectedReport === type.id ? "bg-[#E63946]" : "bg-gray-100"
                     }`}
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight
+                      className={`w-6 h-6 ${selectedReport === type.id ? "text-white" : "text-gray-500"}`}
+                    />
                   </div>
+                  <h3
+                    className={`font-semibold text-lg mb-1 ${
+                      selectedReport === type.id ? "text-[#E63946]" : "text-[#0A1A2F]"
+                    }`}
+                  >
+                    {type.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{type.description}</p>
                 </div>
               </button>
             ))}
@@ -147,7 +145,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
                     type="date"
                     value={dateRange.startDate}
                     onChange={(e) => setDateRange((prev) => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200 text-[#0A1A2F]"
                   />
                 </div>
                 <div className="w-40 relative">
@@ -156,7 +154,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
                     type="time"
                     value={dateRange.startTime}
                     onChange={(e) => setDateRange((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200 text-[#0A1A2F]"
                   />
                 </div>
               </div>
@@ -171,7 +169,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
                     type="date"
                     value={dateRange.endDate}
                     onChange={(e) => setDateRange((prev) => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200 text-[#0A1A2F]"
                   />
                 </div>
                 <div className="w-40 relative">
@@ -180,7 +178,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
                     type="time"
                     value={dateRange.endTime}
                     onChange={(e) => setDateRange((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E63946] focus:border-[#E63946] transition-all duration-200 text-[#0A1A2F]"
                   />
                 </div>
               </div>
