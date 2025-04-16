@@ -23,7 +23,7 @@ export default async function SystemNotificationsPage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">System Notifications</h1>
+        {/* <h1 className="text-3xl font-semibold text-gray-900 mb-6">System Notifications</h1> */}
         
         <Suspense fallback={<NotificationsSkeletonLoader />}>
           <SystemNotificationsContainer userRole={userRole} />

@@ -23,7 +23,7 @@ export default async function CorrectiveActionsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">My Corrective Actions</h1>
+      {/* <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">My Corrective Actions</h1> */}
       <InfoPanel title="Open Corrective Actions" icon={<ShieldAlert className="h-5 w-5 text-red-600" />}>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           These are safety improvements assigned to you. Each action has a priority level and deadline.

@@ -24,16 +24,17 @@ export default async function NotificationsPage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Notifications</h1>
+        {/* <h1 className="text-3xl font-semibold text-gray-900 mb-6">Notifications</h1> */}
         <InfoPanel 
             title="System Alerts & Reminders"
             icon={<Bell className="h-5 w-5 text-red-600" />}
           >
             <p>
-              Your notifications include: <strong>investigation reminders</strong>, 
-              <strong> action deadlines</strong>, and <strong>system updates</strong>. 
+              Your notifications include: <strong className="text-black">investigation reminders</strong>, 
+              <strong className="text-black">action deadlines</strong>, and <strong className="text-black">system updates</strong>. 
               Critical alerts are marked with a red badge. Check regularly to stay compliant.
             </p>
+
             <div className="flex gap-4 mt-3">
               <Button 
                 size="sm" 

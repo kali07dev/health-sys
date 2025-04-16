@@ -325,7 +325,7 @@ export const IncidentsTable = ({
           </Button>
         </div>
       </div>
-      <InfoPanel title="Incident Reporting Tools" icon={<FileText className="h-5 w-5 text-blue-600" />}>
+      <InfoPanel title="Incident Reporting Tools" icon={<FileText className="h-5 w-5 text-red-600" />}>
         <p className="text-sm">
           This page allows you to create, view, and manage safety incidents. Use the <strong>New Incident</strong>{" "}
           button to report new issues. All incidents require review within 24 hours of submission.
@@ -334,13 +334,13 @@ export const IncidentsTable = ({
           <Button
             size="sm"
             variant="outline"
-            className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50"
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-1" />
             New Incident
           </Button>
-          <Button size="sm" variant="outline" className="bg-white text-blue-700 border-blue-200 hover:bg-blue-50">
+          <Button size="sm" variant="outline" className="bg-white text-red-700 border-red-200 hover:bg-red-50">
             <CalendarClock className="h-4 w-4 mr-1" />
             View Reports
           </Button>
