@@ -148,7 +148,7 @@ export default function SafetyDashboard() {
     <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md border-l-4 border-red-500">
       <div className="flex justify-between items-start">
         <div className="flex-1 mr-2">
-          <h3 className="font-medium text-sm sm:text-base">{incident.Title}</h3>
+          <h3 className="font-medium text-black text-sm sm:text-base">{incident.Title}</h3>
           <p className="text-xs text-gray-500">{incident.ReferenceNumber}</p>
         </div>
         <span
