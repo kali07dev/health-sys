@@ -22,7 +22,8 @@ export default async function InvestigationsPage() {
   const userId = session.user?.id
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    // <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="container mx-auto px-4 py-8 bg-gray-50  min-h-screen">
       {/* <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Investigations</h1> */}
       <InfoPanel title="Pending Investigations" icon={<ClipboardList className="h-5 w-5 text-red-600" />}>
         <p className="text-sm text-gray-700 dark:text-gray-300">

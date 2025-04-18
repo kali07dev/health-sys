@@ -264,7 +264,7 @@ export default function SafetyDashboard() {
             name="timeRange"
             value={filters.timeRange}
             onChange={handleFilterChange}
-            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="week">This Week</option>
             <option value="month">This Month</option>
@@ -281,7 +281,7 @@ export default function SafetyDashboard() {
             name="department"
             value={filters.department || ""}
             onChange={handleFilterChange}
-            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">All Departments</option>
             {dashboardData?.departmentMetrics?.map((dept) => (
@@ -300,7 +300,7 @@ export default function SafetyDashboard() {
             name="incidentType"
             value={filters.incidentType || ""}
             onChange={handleFilterChange}
-            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">All Types</option>
             {dashboardData?.systemMetrics.incidentsByType &&
@@ -320,7 +320,7 @@ export default function SafetyDashboard() {
             name="severityLevel"
             value={filters.severityLevel || ""}
             onChange={handleFilterChange}
-            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">All Severities</option>
             {dashboardData?.systemMetrics.incidentsBySeverity &&
@@ -353,7 +353,7 @@ export default function SafetyDashboard() {
             title="Critical Incidents"
             value={dashboardData.systemMetrics.criticalIncidents}
             icon={AlertTriangle}
-            color="bg-amber-600"
+            color="bg-black"
           />
           <StatCard
             title="Avg. Resolution Time"

@@ -270,7 +270,8 @@ export function ViewClosedIncidents() {
   const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} closed incidents`
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    // <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">
@@ -685,7 +686,8 @@ export function ViewClosedIncidents() {
       </Sheet>
 
       {/* Pagination component */}
-      <div className="w-full bg-gray-50 dark:bg-gray-900 p-4">
+      {/* <div className="w-full bg-gray-50 dark:bg-gray-900 p-4"> */}
+      <div className="w-full bg-gray-50 p-4">
         <div className="text-sm text-gray-500">{paginationInfo}</div>
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Page Size Selector */}

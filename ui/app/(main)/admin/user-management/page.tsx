@@ -45,7 +45,8 @@ export default function UserManagement() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
+    // <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Search and Filters Bar */}
       <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex w-full sm:w-auto flex-1 items-center space-x-3">

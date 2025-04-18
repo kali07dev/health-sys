@@ -297,7 +297,8 @@ export function ViewEmployeeClosedIncidents({ employeeId }: ViewEmployeeClosedIn
   const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} closed incidents`
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    // <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">

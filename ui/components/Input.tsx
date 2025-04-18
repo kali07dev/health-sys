@@ -14,7 +14,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, id, className =
       <input
         ref={ref}
         id={id}
-        className={`w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out ${className}`}
+        className={`w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out text-gray-900 ${className}`}
         {...props}
       />
     </div>
@@ -24,4 +24,3 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, id, className =
 Input.displayName = "Input"
 
 export default Input
-
