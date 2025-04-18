@@ -1,130 +1,111 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
+'use client';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Search, Check, ChevronDown } from 'lucide-react';
 
 interface Department {
-  Id: number
-  Name: string
+  ID: string;
+  Name: string;
 }
 
 interface DepartmentDropdownProps {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  disabled?: boolean
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
 const DepartmentDropdown: React.FC<DepartmentDropdownProps> = ({
   value,
   onChange,
-  placeholder = "Select a department",
-  disabled = false,
+  placeholder = "Select Department",
+  disabled,
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [search, setSearch] = useState<string | null>(null)
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [loading, setLoading] = useState(true)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
+  // const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+
+  const app_url = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const BASE_URL = `${app_url}/api/v1`;
+  // Fetch departments on component mount
   useEffect(() => {
     const fetchDepartments = async () => {
+      setIsLoading(true);
+      setError('');
+
       try {
-        // Replace with your actual API endpoint
-        const response = await fetch("https://dummyjson.com/products/categories")
-        const data = await response.json()
-
-        // Assuming the API returns an array of strings, convert them to the Department interface
-        const formattedDepartments: Department[] = data.map((category: string, index: number) => ({
-          Id: index + 1,
-          Name: category,
-        }))
-
-        setDepartments(formattedDepartments)
-        setLoading(false)
-      } catch (error) {
-        console.error("Error fetching departments:", error)
-        setLoading(false)
+        const response = await axios.get(`${BASE_URL}/departments`);
+        setDepartments(response.data);
+      } catch (err) {
+        setError('Failed to load departments. Please try again.');
+        console.error('Error fetching departments:', err);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchDepartments()
-  }, [])
+    fetchDepartments();
+  }, [BASE_URL]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-        setSearch(null)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  const filteredDepartments = search
-    ? departments.filter((dept) => dept.Name.toLowerCase().includes(search.toLowerCase()))
-    : departments
-
-  const handleSelect = (dept: Department) => {
-    onChange(dept.Name)
-    setIsOpen(false)
-    setSearch(null)
-  }
+  // Filter departments based on search input
+  const filteredDepartments = departments.filter((dept) =>
+    dept.Name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className="relative w-full">
       <div
-        className="relative w-full cursor-pointer rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+        className={`flex items-center p-2 border rounded-lg bg-white shadow-sm ${
+          disabled ? 'bg-gray-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400'
+        } focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-500`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
+        <Search className="w-4 h-4 text-black mr-2" />
         <input
           type="text"
-          className="w-full bg-transparent border-none focus:outline-none text-sm text-gray-900"
+          className="w-full bg-transparent border-none focus:outline-none text-sm text-black"
           placeholder={placeholder}
-          value={search || departments.find((d) => d.Name === value)?.Name || ""}
+          value={search || departments.find((d) => d.Name === value)?.Name || ''}
           onChange={(e) => setSearch(e.target.value)}
           onClick={(e) => e.stopPropagation()}
           disabled={disabled}
         />
-        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-          <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path
-              fillRule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </span>
+        <ChevronDown className={`w-4 h-4 text-black transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-          {loading ? (
-            <div className="p-2 text-sm text-gray-700 text-center">Loading departments...</div>
-          ) : filteredDepartments.length > 0 ? (
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+          {isLoading ? (
+            <div className="p-2 text-sm text-black text-center">Loading departments...</div>
+          ) : error ? (
+            <div className="p-2 text-sm text-black text-center">{error}</div>
+          ) : filteredDepartments.length === 0 ? (
+            <div className="p-2 text-sm text-black text-center">No departments found</div>
+          ) : (
             filteredDepartments.map((dept) => (
               <div
-                key={dept.Id}
-                className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                onClick={() => handleSelect(dept)}
+                key={dept.ID}
+                className="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
+                onClick={() => {
+                  onChange(dept.Name);
+                  setSearch('');
+                  setIsOpen(false);
+                }}
               >
-                <div className="flex items-center">
-                  <span className="text-sm text-gray-900">{dept.Name}</span>
-                </div>
+                {value === dept.Name && <Check className="w-4 h-4 text-black mr-2" />}
+                <span className="text-sm text-black">{dept.Name}</span>
               </div>
             ))
-          ) : (
-            <div className="p-2 text-sm text-gray-700 text-center">No departments found</div>
           )}
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default DepartmentDropdown
+export default DepartmentDropdown;
