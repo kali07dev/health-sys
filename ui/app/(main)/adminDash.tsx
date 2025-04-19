@@ -370,7 +370,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-              <h2 className="text-lg sm:text-xl font-semibold">Incident Trends</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">Incident Trends</h2>
             </div>
             <div className="h-64 sm:h-80 lg:h-96">
               <ResponsiveContainer width="100%" height="100%">
@@ -397,7 +397,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <AlertCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-              <h2 className="text-lg sm:text-xl font-semibold">Incidents by Type</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">Incidents by Type</h2>
             </div>
             <div className="h-48 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -419,7 +419,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-black" />
-              <h2 className="text-lg sm:text-xl font-semibold">Incidents by Severity</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">Incidents by Severity</h2>
             </div>
             <div className="h-48 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -441,7 +441,7 @@ export default function SafetyDashboard() {
         <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md mb-6 sm:mb-8">
           <div className="flex items-center mb-3 sm:mb-4">
             <Building2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-            <h2 className="text-lg sm:text-xl font-semibold">Department Safety Performance</h2>
+            <h2 className="text-lg text-black sm:text-xl font-semibold">Department Safety Performance</h2>
           </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle px-4 sm:px-0">
@@ -508,7 +508,7 @@ export default function SafetyDashboard() {
         <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md mb-6 sm:mb-8">
           <div className="flex items-center mb-3 sm:mb-4">
             <ShieldCheck className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-            <h2 className="text-lg sm:text-xl font-semibold">Top Hazards</h2>
+            <h2 className="text-lg text-black sm:text-xl font-semibold">Top Hazards</h2>
           </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle px-4 sm:px-0">

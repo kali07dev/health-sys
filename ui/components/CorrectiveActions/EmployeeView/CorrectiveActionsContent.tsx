@@ -133,7 +133,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
       {/* Pending actions section */}
       {pendingActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Active Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Active Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pendingActions.map((action) => (
               <EmployeeActionCard key={action.id} action={action} onClick={() => handleActionClick(action)} />
@@ -145,7 +145,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
       {/* Completed actions section */}
       {completedActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Completed Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Completed Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completedActions.map((action) => (
               <EmployeeActionCard key={action.id} action={action} onClick={() => handleActionClick(action)} />

@@ -13,8 +13,10 @@ interface IncidentDetailsProps {
 
 const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, attachments, isAuthorized }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100 dark:border-red-900">
-      <div className="px-4 py-5 sm:px-6 bg-red-50 dark:bg-red-950/30">
+    // <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100 dark:border-red-900">
+    <div className="bg-white shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100 dark:border-red-900">
+      {/* <div className="px-4 py-5 sm:px-6 bg-red-50 dark:bg-red-950/30"> */}
+      <div className="px-4 py-5 sm:px-6 bg-red-50">
         <h3 className="text-lg leading-6 font-medium text-red-800 dark:text-red-300">Incident Details</h3>
         <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400 break-words">
           {incident.referenceNumber}

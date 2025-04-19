@@ -300,7 +300,8 @@ export const IncidentsTable = ({
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+    {/* <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen"> */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Incidents</h1>
@@ -818,7 +819,8 @@ export const IncidentsTable = ({
       )}
 
       {/* Pagination component */}
-      <div className="w-full bg-gray-50 dark:bg-gray-900 p-4">
+      {/* <div className="w-full bg-gray-50 dark:bg-gray-900 p-4"> */}
+      <div className="w-full bg-gray-50 p-4">
             <div className="text-sm text-gray-500">
                 {paginationInfo}
               </div>

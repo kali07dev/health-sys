@@ -80,10 +80,10 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
   
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Incident Review: {incident?.referenceNumber}
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-gray-600">
               Status: <span className="font-semibold">{incident?.status}</span>
             </p>
           </div>

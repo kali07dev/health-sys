@@ -69,7 +69,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
     <>
       <Button
         variant={variant}
-        className={`flex items-center gap-2 ${className}`}
+        className={`flex text-black items-center gap-2 ${className}`}
         onClick={() => setShowConfirmDialog(true)}
         disabled={isLoggingOut}
       >

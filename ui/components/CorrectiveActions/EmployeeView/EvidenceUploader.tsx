@@ -136,7 +136,7 @@ export default function EvidenceUploader({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What does this evidence demonstrate?"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+            className="w-full text-black px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
           />
         </div>
         

@@ -26,7 +26,8 @@ export default async function InvestigationsPage() {
     <div className="container mx-auto px-4 py-8 bg-gray-50  min-h-screen">
       {/* <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Investigations</h1> */}
       <InfoPanel title="Pending Investigations" icon={<ClipboardList className="h-5 w-5 text-red-600" />}>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        {/* <p className="text-sm text-gray-700 dark:text-gray-300"> */}
+        <p className="text-sm text-gray-700">
           This section lists investigations requiring your attention. Each investigation must be completed within 72
           hours of assignment. Use the action buttons to update progress or request support.
         </p>
@@ -34,7 +35,8 @@ export default async function InvestigationsPage() {
           <Button
             size="sm"
             variant="outline"
-            className="bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-gray-700"
+            // className="bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-gray-700"
+            className="bg-white"
           >
             <Play className="h-4 w-4 mr-1" />
             Start Investigation
@@ -42,7 +44,7 @@ export default async function InvestigationsPage() {
           <Button
             size="sm"
             variant="outline"
-            className="bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-gray-700"
+            className="bg-white"
           >
             <AlertCircle className="h-4 w-4 mr-1" />
             Request Support
