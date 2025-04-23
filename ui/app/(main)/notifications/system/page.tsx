@@ -20,7 +20,7 @@ interface Session {
 export default async function SystemNotificationsPage() {
    const session = (await getServerSession(authOptions)) as Session | null;
   
-  if (session?.role !== 'admin' && session?.role !== 'safety_officer') {
+  if (session?.role !== 'admin' && session?.role !== 'safety_officer' && session?.role !== 'manager') {
     redirect('/notifications');
   }
 

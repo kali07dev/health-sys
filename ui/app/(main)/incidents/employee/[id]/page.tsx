@@ -36,6 +36,7 @@ export default async function EmployeeIncidentsPage({ params }: PageProps) {
   const canViewIncidents = 
     session?.role === "admin" ||
     session?.role === "safety_officer" || 
+    session?.role === "manager" || 
     session?.user?.id === employeeId;
 
   if (!canViewIncidents) {

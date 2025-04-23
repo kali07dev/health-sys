@@ -16,8 +16,8 @@ export default async function SystemNotificationsPage() {
 
   // Check if user has admin or safety_officer role
   const userRole = session.role;
-  if (userRole !== 'admin' && userRole !== 'safety_officer') {
-    redirect('/notifications'); // Redirect to regular notifications if not authorized
+  if (userRole !== 'admin' && userRole !== 'safety_officer' && userRole !== 'manager') {
+    redirect('/alerts'); // Redirect to regular notifications if not authorized
   }
 
   return (

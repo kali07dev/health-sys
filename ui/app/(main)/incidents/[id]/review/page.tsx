@@ -24,7 +24,7 @@ export default async function Page({ params }: PageProps) {
   }
 
   // Restrict access based on user role
-  if (!['admin', 'safety_officer'].includes(session?.role ?? '')) {
+  if (!['admin', 'safety_officer', 'manager'].includes(session?.role ?? '')) {
     console.log('Unauthorized access:', session);
     // redirect('/dashboard'); // Uncomment to enable redirect
   }

@@ -35,7 +35,7 @@ export default function SystemNotificationsContainer({ userRole }: SystemNotific
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Check if user has permission to view system notifications
-  const hasPermission = userRole === 'admin' || userRole === 'safety_officer';
+  const hasPermission = userRole === 'admin' || userRole === 'safety_officer' || userRole === 'manager';
 
   // Function to navigate back to user notifications
   const navigateToUserNotifications = () => {

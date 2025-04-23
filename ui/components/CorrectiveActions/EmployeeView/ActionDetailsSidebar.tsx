@@ -45,7 +45,7 @@ export default function ActionDetailsSidebar({
   const BE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
   const canAddEvidence = action.status !== 'completed' && action.status !== 'verified';
-  const isAdminOrSafetyOfficer = userRole === 'admin' || userRole === 'safety_officer';
+  const isAdminOrSafetyOfficer = userRole === 'admin' || userRole === 'safety_officer' || userRole === 'manager';
 
   // Get status icon and color
   const getStatusDetails = (status: string) => {

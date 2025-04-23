@@ -48,7 +48,7 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
     }
   };
 
-  const isAuthorized = ['admin', 'safety_officer'].includes(session?.role ?? '');
+  const isAuthorized = ['admin', 'safety_officer', 'manager'].includes(session?.role ?? '');
 
   useEffect(() => {
     const fetchIncident = async () => {

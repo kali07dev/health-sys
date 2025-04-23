@@ -24,7 +24,7 @@ export default async function TasksPage() {
   }
 
   // If user is admin or safety officer, redirect them to a different dashboard
-  if (['admin', 'safety_officer'].includes(userRole)) {
+  if (['admin', 'safety_officer', 'manager'].includes(userRole)) {
     // redirect('/incidents');
   }
 

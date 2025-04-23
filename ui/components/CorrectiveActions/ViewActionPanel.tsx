@@ -24,7 +24,7 @@ export const ViewActionPanel: React.FC<ViewActionPanelProps> = ({
   const [editedAction, setEditedAction] = useState<CorrectiveAction>(action);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const isAdmin = ['admin', 'safety_officer'].includes(userRole);
+  const isAdmin = ['admin', 'safety_officer', 'manager'].includes(userRole);
 
   // Function to get status color
   const getStatusColor = (status: string) => {

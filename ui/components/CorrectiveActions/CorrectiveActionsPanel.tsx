@@ -36,7 +36,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
         
         // If user is admin or safety officer, fetch by incident ID
         // Otherwise, fetch only actions assigned to the current user
-        if (['admin', 'safety_officer'].includes(userRole)) {
+        if (['admin', 'safety_officer', 'manager'].includes(userRole)) {
           response = await incidentAPI.getCorrectiveActionsByIncidentID(incidentId);
         } else {
           response = await incidentAPI.getCorrectiveActionsByUserID(userID);
@@ -62,7 +62,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
       
       // If user is admin or safety officer, fetch by incident ID
       // Otherwise, fetch only actions assigned to the current user
-      if (['admin', 'safety_officer'].includes(userRole)) {
+      if (['admin', 'safety_officer', 'manager'].includes(userRole)) {
         response = await incidentAPI.getCorrectiveActionsByIncidentID(incidentId);
       } else {
         response = await incidentAPI.getCorrectiveActionsByUserID(userID);
@@ -157,10 +157,10 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Add Corrective Action Button - Only show for admin/safety officer */}
-      {['admin', 'safety_officer'].includes(userRole) && (
+      {['admin', 'safety_officer', 'manager'].includes(userRole) && (
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
-            {['admin', 'safety_officer'].includes(userRole) 
+            {['admin', 'safety_officer', 'manager'].includes(userRole) 
               ? `Corrective Actions for Incident #${incidentId}`
               : 'Your Assigned Corrective Actions'}
           </h2>
@@ -175,7 +175,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
       )}
       
       {/* Show only title for non-admin users */}
-      {!['admin', 'safety_officer'].includes(userRole) && (
+      {!['admin', 'safety_officer', 'manager'].includes(userRole) && (
         <h2 className="text-xl font-semibold text-gray-900">
           Your Assigned Corrective Actions
         </h2>
@@ -288,7 +288,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
                 )}
                 
                 {/* Provide Feedback Button - Only for admins & safety officers */}
-                {['admin', 'safety_officer'].includes(userRole) && (
+                {['admin', 'safety_officer', 'manager'].includes(userRole) && (
                   <button
                     onClick={() => {
                       setSelectedAction(action);
@@ -309,7 +309,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
           <div className="text-center">
             <p className="text-lg font-medium">No corrective actions found</p>
             <p className="text-sm text-gray-500">
-              {['admin', 'safety_officer'].includes(userRole) 
+              {['admin', 'safety_officer', 'manager'].includes(userRole) 
                 ? "No actions have been assigned for this incident yet."
                 : "You don't have any corrective actions assigned to you."}
             </p>

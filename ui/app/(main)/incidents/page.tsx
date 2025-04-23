@@ -37,7 +37,7 @@ export default async function IncidentsPage() {
   }
 
   // Handle role-based access
-  if (session.role !== "admin" && session.role !== "safety_officer") {
+  if (session.role !== "admin" && session.role !== "safety_officer" && session.role !== "manager") {
     redirect(`/incidents/employee/${session.user.id}`);
   }
 

@@ -37,7 +37,7 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
    // Check if user has admin or safety_officer role
-   const canViewSystemNotifications = userRole === 'admin' || userRole === 'safety_officer';
+   const canViewSystemNotifications = userRole === 'admin' || userRole === 'safety_officer' || userRole === 'manager';
 
    // Function to navigate to system notifications
    const navigateToSystemNotifications = () => {

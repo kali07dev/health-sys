@@ -19,6 +19,8 @@ export default async function DashboardPage() {
   return (
     <div>
       {role === "admin" && <IncidentTrendsDashboard />}
+      {role === "manager" && <IncidentTrendsDashboard />}
+      {role === "safety_officer" && <IncidentTrendsDashboard />}
       {role === "employee" && <EmployeeDashboard userID={userID} />}
     </div>
   );
