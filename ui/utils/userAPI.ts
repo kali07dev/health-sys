@@ -13,6 +13,31 @@ export type ProfileUpdateRequest = {
 const app_url = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const BASE_URL = `${app_url}/api`;
 
+export async function fetchWithAuthFormData(endpoint: string, formData: FormData, method: 'POST' | 'PUT' | 'PATCH' = 'POST') {
+  const session = await getSession();
+  
+  const headers: Record<string, string> = {}; // No default Content-Type
+
+  if (session?.token) {
+    headers['Authorization'] = `Bearer ${session.token}`;
+  }
+
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    method: method,
+    body: formData,
+    headers: headers, // Browser will set Content-Type for FormData
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'An error occurred processing the response' }));
+    // Consider using a more specific error type if you have one
+    throw new Error(error.message || 'An error occurred with FormData request');
+  }
+
+  return response.json();
+}
+
 export async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const session = await getSession();
   

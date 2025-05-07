@@ -2,6 +2,8 @@ package schema
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/models"
 )
 
@@ -15,6 +17,7 @@ type VPCRequest struct {
 	VpcType           string    `json:"vpcType" validate:"required,oneof=safe unsafe"`
 	ActionTaken       string    `json:"actionTaken" validate:"required"`
 	IncidentRelatesTo string    `json:"incidentRelatesTo" validate:"required"`
+	CreatedBy         uuid.UUID `json:"createdBy"` // This will be set in the service layer
 }
 
 // VPCResponse represents the response format for a VPC
@@ -104,6 +107,7 @@ func (r *VPCRequest) ToModel() models.VPC {
 		VpcType:           r.VpcType,
 		ActionTaken:       r.ActionTaken,
 		IncidentRelatesTo: r.IncidentRelatesTo,
+		CreatedBy:         r.CreatedBy,
 	}
 }
 

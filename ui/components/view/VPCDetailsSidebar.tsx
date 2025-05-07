@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   XMarkIcon,
   ClockIcon,
@@ -8,6 +9,18 @@ import {
   BuildingOfficeIcon,
   TagIcon,
 } from "@heroicons/react/24/outline"
+import { ChevronDown, ChevronUp, FileText } from "lucide-react"
+import Image from "next/image"
+
+interface VPCAttachment {
+  id: string
+  fileName: string
+  fileType: string
+  storagePath: string
+  fileSize: number
+  createdAt: string
+  uploader: string
+}
 
 interface VPC {
   id: string
@@ -19,6 +32,14 @@ interface VPC {
   vpcType: string
   actionTaken: string
   incidentRelatesTo: string
+  createdAt?: string
+  updatedAt?: string
+  createdBy?: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+  attachments?: VPCAttachment[]
 }
 
 interface VPCDetailsSidebarProps {
@@ -27,6 +48,8 @@ interface VPCDetailsSidebarProps {
 }
 
 export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
+  const [evidenceExpanded, setEvidenceExpanded] = useState(true)
+
   const getVpcTypeColor = (vpcType: string) => {
     switch (vpcType.toLowerCase()) {
       case "hazard":
@@ -37,6 +60,10 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
         return "bg-orange-100 text-orange-800"
       case "improvement":
         return "bg-green-100 text-green-800"
+      case "safe":
+        return "bg-green-100 text-green-800"
+      case "unsafe":
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -52,6 +79,8 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
       minute: "2-digit",
     })
   }
+
+  const BE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-25 z-40 overflow-hidden flex justify-end">
@@ -132,6 +161,83 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
             <div className="text-sm text-gray-500 mt-2">
               <span className="font-medium">Reported Date:</span> {formatDate(vpc.reportedDate)}
             </div>
+          </div>
+
+          {/* Evidence section */}
+          <div className="border rounded-lg overflow-hidden mb-6">
+            <div
+              className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer"
+              onClick={() => setEvidenceExpanded(!evidenceExpanded)}
+            >
+              <h3 className="text-sm font-medium text-gray-700">Evidence & Attachments</h3>
+              <button className="p-1 rounded-full hover:bg-gray-200">
+                {evidenceExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
+            </div>
+
+            {evidenceExpanded && (
+              <div className="p-4 border-t">
+                {vpc.attachments && vpc.attachments.length > 0 ? (
+                  <div className="space-y-4">
+                    {vpc.attachments.map((attachment) => (
+                      <div key={attachment.id} className="flex flex-col space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{attachment.fileName}</p>
+                            <p className="text-xs text-gray-500">Uploaded by {attachment.uploader}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(attachment.createdAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        {/* File Preview */}
+                        <div className="mt-2">
+                          {/* Check file extension instead of fileType */}
+                          {attachment.fileName.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
+                            <div className="w-full h-auto rounded-lg border border-gray-200 overflow-hidden">
+                              <Image
+                                src={`${BE_URL}/${attachment.storagePath}`}
+                                alt={attachment.fileName}
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                className="w-full h-auto object-cover rounded-md"
+                                style={{ width: "100%", height: "auto" }}
+                              />
+                            </div>
+                          ) : (
+                            <a
+                              href={`${BE_URL}/${attachment.storagePath}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              Preview File
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-4">
+                    <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                    <p>No evidence uploaded yet</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,9 +1,14 @@
 package api
 
 import (
+	"encoding/json"
+	"mime/multipart"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/hopkali04/health-sys/internal/schema"
 	"github.com/hopkali04/health-sys/internal/services"
+	"github.com/hopkali04/health-sys/internal/utils"
 )
 
 // VPCHandler handles HTTP requests for VPC resources
@@ -34,8 +39,26 @@ func (h *VPCHandler) CreateVPC(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe'"))
 	}
 
+	// Get the currently authenticated user's ID from context locals
+	userIDRaw := c.Locals("userID")
+	if userIDRaw == nil {
+		utils.LogError("Unauthorized: userID missing from c.Locals", map[string]interface{}{})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	userIDStr, ok := userIDRaw.(string)
+	if !ok {
+		utils.LogError("Invalid userID format in c.Locals (expected string)", map[string]interface{}{"userID": userIDRaw})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format"})
+	}
+	authUserUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		utils.LogError("Failed to parse userID string to UUID", map[string]interface{}{"userIDStr": userIDStr, "error": err.Error()})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format (parsing failed)"})
+	}
+	req.CreatedBy = authUserUUID // Set the creator ID in the request
+
 	vpc := req.ToModel()
-	err := h.service.Create(&vpc)
+	err = h.service.Create(&vpc)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(schema.NewErrorResponse("Failed to create VPC: " + err.Error()))
 	}
@@ -74,6 +97,146 @@ func (h *VPCHandler) CreateBulkVPCs(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(schema.NewSuccessResponse("VPCs created successfully", nil))
+}
+func (h *VPCHandler) CreateVPCWithAttachments(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to create a VPC with attachments", map[string]interface{}{
+		"path":        c.Path(),
+		"contentType": c.Get("Content-Type"), // Good to log what was received
+	})
+
+	// REMOVED: Explicit Content-Type check. We'll rely on c.MultipartForm() to fail
+	// if the content isn't parseable as multipart.
+	/*
+		contentType := c.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "multipart/form-data") {
+			utils.LogError("Invalid Content-Type header", map[string]interface{}{
+				"contentType": contentType,
+			})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Content-Type must be multipart/form-data"})
+		}
+	*/
+
+	// Parse the multipart form. This will handle cases where Content-Type is not multipart.
+	form, err := c.MultipartForm()
+	if err != nil {
+		// Log the content type received when parsing fails
+		receivedContentType := c.Get("Content-Type")
+		// Special case for EOF error which might happen with empty forms or critical missing parts
+		if err.Error() == "multipart: NextPart: EOF" {
+			utils.LogError("Empty or incomplete multipart form received (EOF)", map[string]interface{}{
+				"contentType": receivedContentType,
+			})
+			// This error might indicate that 'vpcData' or other essential parts are missing.
+			// The check for `vpcDataValues` later will be more specific.
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "multipart form seems empty or incomplete, ensure vpcData is provided"})
+		}
+		// Handle other multipart errors
+		utils.LogError("Failed to parse multipart form", map[string]interface{}{
+			"error":       err.Error(),
+			"contentType": receivedContentType,
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to parse form data", "details": err.Error()})
+	}
+
+	// Get vpcData from the parsed form values
+	vpcDataValues := form.Value["vpcData"]
+	if len(vpcDataValues) == 0 {
+		utils.LogError("VPC data (vpcData form field) is missing", map[string]interface{}{})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "vpcData form field is required"})
+	}
+	vpcDataStr := vpcDataValues[0]
+
+	var req schema.VPCRequest_new
+	if err := json.Unmarshal([]byte(vpcDataStr), &req); err != nil {
+		utils.LogError("Invalid VPC data format", map[string]interface{}{
+			"vpcData": vpcDataStr,
+			"error":   err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid VPC data format", "details": err.Error()})
+	}
+
+	// Basic validation of VPCRequest fields
+	if req.VpcNumber == "" || req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
+		req.VpcType == "" || req.ActionTaken == "" || req.IncidentRelatesTo == "" {
+		utils.LogError("Missing required fields in vpcData", map[string]interface{}{"request": req})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "All fields in vpcData are required"})
+	}
+	if req.VpcType != "safe" && req.VpcType != "unsafe" {
+		utils.LogError("Invalid VpcType in vpcData", map[string]interface{}{"vpcType": req.VpcType})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "VpcType must be either 'safe' or 'unsafe'"})
+	}
+
+	// Get the currently authenticated user's ID from context locals
+	userIDRaw := c.Locals("userID")
+	if userIDRaw == nil {
+		utils.LogError("Unauthorized: userID missing from c.Locals", map[string]interface{}{})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	userIDStr, ok := userIDRaw.(string)
+	if !ok {
+		utils.LogError("Invalid userID format in c.Locals (expected string)", map[string]interface{}{"userID": userIDRaw})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format"})
+	}
+	authUserUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		utils.LogError("Failed to parse userID string to UUID", map[string]interface{}{"userIDStr": userIDStr, "error": err.Error()})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format (parsing failed)"})
+	}
+
+	// Fetch employee details
+	employee, err := h.service.GetEmployeeByUserID(authUserUUID) // Ensure h.service is correctly initialized
+	if err != nil {
+		utils.LogError("Failed to get employee by user ID", map[string]interface{}{
+			"authUserUUID": authUserUUID,
+			"error":        err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve employee details", "details": err.Error()})
+	}
+	if employee == nil {
+		utils.LogError("Employee not found for authenticated user", map[string]interface{}{"authUserUUID": authUserUUID})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "employee profile not found for the authenticated user"})
+	}
+	creatorEmployeeID := employee.ID
+
+	// Handle file uploads (attachments are optional)
+	var uploadedFiles []*multipart.FileHeader
+	if form.File != nil { // form.File itself could be nil if no files are sent
+		files := form.File["attachments"] // This is []*multipart.FileHeader
+		if len(files) > 0 {
+			utils.LogInfo("Files detected in 'attachments' field", map[string]interface{}{"count": len(files)})
+			for _, file := range files {
+				if !utils.IsAllowedFileType(file.Filename) {
+					utils.LogError("Invalid file type detected", map[string]interface{}{"file": file.Filename})
+					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+						"error": "invalid file type",
+						"file":  file.Filename,
+					})
+				}
+				uploadedFiles = append(uploadedFiles, file)
+			}
+		}
+	}
+
+	// Call the service to create VPC and handle attachments
+	vpc, err := h.service.CreateVPCWithAttachments(req, uploadedFiles, creatorEmployeeID)
+	if err != nil {
+		utils.LogError("Service failed to create VPC with attachments", map[string]interface{}{
+			"creatorEmployeeID": creatorEmployeeID,
+			"error":             err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create VPC", "details": err.Error()})
+	}
+
+	utils.LogInfo("Successfully created VPC with attachments", map[string]interface{}{
+		"vpcID":             vpc.ID,
+		"creatorEmployeeID": creatorEmployeeID,
+		"filesUploaded":     len(vpc.Attachments), // Assuming vpc.Attachments reflects successfully saved files
+	})
+
+	// Handle mail notification
+	h.service.HandleCreateVPCMail(vpc)
+
+	return c.Status(fiber.StatusCreated).JSON(schema.FromModel(*vpc))
 }
 
 // GetVPC retrieves a VPC by ID
@@ -120,13 +283,13 @@ func (h *VPCHandler) ListAllVPCs(c *fiber.Ctx) error {
 		pageSize = 10 // Set a reasonable default and max limit
 	}
 
-	vpcs, totalCount, err := h.service.ListAll(page, pageSize)
+	vpcs, totalCount, err := h.service.ListAllWithAttachments(page, pageSize)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(schema.NewErrorResponse("Failed to retrieve VPCs: " + err.Error()))
 	}
 
 	// Create pagination response
-	paginationResponse := schema.NewPaginationResponse(schema.FromModelList(vpcs), totalCount, page, pageSize)
+	paginationResponse := schema.NewPaginationResponse(schema.FromModel_newList(vpcs), totalCount, page, pageSize)
 
 	return c.Status(fiber.StatusOK).JSON(schema.NewSuccessResponse("VPCs retrieved successfully", paginationResponse))
 }

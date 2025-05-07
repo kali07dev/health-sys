@@ -207,6 +207,7 @@ func SetupInterViewRoutes(app *fiber.App, handler *InterviewHandler) {
 func SetupVpcRoutes(app *fiber.App, h *VPCHandler) {
 	vpcGroup := app.Group("/api/v1/vpcs")
 	vpcGroup.Post("/", middleware.AuthMiddleware(), h.CreateVPC)
+	vpcGroup.Post("/with-attachments", middleware.AuthMiddleware(), h.CreateVPCWithAttachments)
 	vpcGroup.Post("/bulk", middleware.AuthMiddleware(), h.CreateBulkVPCs)
 	vpcGroup.Get("/", middleware.AuthMiddleware(), h.ListAllVPCs)
 	vpcGroup.Get("/:id", middleware.AuthMiddleware(), h.GetVPC)

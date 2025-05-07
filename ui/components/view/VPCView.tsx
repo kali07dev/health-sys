@@ -6,27 +6,14 @@ import { VPCCard } from "./VPCCard"
 import { VPCDetailsSidebar } from "./VPCDetailsSidebar"
 import { Button } from "@/components/ui/button"
 import { Pagination } from "@/components/ui/pagination"
-import { VPCAPI } from "@/utils/vpcAPI"
+import { VPCAPI, type VPC } from "@/utils/vpcAPI"
 
 interface VPCViewProps {
   userId: string
   userRole: string
 }
 
-export interface VPC {
-  id: string
-  vpcNumber: string
-  reportedBy: string
-  reportedDate: string
-  department: string
-  description: string
-  vpcType: string
-  actionTaken: string
-  incidentRelatesTo: string
-}
-
 export default function VPCView({ userId, userRole }: VPCViewProps) {
-    
   const [vpcs, setVpcs] = useState<VPC[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,43 +28,52 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
   console.log("User ID:", userId)
   console.log("User Role:", userRole)
 
-  useEffect(() => {
-    const fetchVPCs = async () => {
-      try {
-        setLoading(true)
-        const apiResponse = await VPCAPI.listAllVPCs({
-          page: pagination.page,
-          pageSize: pagination.pageSize,
-          search: searchQuery
-        })
-        
-        // Access the data property from the API response
-        const response = apiResponse?.data || {}
-        
-        // Ensure items exists and is an array before assigning
-        setVpcs(response?.items || [])
-        setPagination({
-          page: response?.page || 1,
-          pageSize: response?.pageSize || pagination.pageSize,
-          totalCount: response?.totalCount || 0,
-          totalPages: response?.totalPages || 0,
-        })
-        
-        console.log("API Response:", apiResponse)
-        console.log("VPCs loaded:", response?.items || [])
-      } catch (err) {
-        setError("Failed to load VPCs")
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
 
+  const fetchVPCs = async () => {
+    try {
+      setLoading(true)
+      const apiResponse = await VPCAPI.listAllVPCs({
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        search: searchQuery,
+      })
+
+      // Access the data property from the API response
+      const response = apiResponse?.data || {}
+
+      // Ensure items exists and is an array before assigning
+      setVpcs(response?.items || [])
+      setPagination({
+        page: response?.page || 1,
+        pageSize: response?.pageSize || pagination.pageSize,
+        totalCount: response?.totalCount || 0,
+        totalPages: response?.totalPages || 0,
+      })
+
+      console.log("API Response:", apiResponse)
+      console.log("VPCs loaded:", response?.items || [])
+    } catch (err) {
+      setError("Failed to load VPCs")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchVPCs()
   }, [pagination.page, pagination.pageSize, searchQuery])
 
-  const handleSelectVPC = (vpc: VPC) => {
-    setSelectedVPC(vpc)
+  const handleSelectVPC = async (vpc: VPC) => {
+    try {
+      // Fetch the full VPC details including attachments
+      const fullVPC = await VPCAPI.getVPC(vpc.id)
+      setSelectedVPC(fullVPC)
+    } catch (err) {
+      console.error("Error fetching VPC details:", err)
+      // Fall back to the basic VPC data if detailed fetch fails
+      setSelectedVPC(vpc)
+    }
   }
 
   const handleCloseSidebar = () => {
@@ -90,12 +86,12 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
       const apiResponse = await VPCAPI.listAllVPCs({
         page: pagination.page,
         pageSize: pagination.pageSize,
-        search: searchQuery
+        search: searchQuery,
       })
-      
+
       // Access the data property from the API response
       const response = apiResponse?.data || {}
-      
+
       // Ensure items exists and is an array before assigning
       setVpcs(response?.items || [])
       setPagination({
@@ -106,10 +102,10 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
       })
 
       if (selectedVPC) {
-        const updatedVPC = response?.items?.find((vpc: { id: string }) => vpc.id === selectedVPC.id)
-        setSelectedVPC(updatedVPC || null)
+        const updatedVPC = await VPCAPI.getVPC(selectedVPC.id)
+        setSelectedVPC(updatedVPC)
       }
-      
+
       console.log("API Response on refresh:", apiResponse)
       console.log("VPCs after refresh:", response?.items || [])
     } catch (err) {
@@ -142,6 +138,9 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <Button onClick={handleRefresh} className="ml-2 bg-red-600 hover:bg-red-700">
+          Refresh
+        </Button>
       </div>
 
       {loading ? (
