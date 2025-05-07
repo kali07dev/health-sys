@@ -116,6 +116,10 @@ func RunServer() {
 	notificationHandler := api.NewNotificationHandler(notificationService, userService)
 
 	notifySettings := api.NewNotificationSettingsHandler(services.NewNotificationSettingsService(dbConn))
+
+	vpc_svc := services.NewVPCService(dbConn, emailService)
+	vpcHandler := api.NewVPCHandler(vpc_svc)
+
 	go jobs.StartReminderJob(notificationService, emailService)
 
 	// Setup routes
@@ -125,6 +129,7 @@ func RunServer() {
 	api.SetupDepartmentRoutes(app, DepHandler)
 	api.SetupDashboardRoutes(app, NewSafetyDashboardHandler)
 	api.SetupNotificationRoutes(app, notificationHandler)
+	api.SetupVpcRoutes(app, vpcHandler)
 	api.SetupNotificationSettingsRoutes(app, notifySettings)
 
 	api.SetupReportsRoutes(app, reportH)

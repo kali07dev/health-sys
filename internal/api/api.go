@@ -6,7 +6,6 @@ import (
 	"github.com/hopkali04/health-sys/internal/services"
 	"github.com/hopkali04/health-sys/internal/services/dashboard"
 
-	// "github.com/hopkali04/health-sys/internal/services/incident"
 	"github.com/hopkali04/health-sys/internal/services/notification"
 	"github.com/hopkali04/health-sys/internal/services/user"
 )
@@ -73,16 +72,6 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	// Route for updating user status (active/inactive)
 	userRoutes.Put("/:userId/status", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), userSVC.UpdateUserStatus)
 
-	// Incident routes
-	// app.Post("/api/incidents", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionCreateIncidents),
-	// 	NewIncidentHandler(incidentService).CreateIncident)
-	// app.Get("/api/incidents/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionReadIncidents),
-	// 	NewIncidentHandler(incidentService).GetIncident)
-	// app.Put("/api/incidents/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionManageIncidents),
-	// 	NewIncidentHandler(incidentService).UpdateIncident)
-	// app.Delete("/api/incidents/:id", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionManageIncidents),
-	// 	NewIncidentHandler(incidentService).DeleteIncident)
-
 	apiIncidents := app.Group("/api/v1")
 	// apiIncidents.Use(middleware.AuthMiddleware)
 
@@ -114,25 +103,10 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	app.Post("/api/v1/actions/:id/complete", middleware.AuthMiddleware(), correctiveActionHandler.LabelAsCompleted)
 	app.Post("/api/v1/actions/:id/verify", middleware.AuthMiddleware(), correctiveActionHandler.VerifyCompletion)
 
-	// Notification routes
-
-	// app.Get("/api/notifications", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
-	// NewNotificationHandler(notificationService).GetNotifications)
-
-	// Dashboard routes
-	// app.Get("/api/dashboard", middleware.LoggingMiddleware(), middleware.AuthMiddleware(),
-	// 	NewDashboardHandler(dashboardService).GetSummary)
-
-	/////////
 	// Admin-only route
 	app.Post("/api/users", middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleAdmin),
 		userSVC.RegisterUser)
 
-	// Manager and Admin route
-	//app.Get("/api/reports", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleManager, middleware.RoleAdmin), GetReportsHandler)
-
-	// Employee, Manager, and Admin route
-	//app.Get("/api/incidents", middleware.LoggingMiddleware(), middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleEmployee, middleware.RoleManager, middleware.RoleAdmin), GetIncidentsHandler)
 }
 
 func SetupEmployeeRoutes(app *fiber.App, employeeHandler *EmployeeHandler) {
@@ -227,4 +201,18 @@ func SetupInterViewRoutes(app *fiber.App, handler *InterviewHandler) {
 
 	// Route to get evidence details for a specific interview
 	interview.Get("/:id/evidence", handler.GetEvidenceDetails)
+}
+
+// RegisterRoutes registers the routes for VPC resources
+func SetupVpcRoutes(app *fiber.App, h *VPCHandler) {
+	vpcGroup := app.Group("/api/v1/vpcs")
+	vpcGroup.Post("/", middleware.AuthMiddleware(), h.CreateVPC)
+	vpcGroup.Post("/bulk", middleware.AuthMiddleware(), h.CreateBulkVPCs)
+	vpcGroup.Get("/", middleware.AuthMiddleware(), h.ListAllVPCs)
+	vpcGroup.Get("/:id", middleware.AuthMiddleware(), h.GetVPC)
+	vpcGroup.Get("/number/:vpcNumber", middleware.AuthMiddleware(), h.GetVPCByNumber)
+	vpcGroup.Put("/:id", middleware.AuthMiddleware(), h.UpdateVPC)
+	vpcGroup.Delete("/:id", middleware.AuthMiddleware(), h.DeleteVPC)
+	vpcGroup.Get("/department/:department", middleware.AuthMiddleware(), h.ListByDepartment)
+	vpcGroup.Get("/type/:vpcType", middleware.AuthMiddleware(), h.ListByVpcType)
 }

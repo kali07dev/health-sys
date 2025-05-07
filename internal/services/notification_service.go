@@ -23,6 +23,7 @@ const (
 	InterviewScheduled     NotificationType = "interview_scheduled"
 	InvestigationAssigned  NotificationType = "investigation_assigned"
 	InterviewStatusChanged NotificationType = "interview_status_changed"
+	VpcCreated             NotificationType = "vpc_created"
 )
 
 type NotificationService struct {
@@ -93,6 +94,14 @@ func (s *NotificationService) SendNotification(userID uuid.UUID, notificationTyp
 			break
 		}
 		emailErr = s.emailService.sendActionAssignedEmail([]string{user.Email}, &action)
+	
+	case VpcCreated:
+		var vpc models.VPC
+		if err := s.db.First(&vpc, "id = ?", referenceID).Error; err != nil {
+			log.Printf("Failed to fetch VPC: %v", err)
+			break
+		}
+		emailErr = s.emailService.sendVPCNotificationEmail([]string{user.Email}, &vpc)
 
 	case ActionDueSoon:
 		var action models.CorrectiveAction

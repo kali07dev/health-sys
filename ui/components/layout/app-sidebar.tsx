@@ -7,7 +7,8 @@ import {
   Settings,
   Search, 
   ListChecks, 
-  Shield
+  Shield,
+  ShieldCheck
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const sidebarItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
+    { icon: ShieldCheck , label: "VPC", href: "/vpc" },
     { icon: Search, label: "Investigations", href: "/investigation" },
     { icon: ListChecks, label: "Assigned Tasks", href: "/actions" },
     ...(isAdminUser ? [{ icon: FileBarChart, label: "Reports", href: "/reports" }] : []),
