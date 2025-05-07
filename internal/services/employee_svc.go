@@ -61,71 +61,72 @@ func (r *EmployeeService) GetEmployeeByUserID(userID uuid.UUID) (*models.Employe
 
 // UpdateUserProfile updates user profile and employee profile and changes password if needed
 func (r *EmployeeService) UpdateUserProfile(ctx context.Context, req schema.ProfileUpateRequest) error {
-    // Start a transaction
-    tx := r.db.WithContext(ctx).Begin()
-    defer func() {
-        if r := recover(); r != nil {
-            tx.Rollback()
-        }
-    }()
+	// Start a transaction
+	tx := r.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-    // Find the user
-    var user models.User
-    if err := tx.Where("id = ?", req.UserID).First(&user).Error; err != nil {
-        tx.Rollback()
-        return fmt.Errorf("user not found: %v", err)
-    }
+	// Find the user
+	var user models.User
+	if err := tx.Where("id = ?", req.UserID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("user not found: %v", err)
+	}
 
-    // Find the employee
-    var employee models.Employee
-    if err := tx.Where("user_id = ?", req.UserID).First(&employee).Error; err != nil {
-        tx.Rollback()
-        return fmt.Errorf("employee not found: %v", err)
-    }
+	// Find the employee
+	var employee models.Employee
+	if err := tx.Where("user_id = ?", req.UserID).First(&employee).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("employee not found: %v", err)
+	}
 
-    // Update password if provided
-    if req.Password != "" {
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-        if err != nil {
-            tx.Rollback()
-            return fmt.Errorf("failed to hash password: %v", err)
-        }
-        user.PasswordHash = string(hashedPassword)
-        user.PasswordChangedAt = time.Now()
-    }
+	// Update password if provided
+	if req.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to hash password: %v", err)
+		}
+		user.PasswordHash = string(hashedPassword)
+		user.PasswordChangedAt = time.Now()
+	}
 
-    // Update employee fields
-    employee.FirstName = req.FirstName
-    employee.LastName = req.LastName
-    employee.ContactNumber = req.ContactNumber
+	// Update employee fields
+	employee.FirstName = req.FirstName
+	employee.LastName = req.LastName
+	employee.ContactNumber = req.ContactNumber
 
-    // Update emergency contact if provided
-    if req.EmergencyContact != nil {
-        emergencyContact := models.JSONB{
+	// Update emergency contact if provided
+	if req.EmergencyContact != nil {
+		emergencyContact := models.JSONB{
 			"details": req.EmergencyContact,
 		}
-        employee.EmergencyContact = &emergencyContact
-    }
+		employee.EmergencyContact = &emergencyContact
+	}
 
-    // Save the employee
-    if err := tx.Save(&employee).Error; err != nil {
-        tx.Rollback()
-        return fmt.Errorf("failed to update employee: %v", err)
-    }
+	// Save the employee
+	if err := tx.Save(&employee).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update employee: %v", err)
+	}
 
-    // Save the user
-    if err := tx.Save(&user).Error; err != nil {
-        tx.Rollback()
-        return fmt.Errorf("failed to update user: %v", err)
-    }
+	// Save the user
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update user: %v", err)
+	}
 
-    // Commit the transaction
-    if err := tx.Commit().Error; err != nil {
-        return fmt.Errorf("failed to commit transaction: %v", err)
-    }
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
 
-    return nil
+	return nil
 }
+
 // GetEmployeeByID retrieves an employee by their ID
 func (s *EmployeeService) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*models.Employee, error) {
 	var employee models.Employee
@@ -156,20 +157,21 @@ func (s *EmployeeService) ListEmployees(ctx context.Context) ([]models.Employee,
 
 // getManagerEmails retrieves all active manager email addresses
 func (s *EmployeeService) getManagerEmails() ([]string, error) {
-	var employees []models.Employee
-	err := s.db.Where("role = ? AND is_active = ?", "manager", true).
-		Joins("Users").
-		Select("Users.email").
-		Find(&employees).Error
+	var users []models.User
+	err := s.db.Table("users").
+		Joins("JOIN employees ON employees.user_id = users.id").
+		Where("employees.role = ? AND employees.is_active = ?", "manager", true).
+		Select("users.email").
+		Find(&users).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query managers: %v", err)
 	}
 
-	emails := make([]string, 0, len(employees))
-	for _, emp := range employees {
-		if emp.User.Email != "" {
-			emails = append(emails, emp.User.Email)
+	emails := make([]string, 0, len(users))
+	for _, user := range users {
+		if user.Email != "" {
+			emails = append(emails, user.Email)
 		}
 	}
 

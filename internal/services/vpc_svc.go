@@ -23,20 +23,21 @@ func NewVPCService(db *gorm.DB, emailSvc *EmailService) *VPCService {
 	}
 }
 func (s *VPCService) getAdminAndSafetyOfficerEmails() ([]string, error) {
-	var employees []models.Employee
-	err := s.db.Where("(role = ? OR role = ?) AND is_active = ?", "admin", "safety_officer", true).
-		Joins("Users").
-		Select("Users.email").
-		Find(&employees).Error
+	var users []models.User
+	err := s.db.Table("users").
+		Joins("JOIN employees ON employees.user_id = users.id").
+		Where("(employees.role = ? OR employees.role = ?) AND employees.is_active = ?", "admin", "safety_officer", true).
+		Select("users.email").
+		Find(&users).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query admins and safety officers: %v", err)
 	}
 
-	emails := make([]string, 0, len(employees))
-	for _, emp := range employees {
-		if emp.User.Email != "" {
-			emails = append(emails, emp.User.Email)
+	emails := make([]string, 0, len(users))
+	for _, user := range users {
+		if user.Email != "" {
+			emails = append(emails, user.Email)
 		}
 	}
 
