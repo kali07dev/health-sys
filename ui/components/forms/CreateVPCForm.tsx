@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { submitVPC, submitVPCWithoutAttachments } from "@/lib/api/vpc"
 import DepartmentDropdown from "@/components/DepartmentDropdown"
 import { useState, useRef } from "react"
@@ -38,6 +37,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   })
   console.log("User ID:", userId)
 
+  // ========== ORIGINAL FUNCTIONALITY PRESERVED ==========
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -79,12 +79,11 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
         reportedDate: new Date().toISOString(),
       }
 
-      // Call the createVPC function with files if there are any
       const response = 
-      files.length > 0 ? await submitVPC(vpcData, files) : await submitVPCWithoutAttachments(vpcData) 
-        // await VPCAPI.createVPC(vpcData, files.length > 0 ? files : undefined)
-      console.log("VPC created:", response)
-
+        files.length > 0 
+          ? await submitVPC(vpcData, files) 
+          : await submitVPCWithoutAttachments(vpcData)
+      console.log("VPC created successfully:", response)
       router.push("/vpc")
       router.refresh()
     } catch (err) {
@@ -95,186 +94,257 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
     }
   }
 
+  // ========== PREMIUM UI ENHANCEMENTS ==========
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+    <div className="max-w-4xl mx-auto bg-white p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-normal text-black mb-1">Safety Observation Report</h1>
+        <p className="font-normal text-gray-600">Document workplace conditions with precision</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="vpcNumber">VPC Number</Label>
-          <Input id="vpcNumber" name="vpcNumber" value={formData.vpcNumber} onChange={handleChange} required />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {error && (
+          <Alert variant="destructive" className="border border-red-300 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-700">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Core Details Section */}
+        <div className="border-b border-gray-100 pb-8">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600 mb-6">Core Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="vpcNumber" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                VPC Number
+              </Label>
+              <Input
+                id="vpcNumber"
+                name="vpcNumber"
+                value={formData.vpcNumber}
+                onChange={handleChange}
+                required
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reportedBy" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                Reported By
+              </Label>
+              <Input
+                id="reportedBy"
+                name="reportedBy"
+                value={formData.reportedBy}
+                onChange={handleChange}
+                required
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="department" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                Department
+              </Label>
+              <DepartmentDropdown
+                value={formData.department}
+                onChange={(value) => handleSelectChange("department", value)}
+                placeholder="Select Department"
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">VPC Type</Label>
+              <RadioGroup
+                value={formData.vpcType}
+                onValueChange={(value) => handleSelectChange("vpcType", value)}
+                className="flex gap-6 pt-2"
+                required
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="safe" 
+                    id="vpc-type-safe" 
+                    className="text-black border-gray-400 focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-safe" className="cursor-pointer text-gray-800">
+                    Safe
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="unsafe" 
+                    id="vpc-type-unsafe" 
+                    className="text-black border-gray-400 focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-unsafe" className="cursor-pointer text-gray-800">
+                    Unsafe
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="reportedBy">Reported By</Label>
-          <Input id="reportedBy" name="reportedBy" value={formData.reportedBy} onChange={handleChange} required />
+        {/* Incident Details Section */}
+        <div className="border-b border-gray-100 pb-8">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600 mb-6">Incident Details</h3>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="incidentRelatesTo" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                Related Incident
+              </Label>
+              <Input
+                id="incidentRelatesTo"
+                name="incidentRelatesTo"
+                value={formData.incidentRelatesTo}
+                onChange={handleChange}
+                required
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                required
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black min-h-[120px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="actionTaken" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                Action Taken
+              </Label>
+              <Textarea
+                id="actionTaken"
+                name="actionTaken"
+                value={formData.actionTaken}
+                onChange={handleChange}
+                rows={3}
+                required
+                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black min-h-[100px]"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
-          <DepartmentDropdown
-            value={formData.department}
-            onChange={(value) => handleSelectChange("department", value)}
-            placeholder="Select Department"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="vpcType">VPC Type</Label>
-
-          <RadioGroup
-            id="vpcType"
-            value={formData.vpcType}
-            onValueChange={(value) => handleSelectChange("vpcType", value)}
-            className="flex gap-6 pt-2"
-            required
+        {/* Evidence Section - Fully Functional */}
+        <div>
+          <div 
+            className="flex justify-between items-center cursor-pointer mb-4"
+            onClick={() => setEvidenceExpanded(!evidenceExpanded)}
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="safe" id="vpc-type-safe" />
-              <Label htmlFor="vpc-type-safe" className="cursor-pointer">
-                Safe
-              </Label>
-            </div>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600">
+              Evidence & Attachments ({files.length})
+            </h3>
+            <button type="button" className="p-1 text-gray-500 hover:text-black">
+              {evidenceExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          </div>
 
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="unsafe" id="vpc-type-unsafe" />
-              <Label htmlFor="vpc-type-unsafe" className="cursor-pointer">
-                Unsafe
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="incidentRelatesTo">Related Incident</Label>
-          <Input
-            id="incidentRelatesTo"
-            name="incidentRelatesTo"
-            value={formData.incidentRelatesTo}
-            onChange={handleChange}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={4}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="actionTaken">Action Taken</Label>
-        <Textarea
-          id="actionTaken"
-          name="actionTaken"
-          value={formData.actionTaken}
-          onChange={handleChange}
-          rows={3}
-          required
-        />
-      </div>
-
-      {/* Evidence section */}
-      <div className="border rounded-lg overflow-hidden">
-        <div
-          className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer"
-          onClick={() => setEvidenceExpanded(!evidenceExpanded)}
-        >
-          <h3 className="text-sm font-medium text-gray-700">Evidence & Attachments</h3>
-          <button type="button" className="p-1 rounded-full hover:bg-gray-200">
-            {evidenceExpanded ? (
-              <ChevronUp className="h-4 w-4 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
-            )}
-          </button>
-        </div>
-
-        {evidenceExpanded && (
-          <div className="p-4 border-t">
-            {files.length > 0 ? (
-              <div className="space-y-4">
-                {files.map((file, index) => (
-                  <div key={index} className="flex flex-col space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500">Size: {(file.size / 1024).toFixed(2)} KB</p>
+          {evidenceExpanded && (
+            <div className="space-y-4">
+              {files.length > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {files.map((file, index) => (
+                      <div key={index} className="border border-gray-100 p-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start space-x-3">
+                            <FileText className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-black">{file.name}</p>
+                              <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(index)}
+                            className="text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveFile(index)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
 
-                    {/* File Preview for images */}
-                    {file.type.startsWith("image/") && (
-                      <div className="mt-2">
-                        <div className="w-full h-auto rounded-lg border border-gray-200 overflow-hidden">
-                          <Image
-                            src={URL.createObjectURL(file) || "/placeholder.svg"}
-                            alt={file.name}
-                            className="w-full h-auto object-cover rounded-md"
-                            style={{ maxHeight: "200px" }}
-                          />
-                        </div>
+                        {file.type.startsWith("image/") && (
+                          <div className="mt-3 ml-8">
+                            <div className="relative w-full h-40 border border-gray-100 overflow-hidden">
+                              <Image
+                                src={URL.createObjectURL(file)}
+                                alt="Preview"
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
 
-                <Button type="button" variant="outline" onClick={handleAddMoreFiles} className="w-full mt-2">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add More Files
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-4">
-                <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p>No evidence uploaded yet</p>
-
-                <div className="mt-4">
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple />
+                  <div className="flex space-x-3">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange} 
+                      className="hidden" 
+                      multiple 
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAddMoreFiles}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add More Files
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="border-2 border-dashed border-gray-200 p-8 text-center">
+                  <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-4">No evidence documentation attached</p>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                    multiple 
+                  />
                   <Button
                     type="button"
+                    variant="outline"
                     onClick={() => fileInputRef.current?.click()}
-                    className="py-2 px-4 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center mx-auto"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Evidence
                   </Button>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting} className="bg-red-600 hover:bg-red-700 text-white">
+        <div className="flex justify-end pt-6 border-t border-gray-100">
+        <Button type="submit" 
+        disabled={isSubmitting} 
+        className="bg-red-600 hover:bg-red-700 text-white">
           {isSubmitting ? "Creating..." : "Create VPC"}
         </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </div>
   )
 }
