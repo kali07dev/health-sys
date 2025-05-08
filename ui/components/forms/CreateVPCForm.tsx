@@ -37,7 +37,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   })
   console.log("User ID:", userId)
 
-  // ========== ORIGINAL FUNCTIONALITY PRESERVED ==========
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -94,7 +94,6 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
     }
   }
 
-  // ========== PREMIUM UI ENHANCEMENTS ==========
   return (
     <div className="max-w-4xl mx-auto bg-white p-8">
       <div className="mb-8">
@@ -115,47 +114,52 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
           <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600 mb-6">Core Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="vpcNumber" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 VPC Number
               </Label>
               <Input
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                           dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 id="vpcNumber"
                 name="vpcNumber"
                 value={formData.vpcNumber}
                 onChange={handleChange}
                 required
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reportedBy" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Reported By
               </Label>
               <Input
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                           dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 id="reportedBy"
                 name="reportedBy"
                 value={formData.reportedBy}
                 onChange={handleChange}
                 required
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="department" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Department
               </Label>
               <DepartmentDropdown
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                          dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 value={formData.department}
                 onChange={(value) => handleSelectChange("department", value)}
                 placeholder="Select Department"
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">VPC Type</Label>
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
+                VPC Type
+              </Label>
               <RadioGroup
                 value={formData.vpcType}
                 onValueChange={(value) => handleSelectChange("vpcType", value)}
@@ -166,9 +170,10 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                   <RadioGroupItem 
                     value="safe" 
                     id="vpc-type-safe" 
-                    className="text-black border-gray-400 focus:ring-black"
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
                   />
-                  <Label htmlFor="vpc-type-safe" className="cursor-pointer text-gray-800">
+                  <Label htmlFor="vpc-type-safe" className="cursor-pointer text-gray-800 dark:text-gray-800">
                     Safe
                   </Label>
                 </div>
@@ -176,9 +181,10 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                   <RadioGroupItem 
                     value="unsafe" 
                     id="vpc-type-unsafe" 
-                    className="text-black border-gray-400 focus:ring-black"
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
                   />
-                  <Label htmlFor="vpc-type-unsafe" className="cursor-pointer text-gray-800">
+                  <Label htmlFor="vpc-type-unsafe" className="cursor-pointer text-gray-800 dark:text-gray-800">
                     Unsafe
                   </Label>
                 </div>
@@ -193,58 +199,61 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
           
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="incidentRelatesTo" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Related Incident
               </Label>
               <Input
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                           dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 id="incidentRelatesTo"
                 name="incidentRelatesTo"
                 value={formData.incidentRelatesTo}
                 onChange={handleChange}
                 required
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Description
               </Label>
               <Textarea
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                          dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
                 required
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black min-h-[120px]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="actionTaken" className="text-xs font-medium uppercase tracking-wide text-gray-700">
+              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Action Taken
               </Label>
               <Textarea
+                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
+                          dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
                 id="actionTaken"
                 name="actionTaken"
                 value={formData.actionTaken}
                 onChange={handleChange}
                 rows={3}
                 required
-                className="border-gray-300 focus:border-black focus:ring-1 focus:ring-black min-h-[100px]"
               />
             </div>
           </div>
         </div>
 
-        {/* Evidence Section - Fully Functional */}
+        {/* Evidence Section */}
         <div>
           <div 
             className="flex justify-between items-center cursor-pointer mb-4"
             onClick={() => setEvidenceExpanded(!evidenceExpanded)}
           >
-            <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-600">
               Evidence & Attachments ({files.length})
             </h3>
             <button type="button" className="p-1 text-gray-500 hover:text-black">
@@ -258,7 +267,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                 <>
                   <div className="space-y-3">
                     {files.map((file, index) => (
-                      <div key={index} className="border border-gray-100 p-3">
+                      <div key={index} className="border border-gray-100 p-3 bg-white dark:bg-white">
                         <div className="flex justify-between items-start">
                           <div className="flex items-start space-x-3">
                             <FileText className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -304,7 +313,8 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                       type="button"
                       variant="outline"
                       onClick={handleAddMoreFiles}
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black"
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black
+                                 dark:border-gray-300 dark:text-gray-700 dark:hover:bg-gray-50 dark:hover:text-black"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add More Files
@@ -312,7 +322,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                   </div>
                 </>
               ) : (
-                <div className="border-2 border-dashed border-gray-200 p-8 text-center">
+                <div className="border-2 border-dashed border-gray-200 p-8 text-center bg-white dark:bg-white">
                   <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 mb-4">No evidence documentation attached</p>
                   <input 
@@ -326,7 +336,8 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black
+                               dark:border-gray-300 dark:text-gray-700 dark:hover:bg-gray-50 dark:hover:text-black"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Evidence
@@ -338,11 +349,14 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
         </div>
 
         <div className="flex justify-end pt-6 border-t border-gray-100">
-        <Button type="submit" 
-        disabled={isSubmitting} 
-        className="bg-red-600 hover:bg-red-700 text-white">
-          {isSubmitting ? "Creating..." : "Create VPC"}
-        </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-black text-white hover:bg-gray-800 px-6 py-3 rounded-none
+                      dark:bg-black dark:text-white dark:hover:bg-gray-800"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Safety Report"}
+          </Button>
         </div>
       </form>
     </div>
