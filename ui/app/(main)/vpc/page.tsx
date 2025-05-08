@@ -30,7 +30,7 @@ export default async function VPCPage() {
   return (
     <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
       <InfoPanel
-        title="Virtual Private Cloud (VPC) Management"
+        title="Visible Person Commitment (VPC) Management"
         icon={<ClipboardList className="h-5 w-5 text-red-600" />}
       >
         <p className="text-sm text-gray-700">
