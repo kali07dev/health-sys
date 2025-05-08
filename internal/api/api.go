@@ -217,3 +217,12 @@ func SetupVpcRoutes(app *fiber.App, h *VPCHandler) {
 	vpcGroup.Get("/department/:department", middleware.AuthMiddleware(), h.ListByDepartment)
 	vpcGroup.Get("/type/:vpcType", middleware.AuthMiddleware(), h.ListByVpcType)
 }
+
+func SetupVpcReports(app *fiber.App,  c *VPCReportHandler) {
+	vpcGroup := app.Group("/api/v1/vpcs")
+
+	vpcGroup.Get("/reports:id", c.GetVPCReport)
+	vpcGroup.Get("/reports/:id/pdf", c.GetVPCReportPDF)
+	vpcGroup.Get("/reports/:id/html", c.GetVPCReportHTML)
+}
+

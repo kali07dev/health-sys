@@ -2,8 +2,9 @@
 package schema
 
 import (
-	"github.com/hopkali04/health-sys/internal/models"
 	"time"
+
+	"github.com/hopkali04/health-sys/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -75,7 +76,9 @@ func FromModel_new(vpc models.VPC) VPCResponse_new {
 		creatorInfo.ID = vpc.CreatedBy
 	}
 
+	vpcID, _ := uuid.Parse(vpc.ID)
 	return VPCResponse_new{
+		ID:                vpcID,
 		VpcNumber:         vpc.VpcNumber,
 		ReportedBy:        vpc.ReportedBy,
 		ReportedDate:      vpc.ReportedDate,

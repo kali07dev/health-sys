@@ -112,7 +112,7 @@ func (s *EmailService) SendEmail(to []string, subject string, body template.HTML
         Subject:     subject,
         Title:       subject,
         Message:     body,
-        CompanyName: "Health System",
+        CompanyName: "Safety System",
     }
 	htmlContent, err := s.generateHTMLEmail(template)
 	if err != nil {
