@@ -67,8 +67,8 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
   const handleSelectVPC = async (vpc: VPC) => {
     try {
       // Fetch the full VPC details including attachments
-      const fullVPC = await VPCAPI.getVPC(vpc.id)
-      setSelectedVPC(fullVPC)
+      // const fullVPC = await VPCAPI.getVPC(vpc.id)
+      setSelectedVPC(vpc)
     } catch (err) {
       console.error("Error fetching VPC details:", err)
       // Fall back to the basic VPC data if detailed fetch fails
