@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -281,7 +282,7 @@ func (s *ReportService) generateSingleVPCPreview(c *fiber.Ctx, data *VPCReportDa
                 <p><strong>Category:</strong> {{.VPC.IncidentRelatesTo}}</p>
                 <p><strong>Reported by:</strong> {{.ReportData.Reporter.FirstName}} {{.ReportData.Reporter.LastName}}</p>
             </div>
-            <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-200"><strong>Description:</strong> {{.VPC.Description | Truncate 200}}</p>
+            <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-200"><strong>Description:</strong> {{.VPC.Description | Truncate "200"}}</p>
             {{if .Options.IncludeStats}}
                 {{if .ReportData.DepartmentStats.TotalVPCs }}
                 <div class="mt-4 pt-3 border-t border-slate-200">
@@ -299,7 +300,12 @@ func (s *ReportService) generateSingleVPCPreview(c *fiber.Ctx, data *VPCReportDa
     `
 	funcMap := template.FuncMap{
 		"ToUpper": strings.ToUpper,
-		"Truncate": func(s string, maxLen int) string {
+		"Truncate": func(s string, maxLenStr string) string {
+			maxLen, err := strconv.Atoi(maxLenStr)
+			if err != nil {
+				// Default to 100 if conversion fails
+				maxLen = 100
+			}
 			if len(s) <= maxLen { return s }
 			runes := []rune(s)
 			if len(runes) <= maxLen { return s }

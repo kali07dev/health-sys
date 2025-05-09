@@ -57,7 +57,7 @@
 //               <SelectTrigger className="w-[180px]">
 //                 <SelectValue placeholder="Select a role" />
 //               </SelectTrigger>
-//               <SelectContent>
+//               <SelectContent className="bg-white text-black">
 //                 <SelectItem value="report-only">Report Only</SelectItem>
 //                 <SelectItem value="reviewer">Reviewer</SelectItem>
 //                 <SelectItem value="manager">Manager</SelectItem>

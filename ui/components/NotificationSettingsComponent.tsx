@@ -114,7 +114,7 @@ const NotificationSettingsComponent: React.FC<NotificationSettingsProps> = ({ us
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white text-black">
                 {frequencies.map((freq) => (
                   <SelectItem key={freq.value} value={freq.value}>
                     {freq.label}

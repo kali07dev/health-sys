@@ -1,128 +1,155 @@
-// src/components/reports/ReportGenerationModal.tsx
+// src/components/reports/ReportGenerationModal.tsx (Modified)
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { X, CalendarDays, UserCog, FileType, ListChecks, Loader2, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { useRouter } from "next/navigation"; // For navigation to preview page
+import { X, CalendarDays, UserCog,  ListChecks, Loader2, AlertTriangle,  Filter, Layers, FileText } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ReportAPI, ReportApiError } from "@/utils/reportAPI"; // Adjust path
-import type { UserRole, ReportFormat, ReportGenerationParams } from "@/utils/reports"; // Adjust path
+import { departmentService, type Department } from "@/utils/departmentAPI";
+import type { UserRole } from "@/utils/reports"; 
+import { useSession } from "next-auth/react";
 
-// You might get this from session or a global state
-// For now, let's assume the current user's role is passed or known
-const MOCK_CURRENT_USER_ROLE: UserRole = "admin"; // Replace with actual logic
 
 interface ReportGenerationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  vpcIdToReport?: string; // If generating for a specific VPC
-  // onReportGenerated: (blob: Blob, filename: string) => void; // Callback after generation
+  // vpcIdToReport?: string; // We'll handle this by asking if it's a single or summary report
 }
 
+// ... (userRoles, reportFormats definitions from previous version)
 const userRoles: { value: UserRole; label: string; adminOnly?: boolean }[] = [
-  { value: "employee", label: "Employee" },
-  { value: "manager", label: "Manager" },
-  { value: "safety_officer", label: "Safety Officer" },
-  { value: "admin", label: "Administrator", adminOnly: true },
+    { value: "employee", label: "Employee" },
+    { value: "manager", label: "Manager" },
+    { value: "safety_officer", label: "Safety Officer" },
+    { value: "admin", label: "Administrator", adminOnly: true },
+  ];
+  
+// const reportFormats: { value: ReportFormat; label: string }[] = [
+//     { value: "pdf", label: "PDF Document" },
+//     { value: "html", label: "HTML Web Page" },
+// ];
+
+const MOCK_VPC_TYPES = ["safe", "unsafe"];
+const MOCK_AGGREGATION_LEVELS = [
+    {value: "none", label: "No Aggregation (Individual)"},
+    {value: "daily", label: "Daily Summary"},
+    {value: "weekly", label: "Weekly Summary"},
+    {value: "monthly", label: "Monthly Summary"}
 ];
 
-const reportFormats: { value: ReportFormat; label: string }[] = [
-  { value: "pdf", label: "PDF Document" },
-  { value: "html", label: "HTML Web Page" },
-];
 
 export default function ReportGenerationModal({
   isOpen,
   onClose,
-  vpcIdToReport, // Default to a specific VPC if provided
 }: ReportGenerationModalProps) {
-  const [vpcId, setVpcId] = useState(vpcIdToReport || ""); // Allow override or input
-  const [startDate, setStartDate] = useState<string>(""); // YYYY-MM-DD
-  const [endDate, setEndDate] = useState<string>(""); // YYYY-MM-DD
-  const [selectedUserRole, setSelectedUserRole] = useState<UserRole>("employee");
-  const [selectedFormat, setSelectedFormat] = useState<ReportFormat>("pdf");
+  const router = useRouter();
+  const { data: session } = useSession();
+  const currentUserRole = (session?.role as UserRole) || "employee";
+
+  const [reportType, setReportType] = useState<"singleVPC" | "summary">("summary");
+  const [vpcId, setVpcId] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [selectedUserRole, setSelectedUserRole] = useState<UserRole>(currentUserRole);
+  // const [selectedFormat, setSelectedFormat] = useState<ReportFormat>("pdf"); // Format selected on preview/download page
   const [includeStats, setIncludeStats] = useState<boolean>(true);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // New fields for summary reports
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(""); // "all" or specific
+  const [selectedVpcTypeFilter, setSelectedVpcTypeFilter] = useState<string>(""); // "all" or specific
+  const [selectedAggregation, setSelectedAggregation] = useState<string>("none");
 
-  // Filter roles based on current user's permissions
+    // For fetching departments
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
+    const [departmentError, setDepartmentError] = useState<string | null>(null);
+  
+
+  const [isLoading, setIsLoading] = useState(false); // For preview generation
+  const [error, setError] = useState<string | null>(null);
+  // const [successMessage, setSuccessMessage] = useState<string | null>(null); // Not needed if navigating
+
   const availableUserRoles = userRoles.filter(role =>
-    MOCK_CURRENT_USER_ROLE === 'admin' ? true : !role.adminOnly
+    currentUserRole === 'admin' ? true : !role.adminOnly
   );
 
   useEffect(() => {
-    if (vpcIdToReport) {
-      setVpcId(vpcIdToReport);
+    if (!availableUserRoles.find(r => r.value === selectedUserRole)) {
+        setSelectedUserRole(currentUserRole);
     }
-  }, [vpcIdToReport]);
+  }, [currentUserRole, availableUserRoles, selectedUserRole]);
+
+  // Fetch departments on component mount
+    useEffect(() => {
+      fetchDepartments();
+    }, []);
+  
+    const fetchDepartments = async () => {
+      setIsLoadingDepartments(true);
+      setDepartmentError(null);
+      try {
+        const data = await departmentService.getDepartments();
+        setDepartments(data);
+      } catch (error) {
+        console.error("Failed to fetch departments:", error);
+        setDepartmentError("Failed to load departments. Please try again later.");
+      } finally {
+        setIsLoadingDepartments(false);
+      }
+    };
 
   useEffect(() => {
     if (!isOpen) {
-      // Reset form on close
-      // setVpcId(vpcIdToReport || ""); // Keep vpcId if modal is for a specific one
+      setReportType("summary");
+      setVpcId("");
       setStartDate("");
       setEndDate("");
-      setSelectedUserRole("employee");
-      setSelectedFormat("pdf");
+      setSelectedUserRole(currentUserRole);
+      // setSelectedFormat("pdf");
       setIncludeStats(true);
+      setSelectedDepartment("");
+      setSelectedVpcTypeFilter("");
+      setSelectedAggregation("none");
       setError(null);
-      setSuccessMessage(null);
       setIsLoading(false);
     }
-  }, [isOpen, vpcIdToReport]);
-
+  }, [isOpen, currentUserRole]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!vpcId && !vpcIdToReport) { // If vpcId is meant to be selected in the modal
-        setError("VPC ID is required to generate a report.");
-        return;
+    setError(null);
+
+    if (reportType === "singleVPC" && !vpcId) {
+      setError("VPC ID is required for a single VPC report.");
+      return;
     }
     
-    setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
+    // Navigate to the appropriate preview page with query parameters
+    setIsLoading(true); // Show loading while navigating/preparing
 
-    const params: ReportGenerationParams = {
-      vpcId: vpcId || vpcIdToReport!, // Ensure vpcId is set
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      userRole: selectedUserRole,
-      outputFormat: selectedFormat,
-      includeStats: includeStats,
-    };
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.set("startDate", startDate);
+    if (endDate) queryParams.set("endDate", endDate);
+    queryParams.set("userRole", selectedUserRole);
+    queryParams.set("includeStats", includeStats.toString());
 
-    try {
-      const blob = await ReportAPI.generateReport(params);
-      const filename = `vpc-report-${params.vpcId}-${new Date().toISOString().split('T')[0]}.${params.outputFormat}`;
-      
-      // Trigger download
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      setSuccessMessage(`Report "${filename}" generated and download started!`);
-      // onClose(); // Optionally close modal on success
-    } catch (err) {
-      if (err instanceof ReportApiError) {
-        setError(err.data?.error || err.message || "Failed to generate report.");
-      } else {
-        setError("An unexpected error occurred.");
-      }
-      console.error("Report generation failed:", err);
-    } finally {
-      setIsLoading(false);
+    if (reportType === "singleVPC") {
+        router.push(`/reports/vpc/${vpcId}/preview?${queryParams.toString()}`);
+    } else { // Summary Report
+        if (selectedDepartment && selectedDepartment !== "all") queryParams.set("department", selectedDepartment);
+        if (selectedVpcTypeFilter && selectedVpcTypeFilter !== "all") queryParams.set("vpcType", selectedVpcTypeFilter);
+        if (selectedAggregation && selectedAggregation !== "none") queryParams.set("aggregation", selectedAggregation);
+        router.push(`/reports/summary/preview?${queryParams.toString()}`);
     }
+    // The actual fetching and display will happen on the preview page
+    // Close modal after initiating navigation (or let preview page handle it)
+    // For now, let modal stay open with loader, preview page will be new tab/route
+    // To close: onClose();
   };
 
   if (!isOpen) return null;
@@ -131,7 +158,7 @@ export default function ReportGenerationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/70 backdrop-blur-sm p-4">
       <div className="bg-slate-50 text-slate-700 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-2xl font-semibold text-slate-800">Generate VPC Report</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">Generate Report</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-500 hover:text-red-600">
             <X size={24} />
           </Button>
@@ -139,135 +166,129 @@ export default function ReportGenerationModal({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
           {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
-              <div className="flex items-center">
-                <AlertTriangle size={20} className="mr-2"/>
-                <p className="font-bold">Error</p>
-              </div>
-              <p className="text-sm">{error}</p>
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm flex items-center" role="alert">
+              <AlertTriangle size={18} className="mr-2 flex-shrink-0"/> {error}
             </div>
           )}
-          {successMessage && (
-             <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md" role="alert">
-              <div className="flex items-center">
-                <CheckCircle size={20} className="mr-2"/>
-                <p className="font-bold">Success</p>
-              </div>
-              <p className="text-sm">{successMessage}</p>
+          
+          {/* Report Type Selection */}
+          <div>
+            <Label className="text-sm font-medium text-slate-600 mb-2 block">Report Type</Label>
+            <div className="grid grid-cols-2 gap-3">
+                <Button type="button" variant={reportType === 'summary' ? 'destructive' : 'outline'} onClick={() => setReportType('summary')} className={reportType === 'summary' ? 'ring-2 ring-red-500 ring-offset-1' : 'border-slate-300 text-slate-600'}>
+                    <Layers size={16} className="mr-2"/> Summary Report
+                </Button>
+                <Button type="button" variant={reportType === 'singleVPC' ? 'destructive' : 'outline'} onClick={() => setReportType('singleVPC')} className={reportType === 'singleVPC' ? 'ring-2 ring-red-500 ring-offset-1' : 'border-slate-300 text-slate-600'}>
+                    <FileText size={16} className="mr-2"/> Single VPC Report
+                </Button>
             </div>
-          )}
+          </div>
 
-          {/* VPC ID input - only if not pre-filled and required for general reports */}
-          {!vpcIdToReport && (
+
+          {reportType === "singleVPC" && (
             <div>
               <Label htmlFor="vpcId" className="text-sm font-medium text-slate-600 mb-1 flex items-center">
-                <FileText size={16} className="mr-2 text-red-600" /> VPC ID (Optional for general summary)
+                <FileText size={16} className="mr-2 text-red-600" /> VPC ID
               </Label>
               <Input
                 id="vpcId"
                 type="text"
-                placeholder="e.g., vpc-xxxxxxxx"
+                placeholder="Enter specific VPC ID (e.g., vpc-xxxxxxxx)"
                 value={vpcId}
                 onChange={(e) => setVpcId(e.target.value)}
                 className="bg-white border-slate-300 focus:border-red-500 focus:ring-red-500"
+                required
               />
-              <p className="text-xs text-slate-500 mt-1">Leave blank for a general report, or specify a VPC ID.</p>
             </div>
           )}
-           {vpcIdToReport && (
-             <div className="p-3 bg-slate-100 rounded-md border border-slate-200">
-                <p className="text-sm text-slate-600">Generating report for VPC:</p>
-                <p className="font-semibold text-red-600">{vpcIdToReport}</p>
-             </div>
-           )}
-
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div>
               <Label htmlFor="startDate" className="text-sm font-medium text-slate-600 mb-1 flex items-center">
-                <CalendarDays size={16} className="mr-2 text-red-600" /> Start Date (Optional)
+                <CalendarDays size={16} className="mr-2 text-red-600" /> Start Date <span className="text-xs text-slate-400 ml-1">(Optional)</span>
               </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-white border-slate-300 focus:border-red-500 focus:ring-red-500"
-              />
+              <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-white border-slate-300 focus:border-red-500 focus:ring-red-500" />
             </div>
             <div>
               <Label htmlFor="endDate" className="text-sm font-medium text-slate-600 mb-1 flex items-center">
-                <CalendarDays size={16} className="mr-2 text-red-600" /> End Date (Optional)
+                <CalendarDays size={16} className="mr-2 text-red-600" /> End Date <span className="text-xs text-slate-400 ml-1">(Optional)</span>
               </Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                min={startDate} // Basic validation
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-white border-slate-300 focus:border-red-500 focus:ring-red-500"
-              />
+              <Input id="endDate" type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} className="bg-white border-slate-300 focus:border-red-500 focus:ring-red-500" />
             </div>
           </div>
 
-          <div>
+          {reportType === "summary" && (
+            <>
+              <Label className="text-sm font-medium text-slate-600 mb-2 block pt-2 border-t border-slate-200">Summary Filters <span className="text-xs text-slate-400 ml-1">(Optional)</span></Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                 <div>
+                    <Label htmlFor="departmentFilter" className="text-xs font-medium text-slate-600 mb-1 flex items-center"><Filter size={14} className="mr-1.5 text-red-600" />Department</Label>
+                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                        <SelectTrigger className="w-full bg-white border-slate-300 text-sm h-10"><SelectValue placeholder="All Departments" /></SelectTrigger>
+                        <SelectContent className="bg-white text-black">
+                            <SelectItem value="all">All Departments</SelectItem>
+                            {isLoadingDepartments ? (
+                              <SelectItem value="loading" disabled>Loading departments...</SelectItem>
+                            ) : departmentError ? (
+                              <SelectItem value="error" disabled>Error loading departments</SelectItem>
+                            ) : departments.length === 0 ? (
+                              <SelectItem value="none" disabled>No departments found</SelectItem>
+                            ) : (
+                              departments.map(dept => (
+                                <SelectItem key={dept.ID} value={dept.ID.toString()}>{dept.Name}</SelectItem>
+                              ))
+                            )}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div>
+                    <Label htmlFor="vpcTypeFilter" className="text-xs font-medium text-slate-600 mb-1 flex items-center"><Filter size={14} className="mr-1.5 text-red-600" />VPC Type</Label>
+                    <Select value={selectedVpcTypeFilter} onValueChange={setSelectedVpcTypeFilter}>
+                        <SelectTrigger className="w-full bg-white border-slate-300 text-sm h-10"><SelectValue placeholder="All Types" /></SelectTrigger>
+                        <SelectContent className="bg-white text-black">
+                            <SelectItem value="all">All Types</SelectItem>
+                            {MOCK_VPC_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="md:col-span-2">
+                    <Label htmlFor="aggregationLevel" className="text-xs font-medium text-slate-600 mb-1 flex items-center"><Layers size={14} className="mr-1.5 text-red-600" />Aggregation Level</Label>
+                    <Select value={selectedAggregation} onValueChange={setSelectedAggregation}>
+                        <SelectTrigger className="w-full bg-white border-slate-300 text-sm h-10"><SelectValue placeholder="Select Aggregation" /></SelectTrigger>
+                        <SelectContent className="bg-white text-black">
+                            {MOCK_AGGREGATION_LEVELS.map(level => <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+              </div>
+            </>
+          )}
+          
+          <div className="pt-3 border-t border-slate-200">
             <Label htmlFor="userRole" className="text-sm font-medium text-slate-600 mb-1 flex items-center">
               <UserCog size={16} className="mr-2 text-red-600" /> Report View As (User Role)
             </Label>
             <Select value={selectedUserRole} onValueChange={(value) => setSelectedUserRole(value as UserRole)}>
-              <SelectTrigger className="w-full bg-white text-black border-slate-300 focus:border-red-500 focus:ring-red-500">
-                <SelectValue placeholder="Select user role context" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full bg-white border-slate-300 text-sm h-10"><SelectValue placeholder="Select user role context" /></SelectTrigger>
               <SelectContent className="bg-white text-black">
-                {availableUserRoles.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
-                  </SelectItem>
-                ))}
+                {availableUserRoles.map((role) => <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="format" className="text-sm font-medium text-slate-600 mb-1 flex items-center">
-              <FileType size={16} className="mr-2 text-red-600" /> Output Format
-            </Label>
-            <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as ReportFormat)}>
-              <SelectTrigger className="w-full bg-white text-black border-slate-300 focus:border-red-500 focus:ring-red-500">
-                <SelectValue placeholder="Select report format" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-black">
-                {reportFormats.map((format) => (
-                  <SelectItem key={format.value} value={format.value}>
-                    {format.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-3">
             <Label htmlFor="includeStats" className="text-sm font-medium text-slate-600 flex items-center">
               <ListChecks size={16} className="mr-2 text-red-600" /> Include Statistics
             </Label>
-            <Switch
-              id="includeStats"
-              checked={includeStats}
-              onCheckedChange={setIncludeStats}
-              className="data-[state=checked]:bg-red-600"
-            />
+            <Switch id="includeStats" checked={includeStats} onCheckedChange={setIncludeStats} className="data-[state=checked]:bg-red-600" />
           </div>
 
-          <div className="pt-4 flex justify-end space-x-3">
+          <div className="pt-5 flex justify-end space-x-3">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="text-slate-700 border-slate-300 hover:bg-slate-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-red-600 hover:bg-red-700 text-white min-w-[120px]">
-              {isLoading ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                "Generate Report"
-              )}
+            <Button type="submit" disabled={isLoading} className="bg-red-600 hover:bg-red-700 text-white min-w-[150px]">
+              {isLoading ? <Loader2 size={20} className="animate-spin" /> : "Generate Preview"}
             </Button>
           </div>
         </form>

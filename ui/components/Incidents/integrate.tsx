@@ -314,7 +314,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                   <SelectTrigger id="type-filter">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white text-black">
                     <SelectItem value="">All types</SelectItem>
                     <SelectItem value="injury">Injury</SelectItem>
                     <SelectItem value="near_miss">Near Miss</SelectItem>
@@ -334,7 +334,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                   <SelectTrigger id="status-filter">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white text-black">
                     <SelectItem value="">All statuses</SelectItem>
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="investigating">Investigating</SelectItem>
@@ -354,7 +354,7 @@ export const IncidentsTable = ({ incidents: initialIncidents, userRole }: Incide
                   <SelectTrigger id="severity-filter">
                     <SelectValue placeholder="All severities" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white text-black">
                     <SelectItem value="">All severities</SelectItem>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>

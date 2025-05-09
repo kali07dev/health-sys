@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export const reportsApi = {
   generateReport: async (request: ReportRequest) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/reports/generate`, request, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/vpcs/reports/generate`, request, {
         withCredentials: true,
       });
       return response.data;
@@ -27,7 +27,7 @@ export const reportsApi = {
 
   downloadReport: async (request: ReportRequest) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/reports/download`, request, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/vpcs/reports/download`, request, {
         responseType: 'blob',
         withCredentials: true,
       });
