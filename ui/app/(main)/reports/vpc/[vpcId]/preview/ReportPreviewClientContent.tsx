@@ -152,12 +152,12 @@ export default function ReportPreviewClientContent({
       {/* Sticky Header with Controls */}
       <header className="sticky top-0 z-30 bg-slate-50/80 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 sm:h-16">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800 w-full sm:w-auto">
               Report Preview: 
               {/* <span className="text-red-600">{vpcId}</span> */}
             </h1>
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center justify-end space-x-2 sm:space-x-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -169,12 +169,12 @@ export default function ReportPreviewClientContent({
                 <span className="hidden sm:inline">Options</span>
               </Button>
               <Select value={selectedDownloadFormat} onValueChange={(v) => setSelectedDownloadFormat(v as ReportFormat)}>
-                  <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9">
-                      <SelectValue placeholder="Format"/>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white text-black">
-                      {reportFormatsOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                  </SelectContent>
+                <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9">
+                  <SelectValue placeholder="Format"/>
+                </SelectTrigger>
+                <SelectContent className="bg-white text-black">
+                  {reportFormatsOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
               </Select>
               <Button
                 size="sm"

@@ -164,20 +164,10 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="email"
             value={row.email}
             onChange={(e) => handleInputChange(index, 'email', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number*</label>
-          <input
-            type="text"
-            value={row.employeeNumber}
-            onChange={(e) => handleInputChange(index, 'employeeNumber', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-            required
-          />
-        </div> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -187,7 +177,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="password"
             value={row.password}
             onChange={(e) => handleInputChange(index, 'password', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -197,7 +187,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="password"
             value={row.confirmPassword}
             onChange={(e) => handleInputChange(index, 'confirmPassword', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -210,7 +200,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="text"
             value={row.firstName}
             onChange={(e) => handleInputChange(index, 'firstName', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -220,7 +210,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="text"
             value={row.lastName}
             onChange={(e) => handleInputChange(index, 'lastName', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -230,7 +220,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="tel"
             value={row.contactNumber}
             onChange={(e) => handleInputChange(index, 'contactNumber', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -251,7 +241,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="text"
             value={row.position}
             onChange={(e) => handleInputChange(index, 'position', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -260,7 +250,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
           <select
             value={row.officeLocation}
             onChange={(e) => handleInputChange(index, 'officeLocation', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           >
             <option value="">Select Location</option>
@@ -279,7 +269,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
           <select
             value={row.role}
             onChange={(e) => handleInputChange(index, 'role', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           >
             <option value="employee">Employee</option>
@@ -294,7 +284,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="date"
             value={row.startDate}
             onChange={(e) => handleInputChange(index, 'startDate', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
             required
           />
         </div>
@@ -304,7 +294,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="date"
             value={row.endDate || ''}
             onChange={(e) => handleInputChange(index, 'endDate', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
           />
         </div>
       </div>
@@ -316,7 +306,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="text"
             value={row.emergencyContact || ''}
             onChange={(e) => handleInputChange(index, 'emergencyContact', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
           />
         </div>
         <div>
@@ -325,7 +315,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             type="text"
             value={row.reportingManagerId || ''}
             onChange={(e) => handleInputChange(index, 'reportingManagerId', e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm text-black"
           />
         </div>
       </div>
@@ -370,7 +360,7 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="mx-auto w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl sm:p-8 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <Dialog.Title className="text-lg font-medium">{isBulk ? 'Bulk Create Users' : 'Create User'}</Dialog.Title>
+            <Dialog.Title className="text-lg font-medium text-gray-900">{isBulk ? 'Bulk Create Users' : 'Create User'}</Dialog.Title>
             <button
               onClick={onClose}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"

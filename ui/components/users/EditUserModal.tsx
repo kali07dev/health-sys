@@ -64,7 +64,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-medium">Edit User</Dialog.Title>
+            <Dialog.Title className="text-lg font-medium text-gray-900">Edit User</Dialog.Title>
             <button
               onClick={onClose}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
@@ -81,7 +81,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, email: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                 required
               />
             </div>
@@ -94,7 +94,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, firstName: e.target.value }))
                   }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                   required
                 />
               </div>
@@ -106,7 +106,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, lastName: e.target.value }))
                   }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                   required
                 />
               </div>
@@ -127,7 +127,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, position: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, contactNumber: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                 required
               />
             </div>
@@ -148,7 +148,7 @@ export function EditUserModal({ isOpen, onClose, user, onSuccess }: EditUserModa
               <select
                 value={formData.officeLocation}
                 onChange={(e) => setFormData((prev) => ({ ...prev, officeLocation: e.target.value }))}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
                 required
               >
                 <option value="">Select Location</option>

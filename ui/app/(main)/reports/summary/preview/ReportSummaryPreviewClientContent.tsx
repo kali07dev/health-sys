@@ -192,27 +192,27 @@ export default function ReportSummaryPreviewClientContent({
     <>
       <header className="sticky top-0 z-30 bg-slate-50/80 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 sm:h-16">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-800 w-full sm:w-auto">
               VPC Summary Report Preview
             </h1>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-                <Button variant="outline" size="sm" onClick={() => setShowOptions(!showOptions)} className="text-slate-700 border-slate-300 hover:bg-slate-200" title="Report Options">
-                    <Settings size={16} className="mr-0 sm:mr-2" /><span className="hidden sm:inline">Options</span>
-                </Button>
-                <Select value={selectedDownloadFormat} onValueChange={(v) => setSelectedDownloadFormat(v as ReportFormat)}>
-                    <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9"><SelectValue placeholder="Format"/></SelectTrigger>
-                    <SelectContent className="bg-white text-black">
-                      {reportFormatsOptions.map
-                      (f => <SelectItem key={f.value} value={f.value}>{f.label}
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                </Select>
-                <Button size="sm" onClick={handleDownload} disabled={isDownloading} className="bg-red-600 hover:bg-red-700 text-white min-w-[100px] sm:min-w-[120px] h-9">
-                    {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={16} className="mr-0 sm:mr-2" />}
-                    <span className="hidden sm:inline">Download</span>
-                </Button>
+            <div className="flex items-center justify-end space-x-2 sm:space-x-3">
+              <Button variant="outline" size="sm" onClick={() => setShowOptions(!showOptions)} className="text-slate-700 border-slate-300 hover:bg-slate-200" title="Report Options">
+                <Settings size={16} className="mr-0 sm:mr-2" /><span className="hidden sm:inline">Options</span>
+              </Button>
+              <Select value={selectedDownloadFormat} onValueChange={(v) => setSelectedDownloadFormat(v as ReportFormat)}>
+                <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9"><SelectValue placeholder="Format"/></SelectTrigger>
+                <SelectContent className="bg-white text-black">
+                  {reportFormatsOptions.map
+                  (f => <SelectItem key={f.value} value={f.value}>{f.label}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleDownload} disabled={isDownloading} className="bg-red-600 hover:bg-red-700 text-white min-w-[100px] sm:min-w-[120px] h-9">
+                {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={16} className="mr-0 sm:mr-2" />}
+                <span className="hidden sm:inline">Download</span>
+              </Button>
             </div>
           </div>
           {showOptions && (

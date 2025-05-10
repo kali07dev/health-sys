@@ -80,7 +80,7 @@ export function SidebarTrigger() {
     <Button 
       variant="ghost" 
       size="icon" 
-      className="mr-2" 
+      className="mr-2 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm border border-gray-300 dark:border-gray-600"
       onClick={() => {
         // On mobile (sm:hidden) toggle open state
         if (window.innerWidth < 640) {

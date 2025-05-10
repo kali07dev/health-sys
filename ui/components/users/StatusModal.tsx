@@ -47,7 +47,7 @@ export function StatusModal({ isOpen, onClose, user, onSuccess }: StatusModalPro
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-medium">Update Status</Dialog.Title>
+            <Dialog.Title className="text-lg font-medium text-gray-900">Update Status</Dialog.Title>
             <button
               onClick={onClose}
               className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
@@ -60,7 +60,7 @@ export function StatusModal({ isOpen, onClose, user, onSuccess }: StatusModalPro
             <select
               value={status ? "active" : "inactive"}
               onChange={(e) => setStatus(e.target.value === "active")}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
