@@ -167,7 +167,7 @@ export default function ReportSummaryPreviewClientContent({
     if (aggregation && aggregation !== "none") queryForDownload.set("aggregation", aggregation);
     queryForDownload.set("outputFormat", selectedDownloadFormat);
 
-    const downloadEndpoint = `${BASE_URL}/api/v1/vpc/reports/summary/preview?${queryForDownload.toString()}`;
+    const downloadEndpoint = `${BASE_URL}/api/v1/vpc/reports/summary/download?${queryForDownload.toString()}`;
 
     try {
         const response = await fetch(downloadEndpoint, { method: "GET", headers: { /* Auth */ }});
