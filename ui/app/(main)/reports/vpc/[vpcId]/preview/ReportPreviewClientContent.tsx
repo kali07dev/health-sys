@@ -169,7 +169,7 @@ export default function ReportPreviewClientContent({
                 <span className="hidden sm:inline">Options</span>
               </Button>
               <Select value={selectedDownloadFormat} onValueChange={(v) => setSelectedDownloadFormat(v as ReportFormat)}>
-                  <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-sm h-9">
+                  <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9">
                       <SelectValue placeholder="Format"/>
                   </SelectTrigger>
                   <SelectContent className="bg-white text-black">

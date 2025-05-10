@@ -201,7 +201,7 @@ export default function ReportSummaryPreviewClientContent({
                     <Settings size={16} className="mr-0 sm:mr-2" /><span className="hidden sm:inline">Options</span>
                 </Button>
                 <Select value={selectedDownloadFormat} onValueChange={(v) => setSelectedDownloadFormat(v as ReportFormat)}>
-                    <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-sm h-9"><SelectValue placeholder="Format"/></SelectTrigger>
+                    <SelectTrigger className="w-[100px] sm:w-[120px] bg-white text-black text-sm h-9"><SelectValue placeholder="Format"/></SelectTrigger>
                     <SelectContent className="bg-white text-black">
                       {reportFormatsOptions.map
                       (f => <SelectItem key={f.value} value={f.value}>{f.label}
