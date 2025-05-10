@@ -86,6 +86,24 @@ func (s *ReportService) GenerateReport(req ReportRequest) (interface{}, error) {
 	}
 }
 
+func (s *ReportService) addSectionTitlePDF(pdf *fpdf.Fpdf, title string) {
+	pdf.SetFillColor(204, 0, 0)     // Dark Red (#CC0000)
+	pdf.SetTextColor(255, 255, 255) // White
+	pdf.SetFont("Helvetica", "B", 12)
+	pdf.CellFormat(0, 8, " "+title, "", 1, "L", true, 0, "") // Added space for padding
+	pdf.SetTextColor(0, 0, 0)                                // Reset to black for subsequent text
+	pdf.Ln(5)
+}
+
+// Helper function to sum elements of a float64 slice
+func sumFloat64(nums []float64) float64 {
+	sum := 0.0
+	for _, n := range nums {
+		sum += n
+	}
+	return sum
+}
+
 func (s *ReportService) generateSafetyPerformanceReport(req ReportRequest) (*SafetyPerformanceData, error) {
 	// Get basic metrics using the previous query
 	data, err := s.getBasicMetrics(req)
@@ -613,55 +631,106 @@ func (s *ReportService) ExportToPDF(data interface{}, reportType ReportType) (*b
 	}
 }
 func (s *ReportService) exportComplianceReportPDF(pdf *fpdf.Fpdf, data *ComplianceData) (*bytes.Buffer, error) {
-	// Title
-	pdf.CellFormat(190, 10, "Compliance Report", "", 1, "C", false, 0, "")
-	pdf.Ln(10)
+	pdf.AddPage() // Start a new page; header/footer drawn by `setupPdfPage` (called by orchestrator)
 
-	// Overall Compliance
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, fmt.Sprintf("Overall Compliance Rate: %.2f%%", data.OverallCompliance), "", 1, "L", false, 0, "")
-	pdf.Ln(5)
+	// Main Report Title
+	reportTitle := "Compliance Report"
+	pdf.SetFont("Helvetica", "B", 18)
+	pdf.SetTextColor(0, 0, 0) // Black text
+	pdf.CellFormat(0, 10, reportTitle, "", 1, "C", false, 0, "")
+	pdf.Ln(8)
 
-	// Status Breakdown
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Actions by Status", "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 10)
-	for status, count := range data.ActionsByStatus {
-		pdf.CellFormat(95, 8, status, "", 0, "L", false, 0, "")
-		pdf.CellFormat(95, 8, fmt.Sprintf("%d", count), "", 1, "L", false, 0, "")
+	// Overall Compliance Section
+	s.addSectionTitlePDF(pdf, "Overall Compliance")
+	pdf.SetFont("Helvetica", "B", 11)
+	pdf.CellFormat(60, 8, "Overall Rate:", "1", 0, "L", false, 0, "") // Added border
+	pdf.SetFont("Helvetica", "", 11)
+	pdf.SetFillColor(255, 238, 238)                                                               // Light Pink (#FFEEEE) for value background
+	pdf.CellFormat(0, 8, fmt.Sprintf("%.2f%%", data.OverallCompliance), "1", 1, "R", true, 0, "") // Added border, right align
+	pdf.SetFillColor(255, 255, 255)                                                               // Reset fill
+	pdf.Ln(8)
+
+	// Actions by Status Section
+	if len(data.ActionsByStatus) > 0 {
+		s.addSectionTitlePDF(pdf, "Actions by Status")
+
+		// Table Headers
+		pdf.SetFont("Helvetica", "B", 10)
+		pdf.SetFillColor(204, 0, 0)     // Header BG: Dark Red (#CC0000)
+		pdf.SetTextColor(255, 255, 255) // Header Text: White
+		pdf.CellFormat(95, 8, "Status", "1", 0, "C", true, 0, "")
+		pdf.CellFormat(85, 8, "Count", "1", 1, "C", true, 0, "") // Total 180, within 170 if margins are 20
+
+		// Table Data
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetTextColor(0, 0, 0) // Body Text: Black
+		isEvenRow := false
+		for status, count := range data.ActionsByStatus {
+			if isEvenRow {
+				pdf.SetFillColor(255, 238, 238) // Zebra Stripe: Light Pink (#FFEEEE)
+			} else {
+				pdf.SetFillColor(255, 255, 255) // White
+			}
+			pdf.CellFormat(95, 8, status, "1", 0, "L", true, 0, "")
+			pdf.CellFormat(85, 8, fmt.Sprintf("%d", count), "1", 1, "C", true, 0, "")
+			isEvenRow = !isEvenRow
+		}
+		pdf.SetFillColor(255, 255, 255) // Reset fill
+		pdf.Ln(10)
 	}
-	pdf.Ln(10)
 
-	// Overdue Actions
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Overdue Actions", "", 1, "L", false, 0, "")
-	pdf.SetFont("Arial", "", 10)
+	// Overdue Actions Section
+	if len(data.OverdueActions) > 0 {
+		s.addSectionTitlePDF(pdf, "Overdue Actions")
 
-	headers := []string{"Description", "Due Date", "Days Overdue", "Priority"}
-	widths := []float64{80, 30, 30, 30}
+		headers := []string{"Description", "Due Date", "Days Overdue", "Priority"}
+		// Printable width = 210 (A4) - 20 (L margin) - 20 (R margin) = 170
+		widths := []float64{70, 30, 35, 35} // Sum = 170
 
-	// Headers
-	for i, header := range headers {
-		pdf.CellFormat(widths[i], 8, header, "1", 0, "C", false, 0, "")
-	}
-	pdf.Ln(-1)
+		// Table Headers
+		pdf.SetFont("Helvetica", "B", 10)
+		pdf.SetFillColor(204, 0, 0)
+		pdf.SetTextColor(255, 255, 255)
+		for i, header := range headers {
+			pdf.CellFormat(widths[i], 8, header, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1) // gofpdf trick to continue table rows without gap
 
-	// Data
-	for _, action := range data.OverdueActions {
-		pdf.CellFormat(widths[0], 8, action.Description, "1", 0, "L", false, 0, "")
-		pdf.CellFormat(widths[1], 8, action.DueDate.Format("2006-01-02"), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(widths[2], 8, fmt.Sprintf("%d", action.DaysOverdue), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(widths[3], 8, action.Priority, "1", 1, "C", false, 0, "")
+		// Table Data
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetTextColor(0, 0, 0)
+		isEvenRow := false
+		for _, action := range data.OverdueActions {
+			if isEvenRow {
+				pdf.SetFillColor(255, 238, 238)
+			} else {
+				pdf.SetFillColor(255, 255, 255)
+			}
+			// For Description, use MultiCell if it can be long
+			currentY := pdf.GetY()
+			pdf.MultiCell(widths[0], 8, action.Description, "1", "L", true)
+			currentX := pdf.GetX() + widths[0]
+			pdf.SetXY(currentX, currentY) // Reset Y to start of row for other cells
+
+			pdf.CellFormat(widths[1], 8, action.DueDate.Format("2006-01-02"), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(widths[2], 8, fmt.Sprintf("%d", action.DaysOverdue), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(widths[3], 8, action.Priority, "1", 1, "C", true, 0, "") // This Ln(1) moves to next line
+
+			// Ensure Y pos is consistent if MultiCell caused variable height (more advanced handling needed)
+			// For now, assuming single line or MultiCell is the last one / simple cases
+			isEvenRow = !isEvenRow
+		}
+		pdf.SetFillColor(255, 255, 255) // Reset fill
+		pdf.Ln(5)
 	}
 
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate PDF: %w", err)
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF for Compliance Report: %w", err)
 	}
-
 	return &buf, nil
 }
+
 func (s *ReportService) exportLocationAnalysis(f *excelize.File, data *LocationAnalysisData) (*excelize.File, error) {
 	// Rename default sheet
 	f.SetSheetName("Sheet1", "Location Analysis")
@@ -696,174 +765,263 @@ func (s *ReportService) exportLocationAnalysis(f *excelize.File, data *LocationA
 	return f, nil
 }
 func (s *ReportService) exportLocationAnalysisPDF(pdf *fpdf.Fpdf, data *LocationAnalysisData) (*bytes.Buffer, error) {
-	// Title
-	pdf.CellFormat(190, 10, "Location Analysis Report", "", 1, "C", false, 0, "")
-	pdf.Ln(10)
+	pdf.AddPage()
 
-	// Set up table headers
-	pdf.SetFont("Arial", "B", 11)
+	reportTitle := "Location Analysis Report"
+	pdf.SetFont("Helvetica", "B", 18)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(0, 10, reportTitle, "", 1, "C", false, 0, "")
+	pdf.Ln(8)
+
+	s.addSectionTitlePDF(pdf, "Location Summaries")
+
 	headers := []string{"Location", "Incidents", "Risk Score", "Last Incident"}
-	colWidths := []float64{50, 30, 30, 40}
+	colWidths := []float64{60, 30, 30, 50} // Total 170
 
+	// Table Headers
+	pdf.SetFont("Helvetica", "B", 10)
+	pdf.SetFillColor(204, 0, 0)
+	pdf.SetTextColor(255, 255, 255)
 	for i, header := range headers {
-		pdf.CellFormat(colWidths[i], 10, header, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colWidths[i], 8, header, "1", 0, "C", true, 0, "")
 	}
 	pdf.Ln(-1)
 
-	// Add data rows
-	pdf.SetFont("Arial", "", 10)
-	for _, summary := range data.LocationSummaries {
-		// Main row
-		pdf.CellFormat(colWidths[0], 10, summary.Location, "1", 0, "L", false, 0, "")
-		pdf.CellFormat(colWidths[1], 10, fmt.Sprintf("%d", summary.IncidentCount), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colWidths[2], 10, fmt.Sprintf("%.2f", summary.RiskScore), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colWidths[3], 10, summary.LastIncident.Format("2006-01-02"), "1", 0, "C", false, 0, "")
-		pdf.Ln(-1)
+	// Table Data
+	pdf.SetFont("Helvetica", "", 10)
+	pdf.SetTextColor(0, 0, 0)
 
-		// Hazard types (indented on next line)
+	for _, summary := range data.LocationSummaries {
+		// Determine row background color (alternating)
+		// Since sub-rows for HazardTypes are added, manage striping carefully.
+		// For simplicity, apply striping only to the main data row.
+		isEvenRow := (pdf.GetY() / 8) // Approximation, better to use a counter
+		if int(isEvenRow)%2 == 0 {
+			pdf.SetFillColor(255, 238, 238)
+		} else {
+			pdf.SetFillColor(255, 255, 255)
+		}
+
+		// Store Y before drawing main row cells, manage height if content wraps
+		startY := pdf.GetY()
+		cellHeight := 8.0 // Default cell height
+
+		// Render main row cells
+		// Handling potential wrapping for 'Location' by using MultiCell
+		pdf.MultiCell(colWidths[0], cellHeight, summary.Location, "1", "L", true)
+		xAfterLocation := pdf.GetX() + colWidths[0]
+		yAfterLocation := pdf.GetY() // Y might have changed due to MultiCell
+
+		// Reset Y for other cells to align with the start of the 'Location' cell content
+		pdf.SetXY(xAfterLocation, startY)
+		pdf.CellFormat(colWidths[1], cellHeight, fmt.Sprintf("%d", summary.IncidentCount), "1", 0, "C", true, 0, "")
+		pdf.CellFormat(colWidths[2], cellHeight, fmt.Sprintf("%.2f", summary.RiskScore), "1", 0, "C", true, 0, "")
+		pdf.CellFormat(colWidths[3], cellHeight, summary.LastIncident.Format("2006-01-02"), "1", 0, "C", true, 0, "") // No Ln yet
+
+		// Ensure we move to the Y position after the potentially tallest cell (Location)
+		if yAfterLocation > pdf.GetY() {
+			pdf.SetY(yAfterLocation)
+		}
+		pdf.Ln(cellHeight) // Ensure we are on a new line after the row
+
+		// Hazard types: Rendered as a sub-list below the main row
 		if len(summary.HazardTypes) > 0 {
-			currentX := pdf.GetX()
-			currentY := pdf.GetY()
-			pdf.SetX(currentX + 10) // Indent
-			pdf.SetFont("Arial", "I", 9)
-			pdf.CellFormat(170, 8, "Hazard Types: "+strings.Join(summary.HazardTypes, ", "), "LR", 1, "L", false, 0, "")
-			pdf.SetFont("Arial", "", 10)
-			pdf.SetY(currentY + 8)
+			pdf.SetFillColor(255, 255, 255) // White background for this sub-section
+			pdf.SetFont("Helvetica", "I", 9)
+			pdf.CellFormat(10, 6, "", "", 0, "L", false, 0, "")                                                                   // Indentation
+			pdf.MultiCell(sumFloat64(colWidths)-10, 6, "Hazard Types: "+strings.Join(summary.HazardTypes, ", "), "B", "L", false) // Bottom border for separation
+			pdf.SetFont("Helvetica", "", 10)                                                                                      // Reset font
+			pdf.Ln(2)                                                                                                             // Small space after hazard types
 		}
 	}
+	pdf.SetFillColor(255, 255, 255) // Reset fill
+	pdf.Ln(5)
 
-	// Create buffer and write PDF
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate PDF: %w", err)
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF for Location Analysis: %w", err)
 	}
-
 	return &buf, nil
 }
+
 func (s *ReportService) exportSafetyPerformancePDF(pdf *fpdf.Fpdf, data *SafetyPerformanceData) (*bytes.Buffer, error) {
-	// Header
-	pdf.CellFormat(190, 10, "Safety Performance Report", "", 1, "L", false, 0, "")
-	pdf.Ln(15)
+	pdf.AddPage()
 
-	// Summary Section
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Summary Metrics", "", 1, "L", false, 0, "")
-	pdf.Ln(10)
+	reportTitle := "Safety Performance Report"
+	pdf.SetFont("Helvetica", "B", 18)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(0, 10, reportTitle, "", 1, "C", false, 0, "")
+	pdf.Ln(8)
 
-	pdf.SetFont("Arial", "", 10)
+	s.addSectionTitlePDF(pdf, "Summary Metrics")
+
 	metrics := []struct {
 		label string
 		value string
 	}{
-		{"Total Incidents", fmt.Sprintf("%d", data.TotalIncidents)},
-		{"Resolution Rate", fmt.Sprintf("%.2f%%", data.ResolutionRate)},
-		{"Compliance Rate", fmt.Sprintf("%.2f%%", data.ComplianceRate)},
-		{"Critical Findings", fmt.Sprintf("%d", data.CriticalFindings)},
+		{"Total Incidents:", fmt.Sprintf("%d", data.TotalIncidents)},
+		{"Resolution Rate:", fmt.Sprintf("%.2f%%", data.ResolutionRate)},
+		{"Compliance Rate:", fmt.Sprintf("%.2f%%", data.ComplianceRate)},
+		{"Critical Findings:", fmt.Sprintf("%d", data.CriticalFindings)},
 	}
 
+	// Table-like display for metrics
+	pdf.SetFont("Helvetica", "B", 10) // Header for this pseudo-table (optional or integrate)
+
+	isEvenRow := false
 	for _, m := range metrics {
-		pdf.CellFormat(95, 8, m.label, "", 0, "L", false, 0, "")
-		pdf.CellFormat(95, 8, m.value, "", 1, "L", false, 0, "")
+		if isEvenRow {
+			pdf.SetFillColor(255, 238, 238) // Light Pink
+		} else {
+			pdf.SetFillColor(255, 255, 255) // White
+		}
+		pdf.SetFont("Helvetica", "B", 10) // Label bold
+		pdf.CellFormat(85, 8, m.label, "1", 0, "L", true, 0, "")
+		pdf.SetFont("Helvetica", "", 10)                         // Value normal
+		pdf.CellFormat(85, 8, m.value, "1", 1, "R", true, 0, "") // Right align value
+		isEvenRow = !isEvenRow
 	}
+	pdf.SetFillColor(255, 255, 255) // Reset fill
+	pdf.Ln(5)
 
-	// Create buffer and write PDF
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
-	if err != nil {
-		return nil, err
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF for Safety Performance: %w", err)
 	}
-
 	return &buf, nil
 }
 
 func (s *ReportService) exportIncidentTrendsPDF(pdf *fpdf.Fpdf, data *IncidentTrendsData) (*bytes.Buffer, error) {
-	// Header
-	pdf.SetFont("Arial", "B", 16)
-	pdf.CellFormat(190, 10, "Incident Trends Report", "", 1, "L", false, 0, "")
-	pdf.Ln(15)
+	pdf.AddPage()
+
+	reportTitle := "Incident Trends Report"
+	pdf.SetFont("Helvetica", "B", 18)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(0, 10, reportTitle, "", 1, "C", false, 0, "")
+	pdf.Ln(8)
 
 	// Common Hazards Section
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Common Hazards", "", 1, "L", false, 0, "")
-	pdf.Ln(10)
+	if len(data.CommonHazards) > 0 {
+		s.addSectionTitlePDF(pdf, "Common Hazards")
+		hazardHeaders := []string{"Type", "Frequency", "Risk Score"}
+		hazardWidths := []float64{90, 40, 40} // Total 170
 
-	pdf.SetFont("Arial", "", 10)
-	hazardHeaders := []string{"Type", "Frequency", "Risk Score"}
-	// Set up table header
-	for _, header := range hazardHeaders {
-		pdf.CellFormat(63, 8, header, "", 0, "L", false, 0, "")
-	}
-	pdf.Ln(8)
+		pdf.SetFont("Helvetica", "B", 10)
+		pdf.SetFillColor(204, 0, 0)
+		pdf.SetTextColor(255, 255, 255)
+		for i, header := range hazardHeaders {
+			pdf.CellFormat(hazardWidths[i], 8, header, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
 
-	// Add hazard data
-	for _, hazard := range data.CommonHazards {
-		pdf.CellFormat(63, 8, hazard.Type, "", 0, "L", false, 0, "")
-		pdf.CellFormat(63, 8, fmt.Sprintf("%d", hazard.Frequency), "", 0, "L", false, 0, "")
-		pdf.CellFormat(63, 8, fmt.Sprintf("%.2f", hazard.RiskScore), "", 1, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetTextColor(0, 0, 0)
+		isEvenRow := false
+		for _, hazard := range data.CommonHazards {
+			if isEvenRow {
+				pdf.SetFillColor(255, 238, 238)
+			} else {
+				pdf.SetFillColor(255, 255, 255)
+			}
+			pdf.CellFormat(hazardWidths[0], 8, hazard.Type, "1", 0, "L", true, 0, "")
+			pdf.CellFormat(hazardWidths[1], 8, fmt.Sprintf("%d", hazard.Frequency), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(hazardWidths[2], 8, fmt.Sprintf("%.2f", hazard.RiskScore), "1", 1, "C", true, 0, "")
+			isEvenRow = !isEvenRow
+		}
+		pdf.SetFillColor(255, 255, 255)
+		pdf.Ln(10)
 	}
-	pdf.Ln(10)
 
 	// Monthly Trends Section
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Monthly Trends", "", 1, "L", false, 0, "")
-	pdf.Ln(10)
+	if len(data.TrendsByMonth) > 0 {
+		s.addSectionTitlePDF(pdf, "Monthly Trends")
+		trendHeaders := []string{"Month", "Incidents", "Avg. Severity", "Resolved", "New Hazards"}
+		trendWidths := []float64{30, 30, 35, 30, 45} // Total 170
 
-	pdf.SetFont("Arial", "", 10)
-	trendHeaders := []string{"Month", "Incidents", "Severity", "Resolved", "New Hazards"}
-	// Set up table header
-	for _, header := range trendHeaders {
-		pdf.CellFormat(38, 8, header, "", 0, "L", false, 0, "")
-	}
-	pdf.Ln(8)
+		pdf.SetFont("Helvetica", "B", 10)
+		pdf.SetFillColor(204, 0, 0)
+		pdf.SetTextColor(255, 255, 255)
+		for i, header := range trendHeaders {
+			pdf.CellFormat(trendWidths[i], 8, header, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
 
-	// Add monthly trend data
-	for _, trend := range data.TrendsByMonth {
-		pdf.CellFormat(38, 8, trend.Month.Format("Jan 2006"), "", 0, "L", false, 0, "")
-		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.IncidentCount), "", 0, "L", false, 0, "")
-		pdf.CellFormat(38, 8, fmt.Sprintf("%.2f", trend.SeverityScore), "", 0, "L", false, 0, "")
-		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.ResolvedCount), "", 0, "L", false, 0, "")
-		pdf.CellFormat(38, 8, fmt.Sprintf("%d", trend.NewHazards), "", 1, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetTextColor(0, 0, 0)
+		isEvenRow := false
+		for _, trend := range data.TrendsByMonth {
+			if isEvenRow {
+				pdf.SetFillColor(255, 238, 238)
+			} else {
+				pdf.SetFillColor(255, 255, 255)
+			}
+			pdf.CellFormat(trendWidths[0], 8, trend.Month.Format("Jan 2006"), "1", 0, "L", true, 0, "")
+			pdf.CellFormat(trendWidths[1], 8, fmt.Sprintf("%d", trend.IncidentCount), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(trendWidths[2], 8, fmt.Sprintf("%.2f", trend.SeverityScore), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(trendWidths[3], 8, fmt.Sprintf("%d", trend.ResolvedCount), "1", 0, "C", true, 0, "")
+			pdf.CellFormat(trendWidths[4], 8, fmt.Sprintf("%d", trend.NewHazards), "1", 1, "C", true, 0, "")
+			isEvenRow = !isEvenRow
+		}
+		pdf.SetFillColor(255, 255, 255)
+		pdf.Ln(10)
 	}
-	pdf.Ln(10)
 
 	// Risk Patterns Section
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Risk Patterns", "", 1, "L", false, 0, "")
-	pdf.Ln(10)
+	if len(data.RiskPatterns) > 0 {
+		s.addSectionTitlePDF(pdf, "Risk Patterns")
+		pdf.SetFont("Helvetica", "", 10)
+		for i, pattern := range data.RiskPatterns {
+			if i > 0 { // Add a separator line
+				pdf.SetDrawColor(255, 153, 153) // Soft Red (#FF9999)
+				currentY := pdf.GetY()
+				// Draw line from current X (margin) to page width - margin X
+				pdf.Line(pdf.GetX(), currentY, 210-pdf.GetCellMargin()-20, currentY) // Assuming 20mm right margin
+				pdf.Ln(3)
+				pdf.SetDrawColor(0, 0, 0) // Reset draw color
+			}
 
-	pdf.SetFont("Arial", "", 10)
-	for _, pattern := range data.RiskPatterns {
-		pdf.CellFormat(190, 8, fmt.Sprintf("Category: %s", pattern.Category), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Frequency: %d | Severity: %s", pattern.Frequency, pattern.Severity), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Departments: %s", strings.Join(pattern.Departments, ", ")), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Root Causes: %s", strings.Join(pattern.RootCauses, ", ")), "", 1, "L", false, 0, "")
-		pdf.Ln(4)
+			pdf.SetFillColor(245, 245, 245) // Light gray background (#F5F5F5)
+			pdf.SetFont("Helvetica", "B", 10)
+			pdf.MultiCell(0, 7, "Category: "+pattern.Category, "TLR", "L", true) // Top, Left, Right borders
+			pdf.SetFont("Helvetica", "", 10)
+			pdf.MultiCell(0, 7, fmt.Sprintf("  Frequency: %d  |  Severity: %s", pattern.Frequency, pattern.Severity), "LR", "L", true)
+			pdf.MultiCell(0, 7, "  Departments: "+strings.Join(pattern.Departments, ", "), "LR", "L", true)
+			pdf.MultiCell(0, 7, "  Root Causes: "+strings.Join(pattern.RootCauses, ", "), "LRB", "L", true) // Bottom border to close box
+			pdf.Ln(5)                                                                                       // Spacing after each pattern block
+		}
+		pdf.SetFillColor(255, 255, 255) // Reset fill
+		pdf.Ln(5)
 	}
 
 	// Recurring Issues Section
-	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(190, 10, "Recurring Issues", "", 1, "L", false, 0, "")
-	pdf.Ln(10)
-
-	pdf.SetFont("Arial", "", 10)
-	for _, issue := range data.RecurringIssues {
-		pdf.CellFormat(190, 8, fmt.Sprintf("Description: %s", issue.Description), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Frequency: %d | Last Occurred: %s",
-			issue.Frequency,
-			issue.LastOccurred.Format("2006-01-02")), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Status: %s | Priority: %s", issue.Status, issue.Priority), "", 1, "L", false, 0, "")
-		pdf.CellFormat(190, 8, fmt.Sprintf("Locations: %s", strings.Join(issue.Locations, ", ")), "", 1, "L", false, 0, "")
-		pdf.Ln(4)
+	if len(data.RecurringIssues) > 0 {
+		s.addSectionTitlePDF(pdf, "Recurring Issues")
+		pdf.SetFont("Helvetica", "", 10)
+		for i, issue := range data.RecurringIssues {
+			if i > 0 { // Add a separator line
+				pdf.SetDrawColor(255, 153, 153) // Soft Red (#FF9999)
+				currentY := pdf.GetY()
+				pdf.Line(pdf.GetX(), currentY, 210-pdf.GetCellMargin()-20, currentY)
+				pdf.Ln(3)
+				pdf.SetDrawColor(0, 0, 0)
+			}
+			pdf.SetFillColor(245, 245, 245) // Light gray background (#F5F5F5)
+			pdf.SetFont("Helvetica", "B", 10)
+			pdf.MultiCell(0, 7, "Issue: "+issue.Description, "TLR", "L", true)
+			pdf.SetFont("Helvetica", "", 10)
+			pdf.MultiCell(0, 7, fmt.Sprintf("  Frequency: %d  |  Last Occurred: %s", issue.Frequency, issue.LastOccurred.Format("2006-01-02")), "LR", "L", true)
+			pdf.MultiCell(0, 7, fmt.Sprintf("  Status: %s  |  Priority: %s", issue.Status, issue.Priority), "LR", "L", true)
+			pdf.MultiCell(0, 7, "  Locations: "+strings.Join(issue.Locations, ", "), "LRB", "L", true)
+			pdf.Ln(5) // Spacing after each issue block
+		}
+		pdf.SetFillColor(255, 255, 255) // Reset fill
+		pdf.Ln(5)
 	}
 
-	// Create buffer and write PDF
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
-	if err != nil {
-		return nil, err
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF for Incident Trends: %w", err)
 	}
-
 	return &buf, nil
 }
 func (s *ReportService) exportComplianceReport(f *excelize.File, data *ComplianceData) (*excelize.File, error) {

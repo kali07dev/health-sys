@@ -10,9 +10,56 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/hopkali04/health-sys/internal/models"
 	"github.com/hopkali04/health-sys/internal/utils"
-	"github.com/jung-kurt/gofpdf"
+
+	// "github.com/jung-kurt/gofpdf"
+	"github.com/go-pdf/fpdf"
 )
 
+func setupPdfPage(pdf *fpdf.Fpdf, companyName string, reportType string, genTimestamp time.Time) {
+	pdf.SetMargins(20, 20, 20) // Consistent margins
+	pdf.SetAutoPageBreak(true, 20)
+
+	// Header function
+	pdf.SetHeaderFunc(func() {
+		pdf.SetFillColor(153, 0, 0)  // Dark Red (#990000)
+		pdf.Rect(0, 0, 210, 20, "F") // Full width header bar at the top
+		pdf.SetFont("Helvetica", "B", 16)
+		pdf.SetTextColor(255, 255, 255) // White text
+		currentX, currentY := pdf.GetXY()
+		pdf.SetXY(20, 5) // Position within the header bar
+		pdf.CellFormat(0, 10, companyName, "", 0, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetXY(20, 5) // Reset X to align right or use specific X
+		pdf.CellFormat(0, 10, reportType, "", 0, "R", false, 0, "")
+		pdf.SetXY(currentX, currentY+15) // Move below header bar area + small margin
+		pdf.SetTextColor(0, 0, 0)        // Reset text color
+	})
+
+	// Footer function
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-15) // Position at 1.5 cm from bottom
+		pdf.SetFont("Helvetica", "I", 8)
+		pdf.SetTextColor(119, 119, 119) // Gray (#777777)
+		footerText := fmt.Sprintf("Generated on: %s  •  © %d %s. All rights reserved.  •  System-Generated Report",
+			genTimestamp.Format("January 02, 2006 15:04 MST"),
+			genTimestamp.Year(),
+			companyName,
+		)
+		pdf.CellFormat(0, 10, footerText, "T", 0, "C", false, 0, "")
+		pdf.SetTextColor(0, 0, 0) // Reset text color
+	})
+}
+
+// PDF Section Title Helper
+func addSectionTitlePDF(pdf *fpdf.Fpdf, title string) {
+	pdf.SetFillColor(204, 0, 0)     // Dark Red (#CC0000)
+	pdf.SetTextColor(255, 255, 255) // White
+	pdf.SetFont("Helvetica", "B", 12)
+	// Using CellFormat with fill, no border for a solid bar look. Height 8.
+	pdf.CellFormat(0, 8, " "+title, "", 1, "L", true, 0, "") // Added a space for padding
+	pdf.SetTextColor(0, 0, 0)                                // Reset to black for subsequent text
+	pdf.Ln(5)
+}
 func (s *ReportService) generateSummaryReport(c *fiber.Ctx, options ReportOptions) error {
 	summaryData, err := s.gatherSummaryReportData(options)
 	if err != nil {
@@ -182,82 +229,186 @@ func (s *ReportService) generateSummaryPreview(c *fiber.Ctx, data *SummaryReport
 }
 
 func (s *ReportService) generateSummaryPDF(c *fiber.Ctx, data *SummaryReportData, options ReportOptions) error {
-	// (Content from previous response, this is for NEW feature and should be fine)
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(15, 15, 15)
+	companyName := "VPC Analytics" // Placeholder company name
+	reportType := "System-Generated Summary Report"
+
+	pdf := fpdf.New("P", "mm", "A4", "")
+	setupPdfPage(pdf, companyName, reportType, data.GeneratedTimestamp) // Use helper for header/footer
 	pdf.AddPage()
+
+	// Main Report Title
 	pdf.SetFont("Helvetica", "B", 18)
+	pdf.SetTextColor(0, 0, 0) // Black
 	pdf.CellFormat(0, 10, data.ReportTitle, "", 1, "C", false, 0, "")
-	pdf.Ln(5)
+	pdf.Ln(8)
+
+	// Filters Applied Section
+	addSectionTitlePDF(pdf, "Filters Applied")
 	pdf.SetFont("Helvetica", "", 10)
-	pdf.CellFormat(0, 6, fmt.Sprintf("Generated: %s", data.GeneratedTimestamp.Format("January 02, 2006 15:04 MST")), "", 1, "R", false, 0, "")
-	pdf.Ln(5)
-	pdf.SetFont("Helvetica", "B", 12)
-	pdf.CellFormat(0, 8, "Filters Applied:", "", 1, "L", false, 0, "")
-	pdf.SetFont("Helvetica", "", 10)
+	pdf.SetFillColor(255, 255, 255) // Reset fill color for content
+
+	filterItem := func(key, value string) {
+		pdf.SetFont("Helvetica", "B", 10)
+		pdf.CellFormat(40, 6, key+":", "", 0, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.CellFormat(0, 6, value, "", 1, "L", false, 0, "")
+		pdf.Ln(1)
+	}
+
 	if data.Filters.StartDate != nil || data.Filters.EndDate != nil {
-		pdf.CellFormat(0, 6, fmt.Sprintf("  Date Range: %s", data.DateRangeCovered), "", 1, "L", false, 0, "")
+		filterItem("Date Range", data.DateRangeCovered)
 	}
 	if df := data.Filters.DepartmentFilter; df != "" && df != "all" {
-		pdf.CellFormat(0, 6, fmt.Sprintf("  Department: %s", df), "", 1, "L", false, 0, "")
+		filterItem("Department", df)
 	}
 	if vtf := data.Filters.VPCTypeFilter; vtf != "" && vtf != "all" {
-		pdf.CellFormat(0, 6, fmt.Sprintf("  VPC Type: %s", vtf), "", 1, "L", false, 0, "")
+		filterItem("VPC Type", vtf)
 	}
 	if al := data.Filters.AggregationLevel; al != "" && al != "none" {
-		pdf.CellFormat(0, 6, fmt.Sprintf("  Aggregation: %s", strings.Title(al)), "", 1, "L", false, 0, "")
+		filterItem("Aggregation", strings.Title(al))
 	}
-	pdf.CellFormat(0, 6, fmt.Sprintf("  Report View As Role: %s", strings.Title(strings.ReplaceAll(data.Filters.UserRole, "_", " "))), "", 1, "L", false, 0, "")
+	filterItem("View As Role", strings.Title(strings.ReplaceAll(data.Filters.UserRole, "_", " ")))
+	filterItem("Include Stats", fmt.Sprintf("%t", options.IncludeStats))
 	pdf.Ln(8)
-	pdf.SetFont("Helvetica", "B", 14)
-	pdf.SetFillColor(240, 240, 240)
-	pdf.CellFormat(0, 10, "Overall Summary", "1", 1, "L", true, 0, "")
+
+	// Overall Summary Section
+	addSectionTitlePDF(pdf, "Overall Summary")
+	pdf.SetFont("Helvetica", "B", 11)
+	pdf.CellFormat(60, 7, "Total VPCs Found:", "", 0, "L", false, 0, "")
 	pdf.SetFont("Helvetica", "", 11)
-	pdf.CellFormat(60, 7, "Total VPCs Found:", "L", 0, "L", false, 0, "")
-	pdf.CellFormat(0, 7, fmt.Sprintf("%d", data.TotalVPCs), "R", 1, "L", false, 0, "")
+	pdf.SetFillColor(255, 238, 238) // Light Pink (#FFEEEE) for value background
+	pdf.CellFormat(0, 7, fmt.Sprintf("%d", data.TotalVPCs), "", 1, "L", true, 0, "")
+	pdf.SetFillColor(255, 255, 255) // Reset fill
+	pdf.Ln(1)                       // Small gap
+
+	// Draw a divider line
+	pdf.SetDrawColor(255, 51, 51)                                // Accent Red (#FF3333)
+	pdf.Line(pdf.GetX(), pdf.GetY(), pdf.GetX()+170, pdf.GetY()) // 170 = A4 width - 2*margins
+	pdf.Ln(5)
+	pdf.SetDrawColor(0, 0, 0) // Reset draw color
+
+	// Statistics Sections
 	if options.IncludeStats {
-		pdf.Ln(5)
-		pdf.SetFont("Helvetica", "B", 12)
-		pdf.CellFormat(0, 8, "VPCs by Type:", "T L R", 1, "L", true, 0, "")
-		pdf.SetFont("Helvetica", "", 10)
-		for vpcType, count := range data.VPCsByType {
-			pdf.CellFormat(60, 6, fmt.Sprintf("  %s:", strings.Title(vpcType)), "L", 0, "L", false, 0, "")
-			pdf.CellFormat(0, 6, fmt.Sprintf("%d", count), "R", 1, "L", false, 0, "")
-		}
-		pdf.CellFormat(0, 0, "", "T", 0, "C", false, 0, "")
-		pdf.Ln(5)
-		if len(data.VPCsByDepartment) > 0 {
-			pdf.SetFont("Helvetica", "B", 12)
-			pdf.CellFormat(0, 8, "VPCs by Department:", "T L R", 1, "L", true, 0, "")
+		if len(data.VPCsByType) > 0 {
+			pdf.Ln(5)
+			addSectionTitlePDF(pdf, "VPCs by Type")
 			pdf.SetFont("Helvetica", "", 10)
-			for dept, count := range data.VPCsByDepartment {
-				pdf.CellFormat(60, 6, fmt.Sprintf("  %s:", dept), "L", 0, "L", false, 0, "")
-				pdf.CellFormat(0, 6, fmt.Sprintf("%d", count), "R", 1, "L", false, 0, "")
+			isEvenRow := false
+			for vpcType, count := range data.VPCsByType {
+				if isEvenRow {
+					pdf.SetFillColor(255, 238, 238) // Light Pink (#FFEEEE)
+				} else {
+					pdf.SetFillColor(255, 255, 255) // White
+				}
+				pdf.CellFormat(60, 7, fmt.Sprintf("  %s:", strings.Title(vpcType)), "L", 0, "L", true, 0, "")
+				pdf.CellFormat(0, 7, fmt.Sprintf("%d", count), "R", 1, "L", true, 0, "")
+				isEvenRow = !isEvenRow
 			}
-			pdf.CellFormat(0, 0, "", "T", 0, "C", false, 0, "")
+			pdf.SetFillColor(255, 255, 255) // Reset fill
+			pdf.Ln(5)
+		}
+
+		if len(data.VPCsByDepartment) > 0 {
+			pdf.Ln(5)
+			addSectionTitlePDF(pdf, "VPCs by Department")
+			pdf.SetFont("Helvetica", "", 10)
+			isEvenRow := false
+			for dept, count := range data.VPCsByDepartment {
+				if isEvenRow {
+					pdf.SetFillColor(255, 238, 238) // Light Pink (#FFEEEE)
+				} else {
+					pdf.SetFillColor(255, 255, 255) // White
+				}
+				pdf.CellFormat(60, 7, fmt.Sprintf("  %s:", dept), "L", 0, "L", true, 0, "")
+				pdf.CellFormat(0, 7, fmt.Sprintf("%d", count), "R", 1, "L", true, 0, "")
+				isEvenRow = !isEvenRow
+			}
+			pdf.SetFillColor(255, 255, 255) // Reset fill
 			pdf.Ln(5)
 		}
 	}
+
+	// Estimated Time / Record Count (optional - can be part of footer or a final section)
+	if data.RecordCount > 100 || data.EstimatedTime != "" {
+		pdf.Ln(5)
+		addSectionTitlePDF(pdf, "Report Generation Notes")
+		if data.RecordCount > 100 {
+			pdf.SetFont("Helvetica", "I", 9)
+			pdf.SetTextColor(100, 100, 100)
+			pdf.MultiCell(0, 5, fmt.Sprintf("Note: This report includes %d records. Consider refining filters for faster generation or more targeted analysis if needed.", data.RecordCount), "", "L", false)
+			pdf.SetTextColor(0, 0, 0)
+		}
+		if data.EstimatedTime != "" {
+			pdf.SetFont("Helvetica", "I", 9)
+			pdf.SetTextColor(100, 100, 100)
+			pdf.CellFormat(0, 5, fmt.Sprintf("Estimated generation time for similar reports: %s", data.EstimatedTime), "", 1, "L", false, 0, "")
+			pdf.SetTextColor(0, 0, 0)
+		}
+		pdf.Ln(5)
+	}
+
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
 		utils.LogError("Error generating PDF", map[string]interface{}{"error": err})
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate summary PDF: " + err.Error()})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate summary PDF: " + err.Error()})
 	}
 
-	filename := fmt.Sprintf("vpc-summary-report-%s.pdf", time.Now().Format("20060102"))
+	filename := fmt.Sprintf("vpc-summary-report-%s.pdf", time.Now().Format("20060102-150405"))
 	c.Set("Content-Type", "application/pdf")
 	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	return c.Send(buf.Bytes())
 }
 
 func (s *ReportService) generateSummaryHTML(c *fiber.Ctx, data *SummaryReportData, options ReportOptions) error {
-	// (Content from previous response, this is for NEW feature and should be fine)
+	companyName := "VPC Analytics" // Placeholder company name
+
 	var sb strings.Builder
-	sb.WriteString(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>VPC Summary Report</title>`)
-	sb.WriteString(`<style> body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; color: #334155; line-height: 1.6; } .container { max-width: 900px; margin: 20px auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); } h1, h2, h3 { color: #1e293b; margin-top: 0; } h1 { font-size: 2em; margin-bottom: 10px; text-align: center; color: #dc2626; } .report-meta { font-size: 0.85em; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; text-align:center; } .section { margin-bottom: 30px; padding: 20px; background-color: #fff; border: 1px solid #e2e8f0; border-radius: 6px; } .section h2 { font-size: 1.5em; color: #1e293b; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 20px; } .grid-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; } .summary-card { background-color: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center; } .summary-card .value { font-size: 2em; font-weight: 700; color: #dc2626; display: block; } .summary-card .label { font-size: 0.9em; color: #475569; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; font-size: 0.9em; } th { background-color: #f1f5f9; font-weight: 600; color: #334155; } .filters-applied ul { list-style: none; padding-left: 0; } .filters-applied li { margin-bottom: 5px; } </style></head><body><div class="container">`)
-	sb.WriteString(fmt.Sprintf(`<h1>%s</h1>`, data.ReportTitle))
-	sb.WriteString(fmt.Sprintf(`<div class="report-meta"><p>Generated: %s</p></div>`, data.GeneratedTimestamp.Format("January 02, 2006 15:04 MST")))
-	sb.WriteString(`<div class="section filters-applied"><h2>Filters Applied</h2><ul>`)
+	sb.WriteString(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>VPC Summary Report - ` + companyName + `</title>`)
+	sb.WriteString(`<style>
+		body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background-color: #F5F5F5; color: #333333; line-height: 1.6; }
+		.container { max-width: 900px; margin: 20px auto; background-color: #ffffff; padding: 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid #990000; }
+		.content-padding { padding: 20px 30px; }
+
+		.corp-header { background-color: #990000; color: white; padding: 20px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+		.corp-header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 2.2em; margin: 0 0 5px 0; }
+		.corp-header p { font-family: Arial, Helvetica, sans-serif; font-size: 1em; margin: 0; }
+
+		h2.report-title { font-family: Georgia, "Times New Roman", serif; font-size: 1.8em; color: #333333; margin-top: 20px; margin-bottom: 25px; text-align: center; }
+		
+		.section { margin-bottom: 25px; padding-top: 15px; border-bottom: 1px solid #FF9999; }
+		.section:last-child { border-bottom: none; }
+		.section-title { font-family: Georgia, "Times New Roman", serif; font-size: 1.5em; color: #990000; border-bottom: 2px solid #CC0000; padding-bottom: 8px; margin-bottom: 15px; }
+		
+		.filters-applied ul { list-style: none; padding-left: 0; }
+		.filters-applied li { margin-bottom: 8px; padding: 8px 12px; border-left: 4px solid #FF3333; background-color: #FFEEEE; border-radius: 4px; }
+		.filters-applied li strong { color: #990000; }
+
+		.grid-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+		.summary-card { background-color: #fdf0f0; padding: 20px; border-radius: 6px; border: 1px solid #FF9999; text-align: center; }
+		.summary-card .value { font-size: 2.5em; font-weight: 700; color: #990000; display: block; font-family: Arial, Helvetica, sans-serif; }
+		.summary-card .label { font-size: 1em; color: #555555; font-family: Arial, Helvetica, sans-serif; }
+		
+		table { width: 100%; border-collapse: collapse; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+		th, td { padding: 10px 12px; text-align: left; font-size: 0.9em; border: 1px solid #e0e0e0; }
+		th { background-color: #CC0000; color: white; font-weight: bold; font-family: Arial, Helvetica, sans-serif; }
+		tr:nth-child(even) td { background-color: #FFEEEE; }
+
+		.notes-section { background-color: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin-top: 20px; font-size: 0.9em; color: #555; }
+		.notes-section p { margin: 5px 0; }
+
+		.corp-footer { font-family: Arial, Helvetica, sans-serif; font-size: 0.85em; text-align: center; color: #777777; margin-top: 30px; padding: 20px 30px 20px; border-top: 1px solid #FF9999; }
+	</style></head><body><div class="container">`)
+
+	// Corporate Header
+	sb.WriteString(fmt.Sprintf(`<div class="corp-header"><h1>%s</h1><p>System-Generated Summary Report</p></div>`, companyName))
+
+	sb.WriteString(`<div class="content-padding">`) // Start content padding
+
+	// Report Title
+	sb.WriteString(fmt.Sprintf(`<h2 class="report-title">%s</h2>`, data.ReportTitle))
+
+	// Filters Applied Section
+	sb.WriteString(`<div class="section filters-applied"><h3 class="section-title">Filters Applied</h3><ul>`)
 	if data.Filters.StartDate != nil || data.Filters.EndDate != nil {
 		sb.WriteString(fmt.Sprintf("<li><strong>Date Range:</strong> %s</li>", data.DateRangeCovered))
 	}
@@ -273,27 +424,58 @@ func (s *ReportService) generateSummaryHTML(c *fiber.Ctx, data *SummaryReportDat
 	sb.WriteString(fmt.Sprintf("<li><strong>View As Role:</strong> %s</li>", strings.Title(strings.ReplaceAll(data.Filters.UserRole, "_", " "))))
 	sb.WriteString(fmt.Sprintf("<li><strong>Include Statistics:</strong> %t</li>", data.Filters.IncludeStats))
 	sb.WriteString(`</ul></div>`)
-	sb.WriteString(`<div class="section"><div class="grid-summary">`)
-	sb.WriteString(fmt.Sprintf(`<div class="summary-card"><span class="value">%d</span><span class="label">Total VPCs</span></div>`, data.TotalVPCs))
+
+	// Overall Summary Section
+	sb.WriteString(`<div class="section"><h3 class="section-title">Overall Summary</h3><div class="grid-summary">`)
+	sb.WriteString(fmt.Sprintf(`<div class="summary-card"><span class="value">%d</span><span class="label">Total VPCs Found</span></div>`, data.TotalVPCs))
+	// Add more summary cards if needed, e.g., data.DataCompleteness
+	if data.DataCompleteness != "" {
+		sb.WriteString(fmt.Sprintf(`<div class="summary-card"><span class="value" style="font-size:1.5em; padding-top:1em;">%s</span><span class="label">Data Completeness</span></div>`, data.DataCompleteness))
+	}
 	sb.WriteString(`</div></div>`)
+
+	// Statistics Sections
 	if options.IncludeStats {
 		if len(data.VPCsByType) > 0 {
-			sb.WriteString(`<div class="section"><h2>VPCs by Type</h2><table><thead><tr><th>Type</th><th>Count</th></tr></thead><tbody>`)
+			sb.WriteString(`<div class="section"><h3 class="section-title">VPCs by Type</h3><table><thead><tr><th>Type</th><th>Count</th></tr></thead><tbody>`)
 			for vpcType, count := range data.VPCsByType {
 				sb.WriteString(fmt.Sprintf(`<tr><td>%s</td><td>%d</td></tr>`, strings.Title(vpcType), count))
 			}
 			sb.WriteString(`</tbody></table></div>`)
 		}
 		if len(data.VPCsByDepartment) > 0 {
-			sb.WriteString(`<div class="section"><h2>VPCs by Department</h2><table><thead><tr><th>Department</th><th>Count</th></tr></thead><tbody>`)
+			sb.WriteString(`<div class="section"><h3 class="section-title">VPCs by Department</h3><table><thead><tr><th>Department</th><th>Count</th></tr></thead><tbody>`)
 			for dept, count := range data.VPCsByDepartment {
 				sb.WriteString(fmt.Sprintf(`<tr><td>%s</td><td>%d</td></tr>`, dept, count))
 			}
 			sb.WriteString(`</tbody></table></div>`)
 		}
 	}
-	sb.WriteString(`</div></body></html>`)
-	filename := fmt.Sprintf("vpc-summary-report-%s.html", time.Now().Format("20060102"))
+
+	// Report Generation Notes Section
+	if data.RecordCount > 100 || data.EstimatedTime != "" {
+		sb.WriteString(`<div class="section notes-section"><h3 class="section-title" style="font-size:1.2em; border-bottom:none; margin-bottom:10px;">Report Generation Notes</h3>`)
+		if data.RecordCount > 100 {
+			sb.WriteString(fmt.Sprintf("<p><strong>Record Count:</strong> This report includes %d records. For faster generation or more targeted analysis, consider refining filters.</p>", data.RecordCount))
+		}
+		if data.EstimatedTime != "" {
+			sb.WriteString(fmt.Sprintf("<p><strong>Performance Hint:</strong> Estimated generation time for similar reports: %s.</p>", data.EstimatedTime))
+		}
+		sb.WriteString(`</div>`)
+	}
+
+	sb.WriteString(`</div>`) // End content-padding
+
+	// Corporate Footer
+	sb.WriteString(fmt.Sprintf(`<div class="corp-footer"><p>Generated on: %s  •  © %d %s. All rights reserved.</p></div>`,
+		data.GeneratedTimestamp.Format("January 02, 2006 15:04 MST"),
+		data.GeneratedTimestamp.Year(),
+		companyName,
+	))
+
+	sb.WriteString(`</div></body></html>`) // Close container and HTML
+
+	filename := fmt.Sprintf("vpc-summary-report-%s.html", time.Now().Format("20060102-150405"))
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	return c.SendString(sb.String())

@@ -337,6 +337,8 @@ func (s *VPCService) ListByVpcType(vpcType string, page, pageSize int) ([]models
 }
 
 func (s *VPCService) HandleCreateVPCMail(vpc *models.VPC) {
+	// a copy of the VPC to avoid any potential data races
+	vpcCopy := *vpc
 
 	// Get Admin emails
 	managerEmails, err := s.getAdminAndSafetyOfficerEmails()
@@ -346,7 +348,7 @@ func (s *VPCService) HandleCreateVPCMail(vpc *models.VPC) {
 	}
 
 	// Send notification
-	if err := s.mailService.sendVPCNotificationEmail(managerEmails, vpc); err != nil {
+	if err := s.mailService.sendVPCNotificationEmail(managerEmails, &vpcCopy); err != nil {
 		log.Printf("Failed to send urgent Vpc notification: %v", err)
 		return
 	}

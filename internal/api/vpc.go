@@ -62,7 +62,8 @@ func (h *VPCHandler) CreateVPC(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(schema.NewErrorResponse("Failed to create VPC: " + err.Error()))
 	}
-	h.service.HandleCreateVPCMail(&vpc)
+	// Run email sending in a goroutine to avoid blocking the response
+	go h.service.HandleCreateVPCMail(&vpc)
 
 	return c.Status(fiber.StatusCreated).JSON(schema.NewSuccessResponse("VPC created successfully", schema.FromModel(vpc)))
 }
@@ -234,7 +235,7 @@ func (h *VPCHandler) CreateVPCWithAttachments(c *fiber.Ctx) error {
 	})
 
 	// Handle mail notification
-	h.service.HandleCreateVPCMail(vpc)
+	go h.service.HandleCreateVPCMail(vpc)
 
 	return c.Status(fiber.StatusCreated).JSON(schema.FromModel(*vpc))
 }
