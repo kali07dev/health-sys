@@ -55,7 +55,21 @@ func (h *VPCHandler) CreateVPC(c *fiber.Ctx) error {
 		utils.LogError("Failed to parse userID string to UUID", map[string]interface{}{"userIDStr": userIDStr, "error": err.Error()})
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "invalid user ID format (parsing failed)"})
 	}
-	req.CreatedBy = authUserUUID // Set the creator ID in the request
+
+	employee, err := h.service.GetEmployeeByUserID(authUserUUID) // Ensure h.service is correctly initialized
+	if err != nil {
+		utils.LogError("Failed to get employee by user ID", map[string]interface{}{
+			"authUserUUID": authUserUUID,
+			"error":        err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve employee details", "details": err.Error()})
+	}
+	if employee == nil {
+		utils.LogError("Employee not found for authenticated user", map[string]interface{}{"authUserUUID": authUserUUID})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "employee profile not found for the authenticated user"})
+	}
+
+	req.CreatedBy = employee.ID // Set the creator ID in the request
 
 	vpc := req.ToModel()
 	err = h.service.Create(&vpc)
