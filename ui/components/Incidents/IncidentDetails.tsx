@@ -23,7 +23,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, attachments
         </p>
       </div>
       <div className="border-t border-red-200 dark:border-red-800 px-4 py-5 sm:p-0">
-        <dl className="divide-y divide-red-100 dark:divide-red-900">
+        <dl className="divide-y divide-red-100 dark:divide-red-900 text-black">
           <DetailItem label="Type" value={incident.type} />
           <DetailItem label="Severity Level" value={incident.severityLevel} />
           <DetailItem label="Status" value={incident.status} />
