@@ -66,7 +66,7 @@ const DetailItem: React.FC<{
   return (
     <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
       <dt className="text-sm font-medium text-red-600 dark:text-red-400">{label}</dt>
-      <dd className={`mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2 ${className}`}>{value}</dd>
+      <dd className={`mt-1 text-sm text-gray-900 dark:text-black sm:mt-0 sm:col-span-2 ${className}`}>{value}</dd>
     </div>
   )
 }
