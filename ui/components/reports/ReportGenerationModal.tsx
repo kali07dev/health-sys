@@ -235,7 +235,7 @@ export default function ReportGenerationModal({
                               <SelectItem value="none" disabled>No departments found</SelectItem>
                             ) : (
                               departments.map(dept => (
-                                <SelectItem key={dept.ID} value={dept.ID.toString()}>{dept.Name}</SelectItem>
+                                <SelectItem key={dept.ID} value={dept.Name}>{dept.Name}</SelectItem>
                               ))
                             )}
                         </SelectContent>
