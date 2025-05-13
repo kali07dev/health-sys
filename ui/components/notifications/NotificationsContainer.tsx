@@ -159,11 +159,11 @@ export default function NotificationsContainer({ userId, userRole  }: Notificati
           <div className="border-b p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <h4 className="text-md font-medium text-gray-700">All Notifications</h4>
-              <div className="flex items-center text-sm">
+              <div className="flex items-center text-sm text-black">
                 <span className="mr-2">Show:</span>
                 <select 
                   onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="border rounded p-1 text-sm"
+                  className="border rounded p-1 text-sm text-black"
                 >
                   {pageSizeOptions.map((option) => (
                     <option key={option} value={option}>

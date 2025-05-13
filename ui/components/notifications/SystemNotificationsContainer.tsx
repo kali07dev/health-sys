@@ -166,7 +166,7 @@ export default function SystemNotificationsContainer({ userRole }: SystemNotific
           <>
             <div className="bg-white rounded-lg shadow mb-6">
               <div className="flex justify-between items-center p-4 border-b">
-                <h2 className="text-lg font-medium">All System Notifications</h2>
+                <h2 className="text-lg font-medium text-black">All System Notifications</h2>
                 <div className="flex items-center space-x-2">
                   <label htmlFor="pageSize" className="text-sm text-gray-600">
                     Show:
@@ -175,7 +175,7 @@ export default function SystemNotificationsContainer({ userRole }: SystemNotific
                     id="pageSize"
                     value={pageSize}
                     onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="border rounded p-1 text-sm"
+                    className="border rounded p-1 text-sm text-black" 
                   >
                     {pageSizeOptions.map((option) => (
                       <option key={option} value={option}>
