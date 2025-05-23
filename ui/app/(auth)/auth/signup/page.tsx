@@ -3,6 +3,7 @@ import SignUpForm from '@/components/Auth/SignUpForm'
 import GoogleSignIn from '@/components/Auth/GoogleSignIn'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import Image from 'next/image';
+import Link from 'next/link';
 
 const SignUpPage: React.FC = () => {
   return (
@@ -22,6 +23,14 @@ const SignUpPage: React.FC = () => {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <SignUpForm />
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Log In
+                </Link>
+              </p>
+            </div>
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

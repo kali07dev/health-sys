@@ -1,13 +1,14 @@
-"use client"
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { signUp } from "../../utils/authApi"
-import Input from "../Input"
-import Button from "../Button"
-import LocationDropdown from "@/components/locationDropDown"
-import DepartmentDropdown from "@/components/DepartmentDropdown" 
-import axios from "axios"
+"use client";
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { signUp } from "../../utils/authApi";
+import Input from "../Input";
+import Button from "../Button";
+import LocationDropdown from "@/components/locationDropDown";
+import DepartmentDropdown from "@/components/DepartmentDropdown";
+import axios from "axios";
 
 const SignUpForm: React.FC = () => {
   const [userData, setUserData] = useState({
@@ -23,59 +24,58 @@ const SignUpForm: React.FC = () => {
     startDate: "",
     contactNumber: "",
     officeLocation: "",
-  })
+  });
 
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const t = useTranslations('auth');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       // Validate passwords match
       if (userData.password !== userData.confirmPassword) {
-        throw new Error("Passwords do not match")
+        throw new Error("Passwords do not match");
       }
 
       // Validate company email domain
       if (!userData.email.endsWith("@huaxincem.com")) {
-        throw new Error("Your Email is not allowed to create an account on the system, use a company email")
+        throw new Error("Your Email is not allowed to create an account on the system, use a company email");
       }
 
       // Convert start date to ISO format
       const formattedData = {
         ...userData,
         startDate: new Date(userData.startDate).toISOString(),
-        role: "employee", 
-      }
+        role: "employee",
+      };
 
       // Call the sign-up API
-      await signUp(formattedData)
-      router.push("/auth/login") // Redirect to home page after successful sign-up
-      
+      await signUp(formattedData);
+      router.push("/auth/login"); // Redirect to home page after successful sign-up
     } catch (err: unknown) {
-
       if (axios.isAxiosError(err)) {
         // Handle backend error response
-        const backendError = err.response?.data?.error
+        const backendError = err.response?.data?.error;
         if (backendError) {
-          setError(backendError)
+          setError(backendError);
         } else {
-          setError(`Request failed: ${err.response?.status} ${err.response?.statusText}`)
+          setError(`Request failed: ${err.response?.status} ${err.response?.statusText}`);
         }
       } else if (err instanceof Error) {
         // Handle frontend validation errors
-        setError(err.message)
+        setError(err.message);
       } else {
-        setError("Sign-up failed. Please try again.")
+        setError("Sign-up failed. Please try again.");
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -93,7 +93,7 @@ const SignUpForm: React.FC = () => {
 
       {/* First Name */}
       <Input
-        label="First Name"
+        label={t('firstName')}
         id="firstName"
         type="text"
         value={userData.firstName}
@@ -103,7 +103,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Last Name */}
       <Input
-        label="Last Name"
+        label={t('lastName')}
         id="lastName"
         type="text"
         value={userData.lastName}
@@ -114,18 +114,18 @@ const SignUpForm: React.FC = () => {
       {/* Department */}
       <div className="space-y-2">
         <label htmlFor="department" className="block text-sm font-medium text-gray-700">
-          Department
+          {t('department')}
         </label>
         <DepartmentDropdown
           value={userData.department}
           onChange={(value) => setUserData({ ...userData, department: value })}
-          placeholder="Select Department"
+          placeholder={t('selectDepartment')}
         />
       </div>
 
       {/* Position */}
       <Input
-        label="Position"
+        label={t('position')}
         id="position"
         type="text"
         value={userData.position}
@@ -135,7 +135,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Email */}
       <Input
-        label="Email"
+        label={t('email')}
         id="email"
         type="email"
         value={userData.email}
@@ -146,7 +146,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Password */}
       <Input
-        label="Password"
+        label={t('password')}
         id="password"
         type="password"
         value={userData.password}
@@ -157,7 +157,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Confirm Password */}
       <Input
-        label="Confirm Password"
+        label={t('confirmPassword')}
         id="ConfirmPassword"
         type="password"
         value={userData.confirmPassword}
@@ -167,7 +167,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Start Date */}
       <Input
-        label="Start Date"
+        label={t('startDate')}
         id="startDate"
         type="date"
         value={userData.startDate}
@@ -177,7 +177,7 @@ const SignUpForm: React.FC = () => {
 
       {/* Contact Number */}
       <Input
-        label="Contact Number"
+        label={t('contactNumber')}
         id="contactNumber"
         type="tel"
         value={userData.contactNumber}
@@ -188,7 +188,7 @@ const SignUpForm: React.FC = () => {
       {/* Office Location */}
       <div className="space-y-2">
         <label htmlFor="officeLocation" className="block text-sm font-medium text-gray-700">
-          Office Location
+          {t('officeLocation')}
         </label>
         <LocationDropdown
           id="officeLocation"
@@ -204,10 +204,10 @@ const SignUpForm: React.FC = () => {
 
       {/* Submit Button */}
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Signing up..." : "Sign Up"}
+        {isLoading ? t('signingUp') : t('signUp')}
       </Button>
     </form>
-  )
-}
+  );
+};
 
 export default SignUpForm;

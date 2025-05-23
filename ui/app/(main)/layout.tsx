@@ -1,13 +1,29 @@
-"use client"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// app/(main)/layout.tsx
+"use client";
 
-import { useEffect } from "react"
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { AppHeader } from "@/components/layout/app-header"
-import PageHeader from '@/components/PageHeader'
+import { useEffect } from "react";
+// import { NextIntlClientProvider } from 'next-intl';
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppHeader } from "@/components/layout/app-header";
+import PageHeader from '@/components/PageHeader';
 
-function MainContent({ children }: { children: React.ReactNode }) {
-  const { isCollapsed } = useSidebar()
+// Define the message structure type
+type Messages = {
+  auth?: Record<string, string>;
+  navigation?: Record<string, string>;
+  common?: Record<string, string>;
+  errors?: Record<string, string>;
+  success?: Record<string, string>;
+};
+
+function MainContent({ 
+  children
+}: { 
+  children: React.ReactNode;
+}) {
+  const { isCollapsed } = useSidebar();
   
   useEffect(() => {
     const sidebarContent = document.querySelector('.sidebar-content');
@@ -55,14 +71,42 @@ function MainContent({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Helper function to get current locale
+function getCurrentLocale(): string {
+  if (typeof window === 'undefined') return 'en';
+  
+  return document.cookie
+    .split('; ')
+    .find(row => row.startsWith('locale='))
+    ?.split('=')[1] || 'en';
+}
+
+// Helper function to load messages
+async function loadMessages(locale: string): Promise<Messages> {
+  try {
+    const messages = await import(`../../messages/${locale}.json`);
+    return messages.default || messages;
+  } catch (error) {
+    console.warn(`Failed to load messages for locale: ${locale}`, error);
+    try {
+      // Fallback to English
+      const fallbackMessages = await import('../../messages/en.json');
+      return fallbackMessages.default || fallbackMessages;
+    } catch (fallbackError) {
+      console.error('Failed to load fallback messages', fallbackError);
+      return {};
+    }
+  }
+}
+
 export default function MainLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <SidebarProvider>
       <MainContent>{children}</MainContent>
     </SidebarProvider>
-  )
+  );
 }

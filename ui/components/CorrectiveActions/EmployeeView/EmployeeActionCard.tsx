@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock, AlertTriangle, Calendar } from 'lucide-react';
 import { CorrectiveAction } from '@/interfaces/incidents';
+import { useTranslations } from 'next-intl';
 
 interface EmployeeActionCardProps {
   action: CorrectiveAction;
@@ -7,6 +8,8 @@ interface EmployeeActionCardProps {
 }
 
 export default function EmployeeActionCard({ action, onClick }: EmployeeActionCardProps) {
+  const t = useTranslations('correctiveActions');
+  
   // Format due date
   const dueDate = new Date(action.dueDate);
   const formattedDueDate = dueDate.toLocaleDateString('en-US', {
@@ -21,60 +24,70 @@ export default function EmployeeActionCard({ action, onClick }: EmployeeActionCa
   
   // Define status styling
   const getStatusConfig = (status: string) => {
+    const statusText = t(`status.${status}`, { defaultValue: status });
+    
     switch (status) {
       case 'completed':
         return {
           bgColor: 'bg-green-50',
           borderColor: 'border-green-400',
           icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
-          textColor: 'text-green-700'
+          textColor: 'text-green-700',
+          text: statusText
         };
       case 'verified':
         return {
           bgColor: 'bg-green-100',
           borderColor: 'border-green-600',
           icon: <CheckCircle2 className="h-5 w-5 text-green-800" />,
-          textColor: 'text-green-800'
+          textColor: 'text-green-800',
+          text: statusText
         };
       case 'in_progress':
         return {
           bgColor: 'bg-blue-50',
           borderColor: 'border-blue-400',
           icon: <Clock className="h-5 w-5 text-blue-600" />,
-          textColor: 'text-blue-700'
+          textColor: 'text-blue-700',
+          text: statusText
         };
       case 'overdue':
         return {
           bgColor: 'bg-red-50',
           borderColor: 'border-red-400',
           icon: <AlertTriangle className="h-5 w-5 text-red-600" />,
-          textColor: 'text-red-700'
+          textColor: 'text-red-700',
+          text: statusText
         };
       default:
         return {
           bgColor: 'bg-amber-50',
           borderColor: 'border-amber-400',
           icon: <Clock className="h-5 w-5 text-amber-600" />,
-          textColor: 'text-amber-700'
+          textColor: 'text-amber-700',
+          text: statusText
         };
     }
   };
 
   // Get priority styling
   const getPriorityStyle = (priority: string) => {
+    const priorityText = t(`priority.${priority}`, { defaultValue: priority });
+    
     switch (priority) {
       case 'critical':
-        return 'bg-red-100 text-red-800';
+        return { style: 'bg-red-100 text-red-800', text: priorityText };
       case 'high':
-        return 'bg-orange-100 text-orange-800';
+        return { style: 'bg-orange-100 text-orange-800', text: priorityText };
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
+        return { style: 'bg-yellow-100 text-yellow-800', text: priorityText };
       default:
-        return 'bg-green-100 text-green-800';
+        return { style: 'bg-green-100 text-green-800', text: priorityText };
     }
   };
 
   const statusConfig = getStatusConfig(action.status);
+  const priorityConfig = getPriorityStyle(action.priority);
 
   return (
     <div 
@@ -86,11 +99,11 @@ export default function EmployeeActionCard({ action, onClick }: EmployeeActionCa
           <div className="flex items-center">
             {statusConfig.icon}
             <span className={`ml-2 text-sm font-medium ${statusConfig.textColor}`}>
-              {action.status.charAt(0).toUpperCase() + action.status.slice(1).replace('_', ' ')}
+              {statusConfig.text}
             </span>
           </div>
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${getPriorityStyle(action.priority)}`}>
-            {action.priority.charAt(0).toUpperCase() + action.priority.slice(1)}
+          <span className={`text-xs font-medium px-2 py-1 rounded-full ${priorityConfig.style}`}>
+            {priorityConfig.text}
           </span>
         </div>
         
@@ -105,10 +118,10 @@ export default function EmployeeActionCard({ action, onClick }: EmployeeActionCa
           {action.status !== 'completed' && action.status !== 'verified' && (
             <div className={daysDiff < 0 ? 'text-red-600 font-medium' : daysDiff <= 3 ? 'text-amber-600 font-medium' : 'text-gray-600'}>
               {daysDiff < 0 
-                ? `${Math.abs(daysDiff)} days overdue` 
+                ? t('details.daysOverdue', { days: Math.abs(daysDiff) })
                 : daysDiff === 0 
-                  ? 'Due today' 
-                  : `${daysDiff} days remaining`}
+                  ? t('details.dueToday')
+                  : t('details.daysRemaining', { days: daysDiff })}
             </div>
           )}
         </div>

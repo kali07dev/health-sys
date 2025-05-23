@@ -1,0 +1,264 @@
+{
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "department": "Department",
+    "position": "Position",
+    "startDate": "Start Date",
+    "contactNumber": "Contact Number",
+    "officeLocation": "Office Location",
+    "forgotPassword": "Forgot your password?",
+    "signingIn": "Signing in...",
+    "signingUp": "Signing up...",
+    "selectDepartment": "Select Department",
+    "selectLocation": "Select Office Location",
+    "employeeNumber": "Employee Number",
+    "role": "Role",
+    "employee": "Employee",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "signInHere": "Sign in here",
+    "signUpHere": "Sign up here"
+  },
+  "navigation": {
+    "notifications": "Notifications",
+    "search": "Search...",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "chinese": "中文",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "submit": "Submit",
+    "close": "Close",
+    "open": "Open",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "welcome": "Welcome",
+    "home": "Home"
+  },
+  "errors": {
+    "passwordMismatch": "Passwords do not match",
+    "invalidEmail": "Please enter a valid email address",
+    "requiredField": "This field is required",
+    "networkError": "Network error occurred",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "notFound": "Page not found",
+    "serverError": "Server error occurred",
+    "somethingWentWrong": "Something went wrong"
+  },
+  "success": {
+    "signInSuccess": "Signed in successfully",
+    "signUpSuccess": "Account created successfully",
+    "profileUpdated": "Profile updated successfully",
+    "settingsSaved": "Settings saved successfully",
+    "passwordChanged": "Password changed successfully"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "incidents": "Incidents",
+    "vpc": "VPC",
+    "investigation": "Investigations",
+    "assignedTasks": "Assigned Tasks",
+    "reports": "Reports",
+    "alerts": "Alerts",
+    "profile": "Profile",
+    "admin": "Admin",
+    "safetySystem": "Safety System"
+  },
+  "toast": {
+    "accountNotVerified": "Please check your email for verification instructions",
+    "setupPassword": "Please check your email to set up your password",
+    "invalidCredentials": "Invalid email or password",
+    "signInError": "An error occurred during sign in"
+  },
+  "dashboard": {
+    "title": "Safety Dashboard",
+    "welcome": "Welcome back, {email}",
+    "quickActions": "Quick Actions",
+    "userManagement": "User Management",
+    "userManagementDesc": "Manage user roles and permissions",
+    "departmentSettings": "Department Settings",
+    "departmentSettingsDesc": "Configure department structures",
+    "generalSettings": "General Settings",
+    "generalSettingsDesc": "Configure system settings",
+    "filters": {
+      "timeRange": "Time Range",
+      "department": "Department",
+      "incidentType": "Incident Type",
+      "severity": "Severity",
+      "allDepartments": "All Departments",
+      "allTypes": "All Types",
+      "allSeverities": "All Severities",
+      "timeOptions": {
+        "week": "This Week",
+        "month": "This Month",
+        "quarter": "This Quarter",
+        "year": "This Year"
+      }
+    },
+    "metrics": {
+      "totalIncidents": "Total Incidents",
+      "resolutionRate": "Resolution Rate",
+      "criticalIncidents": "Critical Incidents",
+      "avgResolutionTime": "Avg. Resolution Time",
+      "resolvedOfTotal": "{resolved} of {total} resolved"
+    },
+    "charts": {
+      "incidentTrends": "Incident Trends",
+      "incidentsByType": "Incidents by Type",
+      "incidentsBySeverity": "Incidents by Severity",
+      "count": "Count"
+    },
+    "departmentPerformance": "Department Safety Performance",
+    "departmentTableHeaders": {
+      "department": "Dept.",
+      "incidents": "Inc.",
+      "resolved": "Res.",
+      "critical": "Crit.",
+      "rate": "Rate"
+    },
+    "topHazards": "Top Hazards",
+    "hazardsTableHeaders": {
+      "type": "Type",
+      "frequency": "Freq.",
+      "severity": "Sev.",
+      "lastReported": "Last",
+      "departments": "Depts."
+    },
+    "recentIncidents": "Recent Incidents",
+    "incidentCard": {
+      "location": "Location: {location}",
+      "reported": "Reported: {date}"
+    }
+  },
+    "employeeDashboard": {
+    "title": "Employee Dashboard",
+    "welcome": "Welcome back! Here's an overview of your safety incidents and tasks.",
+    "quickActions": {
+      "createIncident": "Create Incident",
+      "viewTasks": "View Assigned Tasks",
+      "viewProfile": "View/Update Profile"
+    },
+    "metrics": {
+      "totalIncidents": "Total Incidents",
+      "resolved": "Resolved",
+      "unresolved": "Unresolved",
+      "resolutionRate": "Resolution Rate"
+    },
+    "sections": {
+      "correctiveActions": "Assigned Corrective Actions",
+      "recentIncidents": "Recent Incidents",
+      "noActions": "No Corrective Actions Are Currently Assigned",
+      "noIncidents": "No Recent Incidents Found"
+    },
+    "incidentCard": {
+      "type": "Type: {type}",
+      "status": "Status: {status}",
+      "reported": "{type} incident reported {date}"
+    },
+    "actionCard": {
+      "due": "Due: {date}",
+      "assignedBy": "Assigned by: {name}",
+      "priority": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "status": {
+        "pending": "Pending",
+        "completed": "Completed",
+        "overdue": "Overdue"
+      }
+    },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
+  },
+  "correctiveActions": {
+    "pageTitle": "My Corrective Actions",
+    "infoPanel": {
+      "title": "Open Corrective Actions",
+      "description": "These are safety improvements assigned to you. Each action has a priority level and deadline.",
+      "highPriorityNote": "High-priority items must be addressed within 24 hours."
+    },
+    "buttons": {
+      "markComplete": "Mark Complete",
+      "requestExtension": "Request Extension",
+      "uploadEvidence": "Upload Evidence",
+      "markInProgress": "Mark as In Progress",
+      "markCompleted": "Mark as Completed",
+      "verifyAction": "Verify Action"
+    },
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "verified": "Verified",
+      "overdue": "Overdue"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "sections": {
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "completed": "Completed",
+      "active": "Active Actions",
+      "evidence": "Evidence & Attachments",
+      "history": "Action History",
+      "noEvidence": "No evidence uploaded yet",
+      "noActions": "No corrective actions assigned",
+      "noActionsDescription": "You don't have any corrective actions assigned to you at the moment"
+    },
+    "details": {
+      "incidentTitle": "Incident Title",
+      "assignedBy": "Assigned By",
+      "assignedTo": "Assigned To",
+      "location": "Location",
+      "description": "Description",
+      "dueDate": "Due Date",
+      "type": "Type",
+      "daysRemaining": "{days} days remaining",
+      "dueToday": "Due today",
+      "daysOverdue": "{days} days overdue",
+      "actionCreated": "Action Created",
+      "statusChanged": "Status Changed to {status}",
+      "actionCompleted": "Action Completed",
+      "actionVerified": "Action Verified",
+      "verifiedBy": "Verified by: {name}",
+      "dateNotAvailable": "Date not available"
+    },
+    "messages": {
+      "actionInProgress": "Action marked as in progress",
+      "actionUpdated": "Action updated successfully",
+      "loadFailed": "Failed to load your corrective actions"
+    }
+  }
+}
+

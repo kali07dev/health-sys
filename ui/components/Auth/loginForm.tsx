@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Input from '../Input';
 import Button from '../Button';
@@ -13,6 +14,8 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('auth');
+  const toastT = useTranslations('toast');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,20 +31,20 @@ const LoginForm: React.FC = () => {
       if (result?.error) {
         // Handle specific error cases
         if (result.error.includes('Account not verified')) {
-          toast.error('Please check your email for verification instructions');
+          toast.error(toastT('accountNotVerified'));
         } else if (result.error.includes('set up your password')) {
-          toast.error('Please check your email to set up your password');
+          toast.error(toastT('setupPassword'));
         } else {
-          toast.error(result.error || 'Invalid email or password');
+          toast.error(result.error || toastT('invalidCredentials'));
         }
         return;
       }
 
-      toast.success('Signed in successfully');
+      toast.success(t('signInSuccess'));
       router.push('/');
       router.refresh();
     } catch {
-      toast.error('An error occurred during sign in');
+      toast.error(toastT('signInError'));
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +54,7 @@ const LoginForm: React.FC = () => {
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
-          label="Email"
+          label={t('email')}
           id="email"
           type="email"
           value={email}
@@ -60,7 +63,7 @@ const LoginForm: React.FC = () => {
           autoComplete="email"
         />
         <Input
-          label="Password"
+          label={t('password')}
           id="password"
           type="password"
           value={password}
@@ -73,11 +76,11 @@ const LoginForm: React.FC = () => {
             href="/auth/reset-password"
             className="text-sm text-blue-600 hover:text-blue-500"
           >
-            Forgot your password?
+            {t('forgotPassword')}
           </Link>
         </div>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? t('signingIn') : t('signIn')}
         </Button>
       </form>
     </div>

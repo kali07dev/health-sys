@@ -7,6 +7,7 @@ import { incidentAPI } from "@/utils/api"
 import EmployeeActionCard from "./EmployeeActionCard"
 import ActionDetailsSidebar from "./ActionDetailsSidebar"
 import { Loader2 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface CorrectiveActionsContentProps {
   userId: string
@@ -19,6 +20,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
   const [error, setError] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<CorrectiveAction | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const t = useTranslations('correctiveActions')
 
   useEffect(() => {
     const fetchUserActions = async () => {
@@ -29,14 +31,14 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
         setError(null)
       } catch (err) {
         console.error(err)
-        setError("Failed to load your corrective actions")
-        toast.error("Failed to load your corrective actions")
+        setError(t('messages.loadFailed'))
+        toast.error(t('messages.loadFailed'))
       } finally {
         setLoading(false)
       }
     }
     fetchUserActions()
-  }, [userId])
+  }, [userId, t])
 
   const fetchUserActions = async () => {
     try {
@@ -46,8 +48,8 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
       setError(null)
     } catch (err) {
       console.error(err)
-      setError("Failed to load your corrective actions")
-      toast.error("Failed to load your corrective actions")
+      setError(t('messages.loadFailed'))
+      toast.error(t('messages.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -64,7 +66,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
 
   const handleActionUpdated = () => {
     fetchUserActions()
-    toast.success("Action updated successfully")
+    toast.success(t('messages.actionUpdated'))
   }
 
   if (loading) {
@@ -77,8 +79,8 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-        <p className="font-medium">Error</p>
+      <div className="bg-red-50 p-4 rounded-md border border-red-200 text-red-700">
+        <p className="font-medium">{t('errors.title')}</p>
         <p>{error}</p>
       </div>
     )
@@ -86,11 +88,9 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
 
   if (!actions || actions.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No corrective actions assigned</h3>
-        <p className="text-gray-500 dark:text-gray-400">
-          You don&apos;t have any corrective actions assigned to you at the moment.
-        </p>
+      <div className="bg-gray-50 rounded-lg p-8 text-center border border-gray-200">
+        <h3 className="text-lg font-medium text-gray-700 mb-2">{t('sections.noActions')}</h3>
+        <p className="text-gray-500">{t('sections.noActionsDescription')}</p>
       </div>
     )
   }
@@ -104,24 +104,24 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
     <div className="space-y-8 mt-6">
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-red-500">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Pending</h3>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">{pendingActions.length}</p>
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase">{t('sections.pending')}</h3>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{pendingActions.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-amber-500">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Overdue</h3>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">{overdueActions.length}</p>
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-amber-500">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase">{t('sections.overdue')}</h3>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{overdueActions.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-green-500">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">Completed</h3>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">{completedActions.length}</p>
+        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase">{t('sections.completed')}</h3>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{completedActions.length}</p>
         </div>
       </div>
 
       {/* Overdue actions section */}
       {overdueActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">Overdue Actions</h2>
+          <h2 className="text-lg font-semibold text-red-600 mb-4">{t('sections.overdue')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {overdueActions.map((action) => (
               <EmployeeActionCard key={action.id} action={action} onClick={() => handleActionClick(action)} />
@@ -133,7 +133,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
       {/* Pending actions section */}
       {pendingActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Active Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('sections.active')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pendingActions.map((action) => (
               <EmployeeActionCard key={action.id} action={action} onClick={() => handleActionClick(action)} />
@@ -145,7 +145,7 @@ export default function CorrectiveActionsContent({ userId, userRole }: Correctiv
       {/* Completed actions section */}
       {completedActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Completed Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('sections.completed')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completedActions.map((action) => (
               <EmployeeActionCard key={action.id} action={action} onClick={() => handleActionClick(action)} />
