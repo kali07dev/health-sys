@@ -1,0 +1,264 @@
+{
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "firstName": "名字",
+    "lastName": "姓氏",
+    "department": "部门",
+    "position": "职位",
+    "startDate": "入职日期",
+    "contactNumber": "联系电话",
+    "officeLocation": "办公地点",
+    "forgotPassword": "忘记密码？",
+    "signingIn": "登录中...",
+    "signingUp": "注册中...",
+    "selectDepartment": "选择部门",
+    "selectLocation": "选择办公地点",
+    "employeeNumber": "员工编号",
+    "role": "角色",
+    "employee": "员工",
+    "createAccount": "创建账户",
+    "alreadyHaveAccount": "已有账户？",
+    "dontHaveAccount": "没有账户？",
+    "signInHere": "在此登录",
+    "signUpHere": "在此注册"
+  },
+  "navigation": {
+    "notifications": "通知",
+    "search": "搜索...",
+    "dashboard": "仪表板",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出登录"
+  },
+  "common": {
+    "language": "语言",
+    "english": "English",
+    "chinese": "中文",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "remove": "移除",
+    "confirm": "确认",
+    "loading": "加载中...",
+    "submit": "提交",
+    "close": "关闭",
+    "open": "打开",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "welcome": "欢迎",
+    "home": "首页"
+  },
+  "errors": {
+    "passwordMismatch": "密码不匹配",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "requiredField": "此字段为必填项",
+    "networkError": "网络错误",
+    "unauthorized": "未授权访问",
+    "forbidden": "访问被禁止",
+    "notFound": "页面未找到",
+    "serverError": "服务器错误",
+    "somethingWentWrong": "出现错误"
+  },
+  "success": {
+    "signInSuccess": "登录成功",
+    "signUpSuccess": "账户创建成功",
+    "profileUpdated": "个人资料更新成功",
+    "settingsSaved": "设置保存成功",
+    "passwordChanged": "密码修改成功"
+  },
+  "sidebar": {
+    "dashboard": "仪表板",
+    "incidents": "事件",
+    "vpc": "VPC",
+    "investigation": "调查",
+    "assignedTasks": "分配的任务",
+    "reports": "报告",
+    "alerts": "警报",
+    "profile": "个人资料",
+    "admin": "管理员",
+    "safetySystem": "安全系统"
+  },
+  "toast": {
+    "accountNotVerified": "请检查您的电子邮件以获取验证说明",
+    "setupPassword": "请检查您的电子邮件以设置密码",
+    "invalidCredentials": "无效的邮箱或密码",
+    "signInError": "登录时发生错误"
+  },
+  "dashboard": {
+    "title": "安全仪表板",
+    "welcome": "欢迎回来, {email}",
+    "quickActions": "快速操作",
+    "userManagement": "用户管理",
+    "userManagementDesc": "管理用户角色和权限",
+    "departmentSettings": "部门设置",
+    "departmentSettingsDesc": "配置部门结构",
+    "generalSettings": "通用设置",
+    "generalSettingsDesc": "配置系统设置",
+    "filters": {
+      "timeRange": "时间范围",
+      "department": "部门",
+      "incidentType": "事件类型",
+      "severity": "严重程度",
+      "allDepartments": "所有部门",
+      "allTypes": "所有类型",
+      "allSeverities": "所有严重程度",
+      "timeOptions": {
+        "week": "本周",
+        "month": "本月",
+        "quarter": "本季度",
+        "year": "本年"
+      }
+    },
+    "metrics": {
+      "totalIncidents": "总事件数",
+      "resolutionRate": "解决率",
+      "criticalIncidents": "严重事件",
+      "avgResolutionTime": "平均解决时间",
+      "resolvedOfTotal": "{resolved}/{total} 已解决"
+    },
+    "charts": {
+      "incidentTrends": "事件趋势",
+      "incidentsByType": "按类型分类事件",
+      "incidentsBySeverity": "按严重程度分类事件",
+      "count": "数量"
+    },
+    "departmentPerformance": "部门安全表现",
+    "departmentTableHeaders": {
+      "department": "部门",
+      "incidents": "事件",
+      "resolved": "解决",
+      "critical": "严重",
+      "rate": "比率"
+    },
+    "topHazards": "主要危害",
+    "hazardsTableHeaders": {
+      "type": "类型",
+      "frequency": "频率",
+      "severity": "严重",
+      "lastReported": "最后",
+      "departments": "部门"
+    },
+    "recentIncidents": "最近事件",
+    "incidentCard": {
+      "location": "地点: {location}",
+      "reported": "报告: {date}"
+    }
+  },
+  "employeeDashboard": {
+    "title": "员工仪表板",
+    "welcome": "欢迎回来！这是您的安全事件和任务概览。",
+    "quickActions": {
+      "createIncident": "创建事件",
+      "viewTasks": "查看分配的任务",
+      "viewProfile": "查看/更新个人资料"
+    },
+    "metrics": {
+      "totalIncidents": "总事件数",
+      "resolved": "已解决",
+      "unresolved": "未解决",
+      "resolutionRate": "解决率"
+    },
+    "sections": {
+      "correctiveActions": "分配的纠正措施",
+      "recentIncidents": "最近事件",
+      "noActions": "当前没有分配纠正措施",
+      "noIncidents": "未找到最近事件"
+    },
+    "incidentCard": {
+      "type": "类型: {type}",
+      "status": "状态: {status}",
+      "reported": "{type} 事件报告于 {date}"
+    },
+    "actionCard": {
+      "due": "截止: {date}",
+      "assignedBy": "分配人: {name}",
+      "priority": {
+        "high": "高",
+        "medium": "中",
+        "low": "低"
+      },
+      "status": {
+        "pending": "待处理",
+        "completed": "已完成",
+        "overdue": "已逾期"
+      }
+    },
+    "severity": {
+      "critical": "严重",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    }
+  },
+  "correctiveActions": {
+    "pageTitle": "我的纠正措施",
+    "infoPanel": {
+      "title": "待处理的纠正措施",
+      "description": "这些是分配给您的安全改进措施。每个措施都有优先级和截止日期。",
+      "highPriorityNote": "高优先级项目必须在24小时内处理。"
+    },
+    "buttons": {
+      "markComplete": "标记完成",
+      "requestExtension": "请求延期",
+      "uploadEvidence": "上传证据",
+      "markInProgress": "标记为进行中",
+      "markCompleted": "标记为已完成",
+      "verifyAction": "验证措施"
+    },
+    "status": {
+      "pending": "待处理",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "verified": "已验证",
+      "overdue": "已逾期"
+    },
+    "priority": {
+      "critical": "严重",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "sections": {
+      "pending": "待处理",
+      "overdue": "已逾期",
+      "completed": "已完成",
+      "active": "活跃措施",
+      "evidence": "证据和附件",
+      "history": "措施历史",
+      "noEvidence": "尚未上传证据",
+      "noActions": "没有分配的纠正措施",
+      "noActionsDescription": "目前没有分配给您任何纠正措施"
+    },
+    "details": {
+      "incidentTitle": "事件标题",
+      "assignedBy": "分配人",
+      "assignedTo": "分配给",
+      "location": "地点",
+      "description": "描述",
+      "dueDate": "截止日期",
+      "type": "类型",
+      "daysRemaining": "剩余{days}天",
+      "dueToday": "今天截止",
+      "daysOverdue": "逾期{days}天",
+      "actionCreated": "措施创建",
+      "statusChanged": "状态更改为{status}",
+      "actionCompleted": "措施完成",
+      "actionVerified": "措施已验证",
+      "verifiedBy": "验证人: {name}",
+      "dateNotAvailable": "日期不可用"
+    },
+    "messages": {
+      "actionInProgress": "措施已标记为进行中",
+      "actionUpdated": "措施更新成功",
+      "loadFailed": "加载纠正措施失败"
+    }
+  }
+
+}

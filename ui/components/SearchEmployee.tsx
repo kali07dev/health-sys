@@ -23,7 +23,7 @@ export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   const searchEmployees = useCallback(async (query: string) => {
-    if (query.length < 3) return;
+    if (query.length < 1) return;
     
     setIsLoading(true);
     try {
@@ -43,7 +43,7 @@ export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    if (query.length >= 3) {
+    if (query.length >= 0) {
       searchEmployees(query);
     } else {
       setEmployees([]);
@@ -86,7 +86,7 @@ export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
                 placeholder="Type at least 3 characters..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-9 pr-4 py-2 text-sm text-black bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>

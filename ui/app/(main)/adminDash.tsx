@@ -30,6 +30,7 @@ import {
 } from "recharts"
 import type { AdminDashboardResponse, DashboardFilters, TimeSeriesPoint, Incident } from "@/interfaces/dashboard"
 import { dashboardAPI } from "@/utils/adminApi"
+import { useTranslations } from 'next-intl'
 
 export default function SafetyDashboard() {
   const { data: session } = useSession()
@@ -38,6 +39,7 @@ export default function SafetyDashboard() {
   const [filters, setFilters] = useState<DashboardFilters>({
     timeRange: "month",
   })
+  const t = useTranslations('dashboard')
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -144,34 +146,33 @@ export default function SafetyDashboard() {
     </div>
   )
 
-  const IncidentCard = ({ incident }: { incident: Incident }) => (
-    <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md border-l-4 border-red-500">
-      <div className="flex justify-between items-start">
-        <div className="flex-1 mr-2">
-          <h3 className="font-medium text-black text-sm sm:text-base">{incident.Title}</h3>
-          <p className="text-xs text-gray-500">{incident.ReferenceNumber}</p>
+  const IncidentCard = ({ incident }: { incident: Incident }) => {
+    const severityColor = {
+      critical: "bg-red-100 text-red-800",
+      high: "bg-orange-100 text-orange-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      low: "bg-green-100 text-green-800"
+    }[incident.SeverityLevel] || "bg-gray-100 text-gray-800"
+
+    return (
+      <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md border-l-4 border-red-500">
+        <div className="flex justify-between items-start">
+          <div className="flex-1 mr-2">
+            <h3 className="font-medium text-black text-sm sm:text-base">{incident.Title}</h3>
+            <p className="text-xs text-gray-500">{incident.ReferenceNumber}</p>
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${severityColor}`}>
+            {incident.SeverityLevel}
+          </span>
         </div>
-        <span
-          className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-            incident.SeverityLevel === "critical"
-              ? "bg-red-100 text-red-800"
-              : incident.SeverityLevel === "high"
-                ? "bg-orange-100 text-orange-800"
-                : incident.SeverityLevel === "medium"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
-          }`}
-        >
-          {incident.SeverityLevel}
-        </span>
+        <p className="mt-2 text-xs sm:text-sm text-gray-600 line-clamp-2">{incident.Description}</p>
+        <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500">
+          <span className="mb-1 sm:mb-0">{t('incidentCard.location', { location: incident.Location })}</span>
+          <span>{t('incidentCard.reported', { date: new Date(incident.CreatedAt).toLocaleDateString() })}</span>
+        </div>
       </div>
-      <p className="mt-2 text-xs sm:text-sm text-gray-600 line-clamp-2">{incident.Description}</p>
-      <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500">
-        <span className="mb-1 sm:mb-0">Location: {incident.Location}</span>
-        <span>Reported: {new Date(incident.CreatedAt).toLocaleDateString()}</span>
-      </div>
-    </div>
-  )
+    )
+  }
 
   if (loading) {
     return (
@@ -223,30 +224,32 @@ export default function SafetyDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-red-600">Safety Dashboard</h1>
-        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Welcome back, {session?.user?.email}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-red-600">{t('title')}</h1>
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+          {t('welcome', { email: session?.user?.email ?? "" })}
+        </p>
       </div>
 
       {/* Quick Actions Grid */}
-      <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-gray-900">Quick Actions</h2>
+      <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-gray-900">{t('quickActions')}</h2>
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <QuickAction
-          title="User Management"
-          description="Manage user roles and permissions"
+          title={t('userManagement')}
+          description={t('userManagementDesc')}
           icon={UserCog}
           href="/admin/user-management"
           color="bg-red-600"
         />
         <QuickAction
-          title="Department Settings"
-          description="Configure department structures"
+          title={t('departmentSettings')}
+          description={t('departmentSettingsDesc')}
           icon={Building2}
           href="/admin/departments"
           color="bg-blue-600"
         />
         <QuickAction
-          title="General Settings"
-          description="Configure system settings"
+          title={t('generalSettings')}
+          description={t('generalSettingsDesc')}
           icon={Settings}
           href="/admin"
           color="bg-black"
@@ -257,7 +260,7 @@ export default function SafetyDashboard() {
       <div className="my-6 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 p-4 bg-white rounded-lg shadow-sm">
         <div className="w-full sm:w-auto">
           <label htmlFor="timeRange" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Time Range
+            {t('filters.timeRange')}
           </label>
           <select
             id="timeRange"
@@ -266,15 +269,14 @@ export default function SafetyDashboard() {
             onChange={handleFilterChange}
             className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
+            {Object.entries(t.raw('filters.timeOptions')).map(([value, label]) => (
+              <option key={value} value={value}>{String(label)}</option>
+            ))}
           </select>
         </div>
         <div className="w-full sm:w-auto">
           <label htmlFor="department" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Department
+            {t('filters.department')}
           </label>
           <select
             id="department"
@@ -283,7 +285,7 @@ export default function SafetyDashboard() {
             onChange={handleFilterChange}
             className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="">All Departments</option>
+            <option value="">{t('filters.allDepartments')}</option>
             {dashboardData?.departmentMetrics?.map((dept) => (
               <option key={dept.departmentName} value={dept.departmentName}>
                 {dept.departmentName}
@@ -293,7 +295,7 @@ export default function SafetyDashboard() {
         </div>
         <div className="w-full sm:w-auto">
           <label htmlFor="incidentType" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Incident Type
+            {t('filters.incidentType')}
           </label>
           <select
             id="incidentType"
@@ -302,7 +304,7 @@ export default function SafetyDashboard() {
             onChange={handleFilterChange}
             className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="">All Types</option>
+            <option value="">{t('filters.allTypes')}</option>
             {dashboardData?.systemMetrics.incidentsByType &&
               Object.keys(dashboardData.systemMetrics.incidentsByType).map((type) => (
                 <option key={type} value={type}>
@@ -313,7 +315,7 @@ export default function SafetyDashboard() {
         </div>
         <div className="w-full sm:w-auto">
           <label htmlFor="severityLevel" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Severity
+            {t('filters.severity')}
           </label>
           <select
             id="severityLevel"
@@ -322,7 +324,7 @@ export default function SafetyDashboard() {
             onChange={handleFilterChange}
             className="w-full sm:w-auto border border-gray-300 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-black focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="">All Severities</option>
+            <option value="">{t('filters.allSeverities')}</option>
             {dashboardData?.systemMetrics.incidentsBySeverity &&
               Object.keys(dashboardData.systemMetrics.incidentsBySeverity).map((severity) => (
                 <option key={severity} value={severity}>
@@ -337,26 +339,29 @@ export default function SafetyDashboard() {
       {dashboardData && (
         <div className="mb-6 sm:mb-8 grid gap-3 sm:gap-6 grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Incidents"
+            title={t('metrics.totalIncidents')}
             value={dashboardData.systemMetrics.totalIncidents}
             icon={AlertCircle}
             color="bg-red-600"
           />
           <StatCard
-            title="Resolution Rate"
+            title={t('metrics.resolutionRate')}
             value={`${dashboardData.systemMetrics.resolutionRate.toFixed(1)}%`}
-            description={`${dashboardData.systemMetrics.resolvedIncidents} of ${dashboardData.systemMetrics.totalIncidents} resolved`}
+            description={t('metrics.resolvedOfTotal', {
+              resolved: dashboardData.systemMetrics.resolvedIncidents,
+              total: dashboardData.systemMetrics.totalIncidents
+            })}
             icon={ClipboardCheck}
             color="bg-green-600"
           />
           <StatCard
-            title="Critical Incidents"
+            title={t('metrics.criticalIncidents')}
             value={dashboardData.systemMetrics.criticalIncidents}
             icon={AlertTriangle}
             color="bg-black"
           />
           <StatCard
-            title="Avg. Resolution Time"
+            title={t('metrics.avgResolutionTime')}
             value={`${dashboardData.systemMetrics.averageResolutionTime.toFixed(1)}h`}
             icon={Clock}
             color="bg-blue-600"
@@ -370,7 +375,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-              <h2 className="text-lg text-black sm:text-xl font-semibold">Incident Trends</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">{t('charts.incidentTrends')}</h2>
             </div>
             <div className="h-64 sm:h-80 lg:h-96">
               <ResponsiveContainer width="100%" height="100%">
@@ -383,7 +388,7 @@ export default function SafetyDashboard() {
                   <YAxis tick={{ fontSize: 10 }} width={30} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: "10px" }} />
-                  <Line type="monotone" dataKey="value" name="Incidents" stroke="#dc2626" activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="value" name={t('charts.count')} stroke="#dc2626" activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -397,7 +402,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <AlertCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-              <h2 className="text-lg text-black sm:text-xl font-semibold">Incidents by Type</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">{t('charts.incidentsByType')}</h2>
             </div>
             <div className="h-48 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -410,7 +415,7 @@ export default function SafetyDashboard() {
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
                   <Tooltip />
-                  <Bar dataKey="value" name="Count" fill="#2563eb" />
+                  <Bar dataKey="value" name={t('charts.count')} fill="#2563eb" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -419,7 +424,7 @@ export default function SafetyDashboard() {
           <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md">
             <div className="flex items-center mb-3 sm:mb-4">
               <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-black" />
-              <h2 className="text-lg text-black sm:text-xl font-semibold">Incidents by Severity</h2>
+              <h2 className="text-lg text-black sm:text-xl font-semibold">{t('charts.incidentsBySeverity')}</h2>
             </div>
             <div className="h-48 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -428,7 +433,7 @@ export default function SafetyDashboard() {
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={70} />
                   <Tooltip />
-                  <Bar dataKey="value" name="Count" fill="#dc2626" />
+                  <Bar dataKey="value" name={t('charts.count')} fill="#dc2626" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -441,7 +446,7 @@ export default function SafetyDashboard() {
         <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md mb-6 sm:mb-8">
           <div className="flex items-center mb-3 sm:mb-4">
             <Building2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-            <h2 className="text-lg text-black sm:text-xl font-semibold">Department Safety Performance</h2>
+            <h2 className="text-lg text-black sm:text-xl font-semibold">{t('departmentPerformance')}</h2>
           </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle px-4 sm:px-0">
@@ -449,19 +454,19 @@ export default function SafetyDashboard() {
                 <thead className="bg-red-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Dept.
+                      {t('departmentTableHeaders.department')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Inc.
+                      {t('departmentTableHeaders.incidents')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Res.
+                      {t('departmentTableHeaders.resolved')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Crit.
+                      {t('departmentTableHeaders.critical')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rate
+                      {t('departmentTableHeaders.rate')}
                     </th>
                   </tr>
                 </thead>
@@ -508,7 +513,7 @@ export default function SafetyDashboard() {
         <div className="rounded-lg bg-white p-4 sm:p-6 shadow-md mb-6 sm:mb-8">
           <div className="flex items-center mb-3 sm:mb-4">
             <ShieldCheck className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-            <h2 className="text-lg text-black sm:text-xl font-semibold">Top Hazards</h2>
+            <h2 className="text-lg text-black sm:text-xl font-semibold">{t('topHazards')}</h2>
           </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle px-4 sm:px-0">
@@ -516,19 +521,19 @@ export default function SafetyDashboard() {
                 <thead className="bg-red-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
+                      {t('hazardsTableHeaders.type')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Freq.
+                      {t('hazardsTableHeaders.frequency')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sev.
+                      {t('hazardsTableHeaders.severity')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Last
+                      {t('hazardsTableHeaders.lastReported')}
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Depts.
+                      {t('hazardsTableHeaders.departments')}
                     </th>
                   </tr>
                 </thead>
@@ -584,7 +589,7 @@ export default function SafetyDashboard() {
       {/* Recent Incidents */}
       {dashboardData && dashboardData.recentIncidents.length > 0 && (
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-red-600 mb-3 sm:mb-4">Recent Incidents</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-red-600 mb-3 sm:mb-4">{t('recentIncidents')}</h2>
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {dashboardData.recentIncidents.map((incident) => (
               <IncidentCard key={incident.ID} incident={incident} />

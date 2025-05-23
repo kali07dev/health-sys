@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import StatCard from "@/components/statCard"
 import { dashboardAPI } from "@/utils/adminApi"
+import { useTranslations } from 'next-intl'
 
 interface Incident {
   ID: string
@@ -50,6 +51,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const { toast } = useToast()
+  const t = useTranslations('employeeDashboard')
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -59,8 +61,8 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error)
         toast({
-          title: "Error",
-          description: "Failed to load dashboard data. Please try again.",
+          title: t('errors.title'),
+          description: t('errors.loadFailed'),
           variant: "error",
         })
       } finally {
@@ -69,7 +71,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
     }
 
     fetchDashboardData()
-  }, [toast, userID])
+  }, [toast, userID, t])
 
   if (isLoading) {
     return (
@@ -140,108 +142,126 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
   }
 
   // Card components
-  const IncidentCard = ({ incident }: { incident: Incident }) => (
-    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-red-600 border-t border-r border-b border-gray-100 dark:border-gray-700">
-      <div className="flex justify-between items-start">
-        <div className="flex-1 mr-2">
-          <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{incident.Title}</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{incident.ReferenceNumber}</p>
-        </div>
-        <span
-          className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-            incident.SeverityLevel.toLowerCase() === "critical"
-              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-              : incident.SeverityLevel.toLowerCase() === "high"
-                ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
-                : incident.SeverityLevel.toLowerCase() === "medium"
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-          }`}
-        >
-          {incident.SeverityLevel}
-        </span>
-      </div>
-      <div className="mt-3 flex items-center">
-        <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-            incident.Status === "new"
-              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-              : incident.Status === "in_progress"
-                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                : incident.Status === "action_required"
-                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                  : incident.Status === "investigating"
-                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                    : incident.Status === "resolved"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-          }`}
-        >
-          {incident.Status}
-        </span>
-      </div>
-      <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-        {incident.Type} incident reported {incident.CreatedAt ? new Date(incident.CreatedAt).toLocaleDateString() : ""}
-      </p>
-      <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span className="mb-1 sm:mb-0">Type: {incident.Type}</span>
-        <span>Status: {incident.Status}</span>
-      </div>
-    </div>
-  )
+  const IncidentCard = ({ incident }: { incident: Incident }) => {
+    const severityTranslation = t(`severity.${incident.SeverityLevel.toLowerCase()}`, {
+      defaultValue: incident.SeverityLevel
+    })
 
-  const ActionCard = ({ action }: { action: CorrectiveAction }) => (
-    <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-blue-600 border-t border-r border-b border-red-100 dark:border-red-700">
-      <div className="flex justify-between items-start">
-        <div className="flex-1 mr-2">
-          <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{action.Description}</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Due: {new Date(action.DueDate).toLocaleDateString()}
-          </p>
+    return (
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-red-600 border-t border-r border-b border-gray-100 dark:border-gray-700">
+        <div className="flex justify-between items-start">
+          <div className="flex-1 mr-2">
+            <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{incident.Title}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{incident.ReferenceNumber}</p>
+          </div>
+          <span
+            className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+              incident.SeverityLevel.toLowerCase() === "critical"
+                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                : incident.SeverityLevel.toLowerCase() === "high"
+                  ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
+                  : incident.SeverityLevel.toLowerCase() === "medium"
+                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                    : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+            }`}
+          >
+            {severityTranslation}
+          </span>
         </div>
-        <span
-          className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-            action.Priority.toLowerCase() === "high"
-              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-              : action.Priority.toLowerCase() === "medium"
+        <div className="mt-3 flex items-center">
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+              incident.Status === "new"
+                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                : incident.Status === "in_progress"
+                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                  : incident.Status === "action_required"
+                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                    : incident.Status === "investigating"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                      : incident.Status === "resolved"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+            }`}
+          >
+            {incident.Status}
+          </span>
+        </div>
+        <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+          {t('incidentCard.reported', {
+            type: incident.Type,
+            date: incident.CreatedAt ? new Date(incident.CreatedAt).toLocaleDateString() : ""
+          })}
+        </p>
+        <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span className="mb-1 sm:mb-0">{t('incidentCard.type', { type: incident.Type })}</span>
+          <span>{t('incidentCard.status', { status: incident.Status })}</span>
+        </div>
+      </div>
+    )
+  }
+
+  const ActionCard = ({ action }: { action: CorrectiveAction }) => {
+    const priorityTranslation = t(`actionCard.priority.${action.Priority.toLowerCase()}`, {
+      defaultValue: action.Priority
+    })
+    const statusTranslation = t(`actionCard.status.${action.Status.toLowerCase()}`, {
+      defaultValue: action.Status
+    })
+
+    return (
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow border-l-4 border-blue-600 border-t border-r border-b border-red-100 dark:border-red-700">
+        <div className="flex justify-between items-start">
+          <div className="flex-1 mr-2">
+            <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">{action.Description}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('actionCard.due', { date: new Date(action.DueDate).toLocaleDateString() })}
+            </p>
+          </div>
+          <span
+            className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+              action.Priority.toLowerCase() === "high"
+                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                : action.Priority.toLowerCase() === "medium"
+                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+            }`}
+          >
+            {priorityTranslation}
+          </span>
+        </div>
+        <div className="mt-3 flex items-center">
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+              action.Status === "pending"
                 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-          }`}
-        >
-          {action.Priority}
-        </span>
+                : action.Status === "completed"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                  : action.Status === "overdue"
+                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+            }`}
+          >
+            {statusTranslation}
+          </span>
+        </div>
+        <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{action.Description}</p>
+        <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span className="mb-1 sm:mb-0">
+            {action.AssignedBy ? t('actionCard.assignedBy', { name: action.AssignedBy }) : ""}
+          </span>
+          <span>{t('actionCard.due', { date: new Date(action.DueDate).toLocaleDateString() })}</span>
+        </div>
       </div>
-      <div className="mt-3 flex items-center">
-        <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-            action.Status === "pending"
-              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-              : action.Status === "completed"
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                : action.Status === "overdue"
-                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-          }`}
-        >
-          {action.Status}
-        </span>
-      </div>
-      <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{action.Description}</p>
-      <div className="mt-3 flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span className="mb-1 sm:mb-0">{action.AssignedBy ? `Assigned by: ${action.AssignedBy}` : ""}</span>
-        <span>Due: {new Date(action.DueDate).toLocaleDateString()}</span>
-      </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header Section */}
       <header className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h1 className="text-3xl font-bold text-red-600 dark:text-red-500 mb-2">Employee Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Welcome back! Here&apos;s an overview of your safety incidents and tasks.
-        </p>
+        <h1 className="text-3xl font-bold text-red-600 dark:text-red-500 mb-2">{t('title')}</h1>
+        <p className="text-gray-600 dark:text-gray-400">{t('welcome')}</p>
       </header>
 
       {/* Quick Actions Section */}
@@ -251,7 +271,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
           onClick={() => (window.location.href = "/incidents")}
         >
           <PlusCircle size={24} />
-          <span>Create Incident</span>
+          <span>{t('quickActions.createIncident')}</span>
         </Button>
 
         <Button
@@ -259,7 +279,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
           onClick={() => (window.location.href = "/actions")}
         >
           <ClipboardList size={24} />
-          <span>View Assigned Tasks</span>
+          <span>{t('quickActions.viewTasks')}</span>
         </Button>
 
         <Button
@@ -267,32 +287,32 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
           onClick={() => (window.location.href = "/profile")}
         >
           <UserCircle size={24} />
-          <span>View/Update Profile</span>
+          <span>{t('quickActions.viewProfile')}</span>
         </Button>
       </section>
 
       {/* Metrics Cards */}
       <section className="mb-8 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Total Incidents"
+          title={t('metrics.totalIncidents')}
           value={dashboardData?.metrics.totalIncidents}
           icon={ClipboardList}
           color="bg-blue-600"
         />
         <StatCard
-          title="Resolved"
+          title={t('metrics.resolved')}
           value={dashboardData?.metrics.resolvedIncidents}
           icon={CheckCircle}
           color="bg-green-600"
         />
         <StatCard
-          title="Unresolved"
+          title={t('metrics.unresolved')}
           value={dashboardData?.metrics.unresolvedIncidents}
           icon={XCircle}
           color="bg-red-600"
         />
         <StatCard
-          title="Resolution Rate"
+          title={t('metrics.resolutionRate')}
           value={dashboardData?.metrics.resolutionRate ? `${dashboardData.metrics.resolutionRate}%` : null}
           icon={TrendingUp}
           color="bg-black"
@@ -301,7 +321,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
 
       {/* Corrective Actions Section */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-500">Assigned Corrective Actions</h2>
+        <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-500">{t('sections.correctiveActions')}</h2>
         {dashboardData?.correctiveActions && dashboardData.correctiveActions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dashboardData.correctiveActions.map((action) => (
@@ -313,14 +333,14 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
             className="mt-8 flex justify-center items-center p-6 border-2 border-dotted border-blue-500 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
             style={{ minHeight: "200px" }}
           >
-            <p className="text-xl sm:text-2xl font-bold text-center">No Corrective Actions Are Currently Assigned</p>
+            <p className="text-xl sm:text-2xl font-bold text-center">{t('sections.noActions')}</p>
           </div>
         )}
       </section>
 
       {/* Recent Incidents Section */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-red-600 dark:text-red-500">Recent Incidents</h2>
+        <h2 className="text-2xl font-bold text-red-600 dark:text-red-500">{t('sections.recentIncidents')}</h2>
         {dashboardData?.incidents && dashboardData.incidents.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {dashboardData.incidents.map((incident) => (
@@ -332,7 +352,7 @@ export default function EmployeeDashboard({ userID }: EmployeeDashProps) {
             className="mt-8 flex justify-center items-center p-6 border-2 border-dotted border-red-500 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
             style={{ minHeight: "200px" }}
           >
-            <p className="text-xl sm:text-2xl font-bold text-center">No Recent Incidents Found</p>
+            <p className="text-xl sm:text-2xl font-bold text-center">{t('sections.noIncidents')}</p>
           </div>
         )}
       </section>

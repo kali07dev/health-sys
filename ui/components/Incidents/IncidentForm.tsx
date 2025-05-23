@@ -4,8 +4,11 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import type { ChangeEvent, FormEvent } from "react"
+
 import { submitIncident, IncidentApiError, submitIncidentWithoutAttachments } from "@/lib/api/incidents"
 import type { IncidentFormData, Incident } from "@/interfaces/incidents"
+import { SearchEmployee, Employee } from '@/components/SearchEmployee'; 
+
 import { AlertCircle, Upload, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -34,6 +37,9 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
   const router = useRouter()
   const { data: session, status } = useSession()
 
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [reporterFullName, setreporterFullName] = useState('');
+
   const [formData, setFormData] = useState<IncidentFormData>({
     type: "injury",
     severityLevel: "low",
@@ -44,7 +50,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     immediateActionsTaken: "",
     reportedBy: session?.user?.id || "",
     injuryType: "",
-    reporterFullName: "",
+    reporterFullName: reporterFullName,
     userIncidentID: "",
   })
 
@@ -57,6 +63,11 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     return null
   }
 
+  const handleEmployeeSelect = (employee: Employee) => {
+      const employeeFullName = `${employee.FirstName} ${employee.LastName}`;
+      setSelectedEmployee(employee); // Store the selected employee's details
+      setreporterFullName(employeeFullName);
+  };
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -81,6 +92,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+    formData.reporterFullName = reporterFullName;
 
     try {
       // Make different API call based on whether files are attached
@@ -303,14 +315,12 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
               <Label htmlFor="reporterFullName" className="text-base">
                 Reporter&apos;s Full Name
               </Label>
-              <Input
-                id="reporterFullName"
-                name="reporterFullName"
-                value={formData.reporterFullName}
-                onChange={handleInputChange}
-                placeholder="Enter your full name"
-                className="h-12 text-base"
-              />
+            <SearchEmployee onSelect={handleEmployeeSelect} />
+                                        {selectedEmployee && (
+                                           <div className="mt-2 text-sm text-gray-500">
+                                              Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                                            </div>
+            )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="userIncidentID" className="text-base">

@@ -15,6 +15,7 @@ import { usePathname } from "next/navigation"
 import LogoutButton from "@/components/LogoutButton"
 import { useSession } from "next-auth/react"
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 import {
   Sidebar,
@@ -30,26 +31,27 @@ import {
 export function AppSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const t = useTranslations('sidebar');
   
   // Check if user has admin privileges
   const isAdminUser = session?.role === 'admin' || session?.role === 'safety_officer' || session?.role === 'manager'
   
   const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: AlertTriangle, label: "Incidents", href: "/incidents" },
-    { icon: ShieldCheck , label: "VPC", href: "/vpc" },
-    { icon: Search, label: "Investigations", href: "/investigation" },
-    { icon: ListChecks, label: "Assigned Tasks", href: "/actions" },
-    ...(isAdminUser ? [{ icon: FileBarChart, label: "Reports", href: "/reports" }] : []),
-    { icon: Bell, label: "Alerts", href: "/alerts" },
-    { icon: Settings, label: "Profile", href: "/profile" },
-    ...(isAdminUser ? [{ icon: Shield, label: "Admin", href: "/admin" }] : []),
+    { icon: LayoutDashboard, label: t('dashboard'), href: "/" },
+    { icon: AlertTriangle, label: t('incidents'), href: "/incidents" },
+    { icon: ShieldCheck, label: t('vpc'), href: "/vpc" },
+    { icon: Search, label: t('investigation'), href: "/investigation" },
+    { icon: ListChecks, label: t('assignedTasks'), href: "/actions" },
+    ...(isAdminUser ? [{ icon: FileBarChart, label: t('reports'), href: "/reports" }] : []),
+    { icon: Bell, label: t('alerts'), href: "/alerts" },
+    { icon: Settings, label: t('profile'), href: "/profile" },
+    ...(isAdminUser ? [{ icon: Shield, label: t('admin'), href: "/admin" }] : []),
   ]
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <h1 className="text-lg font-semibold text-red-600 truncate">Safety System</h1>
+        <h1 className="text-lg font-semibold text-red-600 truncate">{t('safetySystem')}</h1>
         <SidebarCollapseButton />
       </SidebarHeader>
       <SidebarContent>

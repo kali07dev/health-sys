@@ -3,6 +3,8 @@
 import type React from "react"
 import { submitVPC, submitVPCWithoutAttachments } from "@/lib/api/vpc"
 import DepartmentDropdown from "@/components/DepartmentDropdown"
+import { SearchEmployee, Employee } from '@/components/SearchEmployee'; 
+
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -25,10 +27,13 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   const [evidenceExpanded, setEvidenceExpanded] = useState(true)
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [reportedBy, setreportedBy] = useState('');
+  
 
   const [formData, setFormData] = useState({
     vpcNumber: "",
-    reportedBy: "",
+    reportedBy: reportedBy,
     department: "",
     description: "",
     vpcType: "",
@@ -37,7 +42,11 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   })
   console.log("User ID:", userId)
 
-  
+  const handleEmployeeSelect = (employee: Employee) => {
+      const employeeFullName = `${employee.FirstName} ${employee.LastName}`;
+      setSelectedEmployee(employee); // Store the selected employee's details
+      setreportedBy(employeeFullName);
+  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -76,6 +85,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
     try {
       const vpcData = {
         ...formData,
+        reportedBy: reportedBy,
         reportedDate: new Date().toISOString(),
       }
 
@@ -132,15 +142,12 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
               <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Reported By
               </Label>
-              <Input
-                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
-                           dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
-                id="reportedBy"
-                name="reportedBy"
-                value={formData.reportedBy}
-                onChange={handleChange}
-                required
-              />
+              <SearchEmployee onSelect={handleEmployeeSelect} />
+                            {selectedEmployee && (
+                               <div className="mt-2 text-sm text-gray-500">
+                                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                                </div>
+              )}
             </div>
 
             <div className="space-y-2">
