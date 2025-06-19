@@ -17,3 +17,11 @@
 
 ## To create Admin Account
 go run main.go create-admin -e email@example.com -p password -f John -l Doek
+
+## For the UI
+- >cd ui
+
+create a .env.production & .env.local files
+- > npm run build
+- > npm start
+  
