@@ -20,6 +20,7 @@ go run main.go create-admin -e email@example.com -p password -f John -l Doek
 
 ## For the UI
 - >cd ui
+- > npm install
 
 create a .env.production & .env.local files
 - > npm run build
