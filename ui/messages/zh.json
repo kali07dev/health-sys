@@ -3,6 +3,8 @@
     "signIn": "登录",
     "signUp": "注册",
     "email": "邮箱",
+    "phone": "电话",
+    "phoneNumber": "电话号码",
     "password": "密码",
     "confirmPassword": "确认密码",
     "firstName": "名字",

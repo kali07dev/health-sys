@@ -3,6 +3,8 @@
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "email": "Email",
+    "phone": "phone Number",
+    "phoneNumber": "Phone Number",
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "firstName": "First Name",
