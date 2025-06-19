@@ -9,6 +9,7 @@ interface CustomSession extends Session {
     email: string;
     role: string;
     name?: string | null;
+    phone?: string | null;
   };
   token: string;
   role: string;
@@ -31,14 +32,29 @@ export const authOptions: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
+        phone: { label: "Phone", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         try {
           const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+          
+          // Prepare the request body
+          const requestBody: Record<string, string> = {
+            password: credentials?.password || ''
+          };
+          
+          if (credentials?.email) {
+            requestBody.email = credentials.email;
+          } else if (credentials?.phone) {
+            requestBody.phone = credentials.phone;
+          } else {
+            throw new Error("Email or phone is required");
+          }
+
           const res = await fetch(`${BASE_URL}/api/auth/login`, {
             method: "POST",
-            body: JSON.stringify(credentials),
+            body: JSON.stringify(requestBody),
             headers: { "Content-Type": "application/json" },
             credentials: 'include',
           });
@@ -55,6 +71,7 @@ export const authOptions: NextAuthOptions = {
             return {
               id: data.user.id,
               email: data.user.email,
+              phone: data.user.phone || null,
               role: data.user.role,
               token: data.token,
               expiresAt: data.expiresAt,
@@ -108,6 +125,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        // token.phone = user.phone || null;
         token.token = user.token;
         token.role = user.role;
       }
@@ -124,6 +142,8 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id as string,
           email: token.email as string,
+          phone: token.phone as string || null,
+          role: token.role as string,
         },
         token: token.token as string,
         role: token.role as string,
