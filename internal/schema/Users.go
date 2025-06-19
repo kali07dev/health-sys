@@ -19,7 +19,9 @@ type UserRequest struct {
 }
 
 type UserLoginRequest struct {
-	Email       string `json:"email" validate:"required,email"`
+	Email       string `json:"email" validate:"omitempty,email"`
+	Phone       string `json:"phone" validate:"omitempty"`
+	UserID      string
 	Password    string `json:"password" validate:"required,min=8"`
 	GoogleID    string `json:"google_id,omitempty"`
 	MicrosoftID string `json:"microsoft_id,omitempty"`

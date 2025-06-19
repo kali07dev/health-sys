@@ -428,39 +428,56 @@ func (app *UserHandler) LoginUser(c *fiber.Ctx) error {
 		})
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
-
-	user, err := app.userService.GetUserByEmail(requestData.Email)
-	if err != nil {
-		utils.LogError("Failed to find user by email", map[string]interface{}{
-			"email": requestData.Email,
-			"error": err.Error(),
-		})
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Email"})
+	if requestData.Email == "" && requestData.Phone == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email or phone number is required"})
 	}
 
-	if !user.IsVerified {
-		if err := app.verificationService.SendVerificationEmail(user); err != nil {
-			utils.LogError("Failed to send verification email", map[string]interface{}{
+	if requestData.Phone != "" {
+		user, err := app.userService.GetUserByPhone(requestData.Phone)
+		if err != nil {
+			utils.LogError("Failed to find user by phone", map[string]interface{}{
+				"phone": requestData.Phone,
+				"error": err.Error(),
+			})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Phone Number Not Found"})
+
+		}
+		requestData.UserID = user.ID.String()
+	}
+	if requestData.Email != "" {
+		user, err := app.userService.GetUserByEmail(requestData.Email)
+		if err != nil {
+			utils.LogError("Failed to find user by email", map[string]interface{}{
 				"email": requestData.Email,
 				"error": err.Error(),
 			})
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to send verification email"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Email"})
 		}
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Account not verified. A new verification email has been sent."})
+
+		if !user.IsVerified {
+			if err := app.verificationService.SendVerificationEmail(user); err != nil {
+				utils.LogError("Failed to send verification email", map[string]interface{}{
+					"email": requestData.Email,
+					"error": err.Error(),
+				})
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to send verification email"})
+			}
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Account not verified. A new verification email has been sent."})
+		}
+
+		if user.PasswordHash == "" {
+			if err := app.verificationService.SendVerificationEmail(user); err != nil {
+				utils.LogError("Failed to send password setup email", map[string]interface{}{
+					"email": requestData.Email,
+					"error": err.Error(),
+				})
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to send password setup email"})
+			}
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Please check your email to set up your password."})
+		}
 	}
 
-	if user.PasswordHash == "" {
-		if err := app.verificationService.SendVerificationEmail(user); err != nil {
-			utils.LogError("Failed to send password setup email", map[string]interface{}{
-				"email": requestData.Email,
-				"error": err.Error(),
-			})
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to send password setup email"})
-		}
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Please check your email to set up your password."})
-	}
-
-	user, err = app.userService.Login(&requestData)
+	user, err := app.userService.Login(&requestData)
 	if err != nil {
 		utils.LogError("Failed to authenticate user", map[string]interface{}{
 			"email": requestData.Email,

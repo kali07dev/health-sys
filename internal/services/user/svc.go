@@ -161,12 +161,22 @@ func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmp
 func (svc *UserService) Login(credentials *schema.UserLoginRequest) (*models.User, error) {
 	// Fetch the user from the database using the email
 	var user models.User
-	err := svc.db.Where("email = ?", credentials.Email).First(&user).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+	if credentials.UserID != "" {
+		err := svc.db.Where("id = ?", credentials.UserID).First(&user).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, errors.New("user not found")
+			}
+			return nil, errors.New("failed to fetch user from the database")
 		}
-		return nil, errors.New("failed to fetch user from the database")
+	}else if credentials.Email != ""  {
+		err := svc.db.Where("email = ?", credentials.Email).First(&user).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, errors.New("user not found")
+			}
+			return nil, errors.New("failed to fetch user from the database")
+		}
 	}
 
 	// Check if the account is locked
@@ -210,6 +220,17 @@ func (svc *UserService) GetUserByID(id uuid.UUID) (*models.User, error) {
 func (svc *UserService) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := svc.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+func (svc *UserService) GetUserByPhone(phoneNumber string) (*models.User, error) {
+	var emp models.Employee
+	var user models.User
+	if err := svc.db.Where("contact_number = ?", phoneNumber).First(&emp).Error; err != nil {
+		return nil, err
+	}
+	if err := svc.db.Where("id = ?", emp.UserID).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
