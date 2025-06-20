@@ -48,6 +48,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.InvestigationInterview{},
 		&models.InvestigationEvidence{},
 		&models.ActionEvidence{},
+		&models.TemporaryEmployee{},
 		&models.VPC{},
 		&models.VPCAttachment{},
 	)

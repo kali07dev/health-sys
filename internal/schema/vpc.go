@@ -9,12 +9,12 @@ import (
 
 // VPCRequest represents the request body for creating or updating a VPC
 type VPCRequest struct {
-	VpcNumber         string    `json:"vpcNumber" validate:"required"`
+	// VpcNumber         string    `json:"vpcNumber"`
 	ReportedBy        string    `json:"reportedBy" validate:"required"`
 	ReportedDate      time.Time `json:"reportedDate" validate:"required"`
 	Department        string    `json:"department" validate:"required"`
 	Description       string    `json:"description" validate:"required"`
-	VpcType           string    `json:"vpcType" validate:"required,oneof=safe unsafe"`
+	VpcType           string    `json:"vpcType" validate:"required"`
 	ActionTaken       string    `json:"actionTaken" validate:"required"`
 	IncidentRelatesTo string    `json:"incidentRelatesTo" validate:"required"`
 	CreatedBy         uuid.UUID `json:"createdBy"` // This will be set in the service layer
@@ -99,7 +99,7 @@ func NewSuccessResponse(message string, data interface{}) APIResponse {
 // ToModel converts a VPCRequest to a VPC model
 func (r *VPCRequest) ToModel() models.VPC {
 	return models.VPC{
-		VpcNumber:         r.VpcNumber,
+		// VpcNumber:         r.VpcNumber,
 		ReportedBy:        r.ReportedBy,
 		ReportedDate:      r.ReportedDate,
 		Department:        r.Department,

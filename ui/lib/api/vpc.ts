@@ -38,12 +38,12 @@ const ALLOWED_FILE_TYPES = [
 ]
 
 const vpcSchema = z.object({
-  vpcNumber: z.string(),
+  // vpcNumber: z.string(),
   reportedBy: z.string(),
   reportedDate: z.string().transform(str => new Date(str)),
   department: z.string(),
   description: z.string(),
-  vpcType: z.enum(['safe', 'unsafe']),
+  vpcType: z.string(),
   actionTaken: z.string(),
   incidentRelatesTo: z.string(),
 })

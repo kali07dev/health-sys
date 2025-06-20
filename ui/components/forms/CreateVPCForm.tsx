@@ -125,21 +125,6 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
-                VPC Number
-              </Label>
-              <Input
-                className="bg-white text-black border-gray-300 focus:border-black focus:ring-1 focus:ring-black
-                           dark:bg-white dark:text-black dark:border-gray-300 dark:focus:border-black"
-                id="vpcNumber"
-                name="vpcNumber"
-                value={formData.vpcNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Reported By
               </Label>
               <SearchEmployee onSelect={handleEmployeeSelect} />
@@ -170,29 +155,73 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
               <RadioGroup
                 value={formData.vpcType}
                 onValueChange={(value) => handleSelectChange("vpcType", value)}
-                className="flex gap-6 pt-2"
+                className="grid grid-cols-2 gap-4 pt-2"
                 required
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem 
-                    value="safe" 
-                    id="vpc-type-safe" 
+                    value="safe-act" 
+                    id="vpc-type-safe-act" 
                     className="text-black border-gray-400 focus:ring-black
                                dark:text-black dark:border-gray-400 dark:focus:ring-black"
                   />
-                  <Label htmlFor="vpc-type-safe" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Safe
+                  <Label htmlFor="vpc-type-safe-act" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Safe Act
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem 
-                    value="unsafe" 
-                    id="vpc-type-unsafe" 
+                    value="safe-condition" 
+                    id="vpc-type-safe-condition" 
                     className="text-black border-gray-400 focus:ring-black
                                dark:text-black dark:border-gray-400 dark:focus:ring-black"
                   />
-                  <Label htmlFor="vpc-type-unsafe" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Unsafe
+                  <Label htmlFor="vpc-type-safe-condition" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Safe Condition
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="safe-behavior" 
+                    id="vpc-type-safe-behavior" 
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-safe-behavior" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Safe Behavior
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="unsafe-act" 
+                    id="vpc-type-unsafe-act" 
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-unsafe-act" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Unsafe Act
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="unsafe-condition" 
+                    id="vpc-type-unsafe-condition" 
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-unsafe-condition" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Unsafe Condition
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="unsafe-behavior" 
+                    id="vpc-type-unsafe-behavior" 
+                    className="text-black border-gray-400 focus:ring-black
+                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
+                  />
+                  <Label htmlFor="vpc-type-unsafe-behavior" className="cursor-pointer text-gray-800 dark:text-gray-800">
+                    Unsafe Behavior
                   </Label>
                 </div>
               </RadioGroup>

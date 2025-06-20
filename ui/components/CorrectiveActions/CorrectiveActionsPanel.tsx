@@ -159,7 +159,7 @@ export const CorrectiveActionsPanel: React.FC<CorrectiveActionsPanelProps> = ({
       {/* Add Corrective Action Button - Only show for admin/safety officer */}
       {['admin', 'safety_officer', 'manager'].includes(userRole) && (
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-white">
             {['admin', 'safety_officer', 'manager'].includes(userRole) 
               ? `Corrective Actions for Incident #${incidentId}`
               : 'Your Assigned Corrective Actions'}

@@ -29,15 +29,15 @@ func (h *VPCHandler) CreateVPC(c *fiber.Ctx) error {
 	}
 
 	// Validate the request
-	if req.VpcNumber == "" || req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
+	if req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
 		req.VpcType == "" || req.ActionTaken == "" || req.IncidentRelatesTo == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("All fields are required"))
 	}
 
 	// Validate VpcType
-	if req.VpcType != "safe" && req.VpcType != "unsafe" {
-		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe'"))
-	}
+	// if req.VpcType != "safe" && req.VpcType != "unsafe" {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe'"))
+	// }
 
 	// Get the currently authenticated user's ID from context locals
 	userIDRaw := c.Locals("userID")
@@ -95,14 +95,14 @@ func (h *VPCHandler) CreateBulkVPCs(c *fiber.Ctx) error {
 
 	// Validate each VPC in the bulk request
 	for i, vpcReq := range req.VPCs {
-		if vpcReq.VpcNumber == "" || vpcReq.ReportedBy == "" || vpcReq.Department == "" || vpcReq.Description == "" ||
+		if vpcReq.ReportedBy == "" || vpcReq.Department == "" || vpcReq.Description == "" ||
 			vpcReq.VpcType == "" || vpcReq.ActionTaken == "" || vpcReq.IncidentRelatesTo == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("All fields are required for VPC at index " + string(i)))
 		}
 
-		if vpcReq.VpcType != "safe" && vpcReq.VpcType != "unsafe" {
-			return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe' for VPC at index " + string(i)))
-		}
+		// if vpcReq.VpcType != "safe" && vpcReq.VpcType != "unsafe" {
+		// 	return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe' for VPC at index " + string(i)))
+		// }
 	}
 
 	vpcs := req.ToModel()
@@ -171,15 +171,15 @@ func (h *VPCHandler) CreateVPCWithAttachments(c *fiber.Ctx) error {
 	}
 
 	// Basic validation of VPCRequest fields
-	if req.VpcNumber == "" || req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
+	if req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
 		req.VpcType == "" || req.ActionTaken == "" || req.IncidentRelatesTo == "" {
 		utils.LogError("Missing required fields in vpcData", map[string]interface{}{"request": req})
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "All fields in vpcData are required"})
 	}
-	if req.VpcType != "safe" && req.VpcType != "unsafe" {
-		utils.LogError("Invalid VpcType in vpcData", map[string]interface{}{"vpcType": req.VpcType})
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "VpcType must be either 'safe' or 'unsafe'"})
-	}
+	// if req.VpcType != "safe" && req.VpcType != "unsafe" {
+	// 	utils.LogError("Invalid VpcType in vpcData", map[string]interface{}{"vpcType": req.VpcType})
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "VpcType must be either 'safe' or 'unsafe'"})
+	// }
 
 	// Get the currently authenticated user's ID from context locals
 	userIDRaw := c.Locals("userID")
@@ -322,15 +322,15 @@ func (h *VPCHandler) UpdateVPC(c *fiber.Ctx) error {
 	}
 
 	// Validate the request
-	if req.VpcNumber == "" || req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
+	if req.ReportedBy == "" || req.Department == "" || req.Description == "" ||
 		req.VpcType == "" || req.ActionTaken == "" || req.IncidentRelatesTo == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("All fields are required"))
 	}
 
 	// Validate VpcType
-	if req.VpcType != "safe" && req.VpcType != "unsafe" {
-		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe'"))
-	}
+	// if req.VpcType != "safe" && req.VpcType != "unsafe" {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VpcType must be either 'safe' or 'unsafe'"))
+	// }
 
 	// Get existing VPC
 	_, err := h.service.Get(id)
@@ -402,9 +402,9 @@ func (h *VPCHandler) ListByVpcType(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VPC type is required"))
 	}
 
-	if vpcType != "safe" && vpcType != "unsafe" {
-		return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VPC type must be either 'safe' or 'unsafe'"))
-	}
+	// if vpcType != "safe" && vpcType != "unsafe" {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(schema.NewErrorResponse("VPC type must be either 'safe' or 'unsafe'"))
+	// }
 
 	// Get pagination parameters from query
 	page := c.QueryInt("page", 1)
