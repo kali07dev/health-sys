@@ -13,17 +13,15 @@ interface IncidentDetailsProps {
 
 const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, attachments, isAuthorized }) => {
   return (
-    // <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100 dark:border-red-900">
-    <div className="bg-white shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100 dark:border-red-900">
-      {/* <div className="px-4 py-5 sm:px-6 bg-red-50 dark:bg-red-950/30"> */}
+    <div className="bg-white shadow overflow-hidden rounded-lg w-full max-w-full mx-auto border border-red-100">
       <div className="px-4 py-5 sm:px-6 bg-red-50">
-        <h3 className="text-lg leading-6 font-medium text-red-800 dark:text-red-300">Incident Details</h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400 break-words">
+        <h3 className="text-lg leading-6 font-medium text-red-800">Incident Details</h3>
+        <p className="mt-1 max-w-2xl text-sm text-gray-500 break-words">
           {incident.referenceNumber}
         </p>
       </div>
-      <div className="border-t border-red-200 dark:border-red-800 px-4 py-5 sm:p-0">
-        <dl className="divide-y divide-red-100 dark:divide-red-900 text-black">
+      <div className="border-t border-red-200 px-4 py-5 sm:p-0">
+        <dl className="divide-y divide-red-100 text-black">
           <DetailItem label="Type" value={incident.type} />
           <DetailItem label="Severity Level" value={incident.severityLevel} />
           <DetailItem label="Status" value={incident.status} />
@@ -65,11 +63,10 @@ const DetailItem: React.FC<{
 }> = ({ label, value, className = "" }) => {
   return (
     <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-      <dt className="text-sm font-medium text-red-600 dark:text-red-400">{label}</dt>
-      <dd className={`mt-1 text-sm text-gray-900 dark:text-black sm:mt-0 sm:col-span-2 ${className}`}>{value}</dd>
+      <dt className="text-sm font-medium text-red-600">{label}</dt>
+      <dd className={`mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 ${className}`}>{value}</dd>
     </div>
   )
 }
 
 export default IncidentDetails
-
