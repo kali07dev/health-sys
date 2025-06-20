@@ -98,6 +98,13 @@ export default function AdminDashboard() {
           href="/admin/user-management"
           color="bg-blue-600"
         />
+        <AdminAction
+          title="Manage Temporary Employees"
+          description="Create, update, and manage temporary staff"
+          icon={UserPlus}
+          href="/admin/temporary-employees"
+          color="bg-orange-600"
+        />
 
         <AdminAction
           title="Create New User"
