@@ -187,6 +187,18 @@ func SetupNotificationSettingsRoutes(app *fiber.App, handler *NotificationSettin
 	settings.Put("/:userId", handler.UpdateSettings)
 }
 
+func SetupTemporaryEmployeeRoutes(app *fiber.App, employeeHandler *TemporaryEmployeeHandler) {
+
+	employeeRoutes := app.Group("/api/temporary-employees")
+	{
+		employeeRoutes.Post("/", employeeHandler.CreateEmployee)
+		employeeRoutes.Get("/", employeeHandler.SearchEmployees)
+		employeeRoutes.Get("/get/all", employeeHandler.ListEmployees)
+		employeeRoutes.Get("/:id", employeeHandler.GetEmployee)
+		employeeRoutes.Put("/:id", employeeHandler.UpdateEmployee)
+		employeeRoutes.Delete("/:id", employeeHandler.DeleteEmployee)
+	}
+}
 func SetupInterViewRoutes(app *fiber.App, handler *InterviewHandler) {
 	interview := app.Group("/api/v1/interview", middleware.AuthMiddleware())
 

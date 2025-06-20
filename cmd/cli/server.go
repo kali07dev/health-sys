@@ -123,6 +123,8 @@ func RunServer() {
 
 	vpcReportHandler := api.NewVPCReportHandler(reports.NewVPCReportService(dbConn))
 	
+	employeeService := services.NewTemporaryEmployeeService(dbConn)
+	tempEmplHandler := api.NewTemporaryEmployeeHandler(employeeService)
 
 	go jobs.StartReminderJob(notificationService, emailService)
 
@@ -136,6 +138,7 @@ func RunServer() {
 	api.SetupVpcRoutes(app, vpcHandler)
 	api.SetupNotificationSettingsRoutes(app, notifySettings)
 	api.SetupVpcReports(app, vpcReportHandler)
+	api.SetupTemporaryEmployeeRoutes(app, tempEmplHandler)
 
 	api.SetupReportsRoutes(app, reportH)
 	app.Get("/panic", func(c *fiber.Ctx) error {
