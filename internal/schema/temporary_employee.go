@@ -29,3 +29,14 @@ type SearchCriteria struct {
 	OfficeLocation string `query:"officeLocation"`
 	IsActive       *bool  `query:"isActive"`
 }
+type CombinedEmployeeSearchResult struct {
+    ID             string    `json:"id"`             // UUID (for Employee) or int (for TemporaryEmployee) converted to string
+    Type           string    `json:"type"`           // Indicates "Regular" or "Temporary" employee
+    FirstName      string    `json:"firstName"`
+    LastName       string    `json:"lastName"`
+    Department     string    `json:"department"`
+    Position       string    `json:"position"`
+    ContactNumber  string    `json:"contactNumber"`
+    OfficeLocation string    `json:"officeLocation"`
+    IsActive       bool      `json:"isActive"`
+}

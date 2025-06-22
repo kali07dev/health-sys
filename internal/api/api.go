@@ -193,6 +193,7 @@ func SetupTemporaryEmployeeRoutes(app *fiber.App, employeeHandler *TemporaryEmpl
 	{
 		employeeRoutes.Post("/", employeeHandler.CreateEmployee)
 		employeeRoutes.Get("/", employeeHandler.SearchEmployees)
+		employeeRoutes.Get("/search/with-temporarly", employeeHandler.SearchAllEmployees)
 		employeeRoutes.Get("/get/all", employeeHandler.ListEmployees)
 		employeeRoutes.Get("/:id", employeeHandler.GetEmployee)
 		employeeRoutes.Put("/:id", employeeHandler.UpdateEmployee)

@@ -3,7 +3,7 @@
 import type React from "react"
 import { submitVPC, submitVPCWithoutAttachments } from "@/lib/api/vpc"
 import DepartmentDropdown from "@/components/DepartmentDropdown"
-import { SearchEmployee, Employee } from '@/components/SearchEmployee'; 
+import { SearchEmployee, Employee } from '@/components/SearchAllEmployees'; 
 
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -43,7 +43,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   console.log("User ID:", userId)
 
   const handleEmployeeSelect = (employee: Employee) => {
-      const employeeFullName = `${employee.FirstName} ${employee.LastName}`;
+      const employeeFullName = `${employee.firstName} ${employee.lastName}`;
       setSelectedEmployee(employee); // Store the selected employee's details
       setreportedBy(employeeFullName);
   };
@@ -130,7 +130,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
               <SearchEmployee onSelect={handleEmployeeSelect} />
                             {selectedEmployee && (
                                <div className="mt-2 text-sm text-gray-500">
-                                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                                  Selected: {`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} ({selectedEmployee.position})
                                 </div>
               )}
             </div>

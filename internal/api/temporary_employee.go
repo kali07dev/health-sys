@@ -120,6 +120,23 @@ func (h *TemporaryEmployeeHandler) SearchEmployees(c *fiber.Ctx) error {
 
 	return c.JSON(employees)
 }
+func (h *TemporaryEmployeeHandler) SearchAllEmployees(c *fiber.Ctx) error {
+	query := c.Query("query") // Get the search query from the URL query parameter
+	if query == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "search query is required",
+		})
+	}
+
+	employees, err := h.services.SearchAllEmployees(c.Context(), query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to search employees",
+		})
+	}
+
+	return c.JSON(employees)
+}
 func (h *TemporaryEmployeeHandler) ListEmployees(c *fiber.Ctx) error {
 	employees, err := h.services.GetAll()
 	if err != nil {

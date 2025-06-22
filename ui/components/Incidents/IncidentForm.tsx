@@ -7,7 +7,7 @@ import type { ChangeEvent, FormEvent } from "react"
 
 import { submitIncident, IncidentApiError, submitIncidentWithoutAttachments } from "@/lib/api/incidents"
 import type { IncidentFormData, Incident } from "@/interfaces/incidents"
-import { SearchEmployee, Employee } from "@/components/SearchEmployee"
+import { SearchEmployee, Employee } from "@/components/SearchAllEmployees"
 
 import { AlertCircle, Upload, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -109,7 +109,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
   }
 
   const handleEmployeeSelect = (employee: Employee) => {
-    const employeeFullName = `${employee.FirstName} ${employee.LastName}`
+    const employeeFullName = `${employee.firstName} ${employee.lastName}`
     setSelectedEmployee(employee)
     setreporterFullName(employeeFullName)
   }
@@ -433,11 +433,11 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
               <SearchEmployee onSelect={handleEmployeeSelect} />
               {selectedEmployee && (
                 <div className="mt-2 text-sm text-gray-500">
-                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                  Selected: {`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} ({selectedEmployee.position})
                 </div>
               )}
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="userIncidentID" className="text-base">
                 Incident ID
               </Label>
@@ -449,7 +449,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 placeholder="Enter the Incident ID if available"
                 className="h-12 text-base"
               />
-            </div>
+            </div> */}
           </div>
 
           <div className="space-y-3">
