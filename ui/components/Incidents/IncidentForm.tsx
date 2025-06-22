@@ -46,6 +46,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     title: "",
     description: "",
     location: "",
+    fulllocation:"",
     occurredAt: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     immediateActionsTaken: "",
     reportedBy: session?.user?.id || "",
@@ -263,6 +264,16 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                   <SelectItem value="makata">Makata</SelectItem>
                 </SelectContent>
               </Select>
+              <Textarea
+                id="fulllocation"
+                name="fulllocation"
+                value={formData.fulllocation}
+                onChange={handleInputChange}
+                placeholder="Specific location of where it happened"
+                rows={4}
+                className="resize-none text-base"
+                required
+              />
             </div>
 
             <div className="space-y-2">
