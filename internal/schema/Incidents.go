@@ -14,6 +14,7 @@ type CreateIncidentRequest struct {
 	Title         string    `json:"title" validate:"required,max=255"`
 	Description   string    `json:"description" validate:"required"`
 	Location      string    `json:"location" validate:"required,max=255"`
+	FullLocation  string    `json:"fulllocation" validate:"required,max=255"`
 	OccurredAt    time.Time `json:"occurredAt" validate:"required"`
 	// ReportedBy              uuid.UUID
 	// AssignedTo              uuid.UUID      `json:"assignedTo"`
@@ -37,6 +38,7 @@ type IncidentResponse struct {
 	Title                   string                 `json:"title"`
 	Description             string                 `json:"description"`
 	Location                string                 `json:"location"`
+	FullLocation            string                 `json:"fulllocation"`
 	OccurredAt              time.Time              `json:"occurredAt"`
 	ReportedBy              string                 `json:"reportedBy"`
 	AssignedTo              *string                `json:"assignedTo,omitempty"`
@@ -76,6 +78,7 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 		Title:                   i.Title,
 		Description:             i.Description,
 		Location:                i.Location,
+		FullLocation:            i.FullLocation,
 		OccurredAt:              i.OccurredAt,
 		ReportedBy:              fmt.Sprintf("%s %s", i.Reporter.FirstName, i.Reporter.LastName),
 		AssignedTo:              assignedTo,

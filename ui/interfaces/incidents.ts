@@ -11,6 +11,7 @@ export interface IncidentFormData {
   title: string;
   description: string;
   location: string;
+  fulllocation: string;
   occurredAt: string;
   immediateActionsTaken?: string;
   reportedBy: string;
@@ -106,6 +107,7 @@ export interface Incident {
   title: string;
   description: string;
   location: string;
+  fulllocation:string;
   occurredAt: string;
   reportedBy: string;
   userReported: string

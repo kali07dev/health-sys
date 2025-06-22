@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import type { ChangeEvent, FormEvent } from "react"
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { format } from "date-fns"
+import { format, isAfter, isBefore, startOfDay } from "date-fns"
 
 interface ValidationError {
   field: string
@@ -39,6 +39,8 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [reporterFullName, setreporterFullName] = useState("")
+  const [showLateReportingReason, setShowLateReportingReason] = useState(false)
+  const [lateReportingReason, setLateReportingReason] = useState("")
 
   const [formData, setFormData] = useState<IncidentFormData>({
     type: "injury",
@@ -58,20 +60,68 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
   const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<FormError | null>(null)
+  const [dateError, setDateError] = useState<string>("")
+
+  // Effect to validate date when lateReportingReason changes
+  useEffect(() => {
+    if (showLateReportingReason && !lateReportingReason) {
+      setDateError("Please provide a reason for late reporting")
+    } else if (showLateReportingReason && lateReportingReason) {
+      setDateError("")
+    }
+  }, [lateReportingReason, showLateReportingReason])
 
   if (status === "unauthenticated") {
     router.push("/auth/login")
     return null
   }
 
+  // Function to check if date requires late reporting reason
+  const checkDateRequirements = (dateValue: string) => {
+    if (!dateValue) return
+
+    const selectedDate = new Date(dateValue)
+    const today = startOfDay(new Date())
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    // Clear any existing date errors
+    setDateError("")
+
+    // Check if date is in the future
+    if (isAfter(startOfDay(selectedDate), today)) {
+      setDateError("Incident date cannot be in the future")
+      setShowLateReportingReason(false)
+      setLateReportingReason("")
+      return
+    }
+
+    // Check if date is before yesterday (more than 1 day ago)
+    if (isBefore(startOfDay(selectedDate), yesterday)) {
+      setShowLateReportingReason(true)
+      if (!lateReportingReason) {
+        setDateError("Please provide a reason for late reporting")
+      }
+    } else {
+      setShowLateReportingReason(false)
+      setLateReportingReason("")
+    }
+  }
+
   const handleEmployeeSelect = (employee: Employee) => {
     const employeeFullName = `${employee.FirstName} ${employee.LastName}`
-    setSelectedEmployee(employee) // Store the selected employee's details
+    setSelectedEmployee(employee)
     setreporterFullName(employeeFullName)
   }
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Special handling for date field
+    if (name === "occurredAt") {
+      checkDateRequirements(value)
+    }
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -89,16 +139,38 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const handleLateReportingReasonChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setLateReportingReason(e.target.value)
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    
+    // Validate date before submission
+    if (dateError) {
+      setError({ message: "Please resolve the date validation error before submitting" })
+      return
+    }
+
+    // Additional validation for late reporting reason
+    if (showLateReportingReason && !lateReportingReason.trim()) {
+      setError({ message: "Please provide a reason for late reporting" })
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
     formData.reporterFullName = reporterFullName
 
+    // Add late reporting reason to form data if applicable
+    const submissionData = {
+      ...formData,
+      lateReportingReason: showLateReportingReason ? lateReportingReason : undefined
+    }
+
     try {
-      // Make different API call based on whether files are attached
       const newIncident =
-        files.length > 0 ? await submitIncident(formData, files) : await submitIncidentWithoutAttachments(formData) // No files parameter
+        files.length > 0 ? await submitIncident(submissionData, files) : await submitIncidentWithoutAttachments(submissionData)
 
       if (onSuccess) {
         onSuccess(newIncident)
@@ -169,6 +241,15 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 ))}
               </ul>
             )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {dateError && (
+        <Alert variant="destructive" className="mb-4 bg-red-100">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertDescription>
+            <p className="font-medium text-red-800">{dateError}</p>
           </AlertDescription>
         </Alert>
       )}
@@ -286,10 +367,33 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                 type="datetime-local"
                 value={formData.occurredAt}
                 onChange={handleInputChange}
-                className="h-12 text-base"
+                className={`h-12 text-base ${dateError ? 'border-red-500' : ''}`}
+                max={format(new Date(), "yyyy-MM-dd'T'HH:mm")} // Prevent future dates in the input
               />
             </div>
           </div>
+
+          {/* Late Reporting Reason Field */}
+          {showLateReportingReason && (
+            <div className="space-y-2">
+              <Label htmlFor="lateReportingReason" className="text-base text-orange-600">
+                Reason for Late Reporting <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="lateReportingReason"
+                name="lateReportingReason"
+                value={lateReportingReason}
+                onChange={handleLateReportingReasonChange}
+                placeholder="Please explain why this incident is being reported late"
+                rows={3}
+                className="resize-none text-base border-orange-300 focus:border-orange-500"
+                required
+              />
+              <p className="text-sm text-orange-600">
+                This incident occurred more than one day ago. Please provide a reason for the delayed reporting.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-base">
@@ -389,8 +493,8 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
         <div className="pt-4 flex justify-end">
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white"
+            disabled={isSubmitting || !!dateError}
+            className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-400"
             size="lg"
           >
             {isSubmitting ? "Submitting..." : "Submit Incident Report"}

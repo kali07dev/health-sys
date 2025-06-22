@@ -1,14 +1,18 @@
 package models
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Incident struct {
 	ID                      uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	ReferenceNumber         string     `gorm:"size:50;not null;unique"`
+	ReferenceNumber         string     `gorm:"size:50;not null;"`
 	UserIncidentID          string     `gorm:"type:text;"`
 	Type                    string     `gorm:"size:50;not null;check:type IN ('injury', 'near_miss', 'property_damage', 'environmental', 'security')"`
 	InjuryType              string     `gorm:"size:50"`
@@ -36,3 +40,50 @@ type Incident struct {
 }
 
 type IncidentSummary struct{}
+
+// BeforeCreate GORM hook to generate UserIncidentID
+func (incident *Incident) BeforeCreate(tx *gorm.DB) error {
+	// Generate incident number if not provided
+	if incident.ReferenceNumber == "" {
+		incidentNumber, err := generateNextIncidentNumber(tx)
+		if err != nil {
+			return fmt.Errorf("failed to generate incident number: %w", err)
+		}
+		incident.ReferenceNumber = incidentNumber
+	}
+
+	return nil
+}
+
+// generateNextIncidentNumber generates the next sequential incident number
+func generateNextIncidentNumber(tx *gorm.DB) (string, error) {
+	var lastIncident Incident
+
+	// Find the incident with the highest number
+	err := tx.Where("reference_number LIKE 'INC%'").
+		Order("LENGTH(reference_number) DESC, reference_number DESC").
+		First(&lastIncident).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return "", fmt.Errorf("failed to query last incident: %w", err)
+	}
+
+	nextNumber := 1
+
+	if err != gorm.ErrRecordNotFound {
+		// Extract the numeric part from incident number
+		numberStr := strings.TrimPrefix(lastIncident.ReferenceNumber, "INC")
+		// Remove leading zeros and convert to int
+		if num, parseErr := strconv.Atoi(numberStr); parseErr == nil {
+			nextNumber = num + 1
+		}
+	}
+
+	// Format with leading zeros (INC00001, INC00002, etc.)
+	return fmt.Sprintf("INC%05d", nextNumber), nil
+}
+
+// TableName specifies the table name for GORM
+func (Incident) TableName() string {
+	return "incidents"
+}

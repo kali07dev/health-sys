@@ -72,24 +72,25 @@ func (s *IncidentService) GetByEmployeeID(employeeID uuid.UUID) ([]models.Incide
 
 // CreateIncident creates a new incident record
 func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userID uuid.UUID) (*models.Incident, error) {
-	refNumber := generateReferenceNumber()
+	// refNumber := generateReferenceNumber()
 
 	if req.Type == "injury" && req.InjuryType == "" {
 		return nil, fmt.Errorf("injury type is required for injury incidents")
 	}
 	incident := &models.Incident{
-		ReferenceNumber: refNumber,
-		UserIncidentID:  req.UserIncidentID,
-		Type:            req.Type,
-		InjuryType:      req.InjuryType,
-		SeverityLevel:   req.SeverityLevel,
-		Status:          "new",
-		Title:           req.Title,
-		Description:     req.Description,
-		Location:        req.Location,
-		OccurredAt:      req.OccurredAt,
-		ReportedBy:      userID,
-		UserReported:    req.ReporterFullName,
+		// ReferenceNumber: refNumber,
+		UserIncidentID: req.UserIncidentID,
+		FullLocation:   req.FullLocation,
+		Type:           req.Type,
+		InjuryType:     req.InjuryType,
+		SeverityLevel:  req.SeverityLevel,
+		Status:         "new",
+		Title:          req.Title,
+		Description:    req.Description,
+		Location:       req.Location,
+		OccurredAt:     req.OccurredAt,
+		ReportedBy:     userID,
+		UserReported:   req.ReporterFullName,
 		// AssignedTo:              req.AssignedTo,
 		ImmediateActionsTaken:   req.ImmediateActionsTaken,
 		Witnesses:               req.Witnesses,
