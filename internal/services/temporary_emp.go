@@ -69,6 +69,22 @@ func (s *TemporaryEmployeeService) Update(id int, updateData *schema.UpdateTempo
 func (s *TemporaryEmployeeService) Delete(id int) error {
 	return s.db.Delete(&models.TemporaryEmployee{}, id).Error
 }
+func (s *TemporaryEmployeeService) StatusChange(id int, action string) error {
+	var employee models.TemporaryEmployee
+	if err := s.db.First(&employee, id).Error; err != nil {
+		return err
+	}
+	if action == "deactivate" {
+		employee.IsActive = false
+	} else if action == "activate" {
+		employee.IsActive = true
+	}
+
+	if err := s.db.Save(&employee).Error; err != nil {
+		return err
+	}
+	return nil
+}
 
 func (s *TemporaryEmployeeService) GetAll() ([]models.TemporaryEmployee, error) {
 	var employees []models.TemporaryEmployee

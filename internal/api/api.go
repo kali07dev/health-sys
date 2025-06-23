@@ -81,6 +81,7 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 	apiIncidents.Get("/incidents/closed", incidentImpl.ListClosedIncidentsHandler)
 	apiIncidents.Post("/incidents/:id/status", incidentImpl.UpdateIncidentStatusHandler)
 	apiIncidents.Get("/incidents/:id/view", incidentImpl.GetIncidentHandler)
+	apiIncidents.Post("/incidents/:id/update", incidentImpl.UpdateIncidentHandler)
 	apiIncidents.Post("/incidents/:id/assign", incidentImpl.AssignIncidentToUserHandler)
 	apiIncidents.Get("/incidents/:id/summary", incidentImpl.GetIncidentSummary)
 	apiIncidents.Get("/incidents/employee/:id", incidentImpl.GetIncidentsByEmployeeID)
@@ -198,6 +199,8 @@ func SetupTemporaryEmployeeRoutes(app *fiber.App, employeeHandler *TemporaryEmpl
 		employeeRoutes.Get("/:id", employeeHandler.GetEmployee)
 		employeeRoutes.Put("/:id", employeeHandler.UpdateEmployee)
 		employeeRoutes.Delete("/:id", employeeHandler.DeleteEmployee)
+		employeeRoutes.Post("/:id/deactivate", employeeHandler.DeActivateEmployee)
+		employeeRoutes.Post("/:id/activate", employeeHandler.ActivateEmployee)
 	}
 }
 func SetupInterViewRoutes(app *fiber.App, handler *InterviewHandler) {

@@ -88,6 +88,9 @@ func (s *TemporaryEmployeeService) SearchAllEmployees(ctx context.Context, query
 			IsActive:       tempEmp.IsActive,
 		})
 	}
+	if len(combinedResults) == 0 {
+		return []schema.CombinedEmployeeSearchResult{}, nil
+	}
 
 	return combinedResults, nil
 }

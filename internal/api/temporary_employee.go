@@ -100,8 +100,47 @@ func (h *TemporaryEmployeeHandler) DeleteEmployee(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(fiber.StatusOK)
 }
+func (h *TemporaryEmployeeHandler) DeActivateEmployee(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid employee ID",
+		})
+	}
+	action := "deactivate"
+
+	if err := h.services.StatusChange(id, action); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to deactivate employee",
+		})
+	}
+
+	 return c.JSON(fiber.Map{
+        "message": "Employee De-activated successfully",
+    })
+}
+func (h *TemporaryEmployeeHandler) ActivateEmployee(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid employee ID",
+		})
+	}
+	action := "activate"
+
+	if err := h.services.StatusChange(id, action); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to deactivate employee",
+		})
+	}
+
+	 return c.JSON(fiber.Map{
+        "message": "Employee activated successfully",
+    })
+}
+
 
 func (h *TemporaryEmployeeHandler) SearchEmployees(c *fiber.Ctx) error {
 	var criteria schema.SearchCriteria
@@ -134,7 +173,7 @@ func (h *TemporaryEmployeeHandler) SearchAllEmployees(c *fiber.Ctx) error {
 			"error": "Failed to search employees",
 		})
 	}
-
+	
 	return c.JSON(employees)
 }
 func (h *TemporaryEmployeeHandler) ListEmployees(c *fiber.Ctx) error {
