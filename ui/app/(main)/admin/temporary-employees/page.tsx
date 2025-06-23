@@ -114,7 +114,7 @@ export default function TemporaryEmployeesPage() {
 
     try {
       await temporaryEmployeeService.deactivateEmployee(selectedEmployee.ID)
-      await fetchEmployees()
+      fetchEmployees()
       setIsDeactivateModalOpen(false)
     } catch (err) {
       console.error("Failed to deactivate employee:", err)
@@ -125,7 +125,7 @@ export default function TemporaryEmployeesPage() {
   const handleReactivateEmployee = async (id: number) => {
     try {
       await temporaryEmployeeService.reactivateEmployee(id)
-      await fetchEmployees()
+      fetchEmployees()
     } catch (err) {
       console.error("Failed to reactivate employee:", err)
       setError('Failed to reactivate employee. Please try again.')

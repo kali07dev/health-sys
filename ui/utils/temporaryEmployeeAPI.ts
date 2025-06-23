@@ -8,69 +8,65 @@ export const temporaryEmployeeService = {
   },
 
   async createEmployee(employee: CreateTemporaryEmployeeRequest): Promise<TemporaryEmployee> {
-    try {
-      const response = await fetchWithAuth('/temporary-employees', {
+    return fetchWithAuth('/temporary-employees', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(employee),
       })
-      if (!response.ok) {
-        throw new Error('Failed to create employee')
-      }
-      return await response.json()
-    } catch (error) {
-      console.error('Error creating employee:', error)
-      throw error
-    }
+    //   if (!response.ok) {
+    //     throw new Error('Failed to create employee')
+    //   }
+    //   return await response.json()
+    // } catch (error) {
+    //   console.error('Error creating employee:', error)
+    //   throw error
+    // }
   },
 
   async updateEmployee(employee: UpdateTemporaryEmployeeRequest & { ID: number }): Promise<TemporaryEmployee> {
-    try {
-      const response = await fetchWithAuth(`/temporary-employees/${employee.ID}`, {
+    return fetchWithAuth(`/temporary-employees/${employee.ID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(employee),
       })
-      if (!response.ok) {
-        throw new Error('Failed to update employee')
-      }
-      return await response.json()
-    } catch (error) {
-      console.error('Error updating employee:', error)
-      throw error
-    }
+    //   if (!response.ok) {
+    //     throw new Error('Failed to update employee')
+    //   }
+    //   return await response.json()
+    // } catch (error) {
+    //   console.error('Error updating employee:', error)
+    //   throw error
+    // }
   },
 
-  async deactivateEmployee(id: number): Promise<void> {
-    try {
-      const response = await fetchWithAuth(`/temporary-employees/${id}/deactivate`, {
+  async deactivateEmployee(id: number){
+    return fetchWithAuth(`/temporary-employees/${id}/deactivate`, {
         method: 'POST',
       })
-      if (!response.ok) {
-        throw new Error('Failed to deactivate employee')
-      }
-    } catch (error) {
-      console.error('Error deactivating employee:', error)
-      throw error
-    }
+    //   if (!response.ok) {
+    //     throw new Error('Failed to deactivate employee')
+    //   }
+    // } catch (error) {
+    //   console.error('Error deactivating employee:', error)
+    //   throw error
+    // }
   },
 
-  async reactivateEmployee(id: number): Promise<void> {
-    try {
-      const response = await fetchWithAuth(`/temporary-employees/${id}/reactivate`, {
+  async reactivateEmployee(id: number){
+    return fetchWithAuth(`/temporary-employees/${id}/activate`, {
         method: 'POST',
       })
-      if (!response.ok) {
-        throw new Error('Failed to reactivate employee')
-      }
-    } catch (error) {
-      console.error('Error reactivating employee:', error)
-      throw error
-    }
+    //   if (!response.ok) {
+    //     throw new Error('Failed to reactivate employee')
+    //   }
+    // } catch (error) {
+    //   console.error('Error reactivating employee:', error)
+    //   throw error
+    // }
   },
 
   async searchEmployees(criteria: SearchCriteria): Promise<TemporaryEmployee[]> {
