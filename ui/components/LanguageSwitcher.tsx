@@ -53,7 +53,7 @@ export function LanguageSwitcher() {
           <DropdownMenuItem
             key={loc.code}
             onClick={() => changeLanguage(loc.code)}
-            className={`flex items-center gap-3 cursor-pointer ${
+            className={`flex items-center gap-3 cursor-pointer text-black ${
               loc.code === locale ? 'bg-gray-100' : ''
             }`}
           >

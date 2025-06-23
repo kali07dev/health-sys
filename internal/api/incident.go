@@ -1,73 +1,60 @@
 package api
 
-// import (
-// 	"github.com/gofiber/fiber/v2"
-// 	"github.com/google/uuid"
-// 	"github.com/hopkali04/health-sys/internal/models"
-// 	"github.com/hopkali04/health-sys/internal/services/incident"
-// )
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/hopkali04/health-sys/internal/schema"
+	"github.com/hopkali04/health-sys/internal/utils"
+)
 
-// type IncidentHandler struct {
-// 	service incident.Service
-// }
+func (h *IncidentsHandler) UpdateIncidentHandler(c *fiber.Ctx) error {
+    utils.LogInfo("Processing request to update incident", map[string]interface{}{
+        "path": c.Path(),
+    })
 
-// func NewIncidentHandler(service incident.Service) *IncidentHandler {
-// 	return &IncidentHandler{service: service}
-// }
+    // Parse incident ID
+    id, err := uuid.Parse(c.Params("id"))
+    if err != nil {
+        utils.LogError("Invalid incident ID format", map[string]interface{}{
+            "incidentID": c.Params("id"),
+            "error":      err.Error(),
+        })
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid incident ID"})
+    }
 
-// func (h *IncidentHandler) CreateIncident(c *fiber.Ctx) error {
-// 	var incident models.Incident
-// 	if err := c.BodyParser(&incident); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 			"error": "Invalid request body",
-// 		})
-// 	}
+    // Parse request body
+    var req schema.UpdateIncidentRequest
+    if err := c.BodyParser(&req); err != nil {
+        utils.LogError("Failed to parse request body", map[string]interface{}{
+            "incidentID": id,
+            "error":      err.Error(),
+        })
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+    }
 
-// 	if err := h.service.CreateIncident(&incident); err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"error": err.Error(),
-// 		})
-// 	}
+    // Validate injury type if incident type is being updated to injury
+    if req.Type != nil && *req.Type == "injury" && (req.InjuryType == nil || *req.InjuryType == "") {
+        utils.LogError("Injury type required", map[string]interface{}{
+            "incidentID": id,
+            "type":       *req.Type,
+        })
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "injury type is required for injury incidents",
+        })
+    }
 
-// 	return c.Status(fiber.StatusCreated).JSON(incident)
-// }
+    // Update the incident
+    incident, err := h.service.UpdateIncident(id, req)
+    if err != nil {
+        utils.LogError("Failed to update incident", map[string]interface{}{
+            "incidentID": id,
+            "error":      err.Error(),
+        })
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+    }
 
-// func (h *IncidentHandler) GetIncident(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	incident, err := h.service.GetIncidentByID(uuid.MustParse(id))
-// 	if err != nil {
-// 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-// 			"error": "Incident not found",
-// 		})
-// 	}
-// 	return c.JSON(incident)
-// }
-
-// func (h *IncidentHandler) UpdateIncident(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	var incident models.Incident
-// 	if err := c.BodyParser(&incident); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 			"error": "Invalid request body",
-// 		})
-// 	}
-
-// 	incident.ID = uuid.MustParse(id)
-// 	if err := h.service.UpdateIncident(&incident); err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"error": err.Error(),
-// 		})
-// 	}
-
-// 	return c.JSON(incident)
-// }
-
-// func (h *IncidentHandler) DeleteIncident(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	if err := h.service.DeleteIncident(uuid.MustParse(id)); err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"error": err.Error(),
-// 		})
-// 	}
-// 	return c.SendStatus(fiber.StatusNoContent)
-// }
+    utils.LogInfo("Successfully updated incident", map[string]interface{}{
+        "incidentID": id,
+    })
+    return c.JSON(schema.ToIncidentResponse(*incident))
+}

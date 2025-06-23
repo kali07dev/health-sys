@@ -19,13 +19,31 @@ type CreateIncidentRequest struct {
 	// ReportedBy              uuid.UUID
 	// AssignedTo              uuid.UUID      `json:"assignedTo"`
 	ReporterFullName        string         `json:"reporterFullName"`
+	LateReason              string         `json:"lateReason"`
 	UserIncidentID          string         `json:"userIncidentID"`
 	ImmediateActionsTaken   string         `json:"immediateActionsTaken"`
 	Witnesses               map[string]any `json:"witnesses"`               // JSONB field
 	EnvironmentalConditions map[string]any `json:"environmentalConditions"` // JSONB field
 	EquipmentInvolved       map[string]any `json:"equipmentInvolved"`       // JSONB field
 }
-
+type UpdateIncidentRequest struct {
+	Type                    *string         `json:"type" validate:"omitempty,oneof=injury near_miss property_damage environmental security"`
+	InjuryType              *string         `json:"injuryType"`
+	SeverityLevel           *string         `json:"severityLevel" validate:"omitempty,oneof=low medium high critical"`
+	Title                   *string         `json:"title" validate:"omitempty,max=255"`
+	Description             *string         `json:"description"`
+	Location                *string         `json:"location" validate:"omitempty,max=255"`
+	FullLocation            *string         `json:"fulllocation" validate:"omitempty,max=255"`
+	Status                  *string         `json:"status" validate:"omitempty,oneof=new investigating action_required resolved closed"`
+	ReporterFullName        *string         `json:"reporterFullName"`
+	LateReason              *string         `json:"lateReason"`
+	UserIncidentID          *string         `json:"userIncidentID"`
+	OccurredAt              *time.Time      `json:"occurredAt"`
+	ImmediateActionsTaken   *string         `json:"immediateActionsTaken"`
+	Witnesses               *map[string]any `json:"witnesses"`
+	EnvironmentalConditions *map[string]any `json:"environmentalConditions"`
+	EquipmentInvolved       *map[string]any `json:"equipmentInvolved"`
+}
 type IncidentResponse struct {
 	ID              string `json:"id"`
 	ReferenceNumber string `json:"referenceNumber"`
@@ -39,6 +57,7 @@ type IncidentResponse struct {
 	Description             string                 `json:"description"`
 	Location                string                 `json:"location"`
 	FullLocation            string                 `json:"fulllocation"`
+	LateReason              string                 `json:"lateReason"`
 	OccurredAt              time.Time              `json:"occurredAt"`
 	ReportedBy              string                 `json:"reportedBy"`
 	AssignedTo              *string                `json:"assignedTo,omitempty"`
@@ -79,6 +98,7 @@ func ToIncidentResponse(i models.Incident) IncidentResponse {
 		Description:             i.Description,
 		Location:                i.Location,
 		FullLocation:            i.FullLocation,
+		LateReason:              i.LateReason,
 		OccurredAt:              i.OccurredAt,
 		ReportedBy:              fmt.Sprintf("%s %s", i.Reporter.FirstName, i.Reporter.LastName),
 		AssignedTo:              assignedTo,

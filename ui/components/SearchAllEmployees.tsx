@@ -19,7 +19,8 @@ interface SearchEmployeeProps {
 
 export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery,
+     setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);

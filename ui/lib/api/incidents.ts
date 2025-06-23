@@ -21,6 +21,7 @@ const incidentSchema = z.object({
   description: z.string(),
   location: z.string().max(255),
   fulllocation: z.string(),
+  lateReason: z.string().optional(),
   occurredAt: z.string().transform(str => new Date(str)),
   immediateActionsTaken: z.string().optional(),
   reportedBy: z.string(),

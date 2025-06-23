@@ -45,6 +45,13 @@ export const incidentAPI = {
         console.error('Error updating corrective action:', error);
         throw error;
       }),
+  updateIncident: (incidentID: string, data: Partial<Incident>) => 
+    api.post(`/incidents/${incidentID}/update`, data)
+      .then(res => res.data)
+      .catch(error => {
+        console.error('Error updating corrective action:', error);
+        throw error;
+      }),
 
   AdminupdateCorrectiveAction: (actionId: string, data: Partial<CorrectiveAction>) => 
         api.post(`/actions/${actionId}/admin`, data)

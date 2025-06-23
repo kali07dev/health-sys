@@ -49,6 +49,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     description: "",
     location: "",
     fulllocation:"",
+    lateReason: "",
     occurredAt: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     immediateActionsTaken: "",
     reportedBy: session?.user?.id || "",
@@ -165,7 +166,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
     // Add late reporting reason to form data if applicable
     const submissionData = {
       ...formData,
-      lateReportingReason: showLateReportingReason ? lateReportingReason : undefined
+      lateReason: showLateReportingReason ? lateReportingReason : undefined
     }
 
     try {
@@ -289,7 +290,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
               </Select>
             </div>
 
-            {formData.type === "injury" && (
+            {/* {formData.type === "injury" && (
               <div className="space-y-2">
                 <Label htmlFor="injuryType" className="text-base">
                   Injury Type
@@ -307,7 +308,7 @@ const IncidentForm = ({ onSuccess }: IncidentFormProps) => {
                   </SelectContent>
                 </Select>
               </div>
-            )}
+            )} */}
 
             <div className="space-y-2">
               <Label htmlFor="severityLevel" className="text-base">

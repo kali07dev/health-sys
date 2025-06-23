@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -74,9 +75,9 @@ func (s *IncidentService) GetByEmployeeID(employeeID uuid.UUID) ([]models.Incide
 func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userID uuid.UUID) (*models.Incident, error) {
 	// refNumber := generateReferenceNumber()
 
-	if req.Type == "injury" && req.InjuryType == "" {
-		return nil, fmt.Errorf("injury type is required for injury incidents")
-	}
+	// if req.Type == "injury" && req.InjuryType == "" {
+	// 	return nil, fmt.Errorf("injury type is required for injury incidents")
+	// }
 	incident := &models.Incident{
 		// ReferenceNumber: refNumber,
 		UserIncidentID: req.UserIncidentID,
@@ -84,6 +85,7 @@ func (s *IncidentService) CreateIncident(req schema.CreateIncidentRequest, userI
 		Type:           req.Type,
 		InjuryType:     req.InjuryType,
 		SeverityLevel:  req.SeverityLevel,
+		LateReason:     req.LateReason,
 		Status:         "new",
 		Title:          req.Title,
 		Description:    req.Description,
@@ -251,17 +253,97 @@ func (s *IncidentService) ListClosedIncidents(page, pageSize int, filters map[st
 }
 
 // UpdateIncident updates an existing incident
-func (s *IncidentService) UpdateIncident(id uuid.UUID, updates map[string]interface{}) (*models.Incident, error) {
-	incident, err := s.GetIncident(id)
-	if err != nil {
-		return nil, err
-	}
+func (s *IncidentService) UpdateIncident(id uuid.UUID, updates schema.UpdateIncidentRequest) (*models.Incident, error) {
+    // Retrieve existing incident
+    var incident models.Incident
+    if err := s.db.Preload("Reporter").Preload("Assignee").First(&incident, "id = ?", id).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, fmt.Errorf("incident not found")
+        }
+        return nil, err
+    }
 
-	if err := s.db.Model(incident).Updates(updates).Error; err != nil {
-		return nil, fmt.Errorf("failed to update incident: %w", err)
-	}
+    // Validate injury type if incident type is being updated to injury
+    if updates.Type != nil && *updates.Type == "injury" && (updates.InjuryType == nil || *updates.InjuryType == "") {
+        return nil, fmt.Errorf("injury type is required for injury incidents")
+    }
 
-	return incident, nil
+    // Selectively update fields
+    if updates.Type != nil {
+        incident.Type = *updates.Type
+    }
+
+    if updates.InjuryType != nil {
+        incident.InjuryType = *updates.InjuryType
+    }
+
+    if updates.SeverityLevel != nil {
+        incident.SeverityLevel = *updates.SeverityLevel
+    }
+
+    if updates.Title != nil {
+        incident.Title = *updates.Title
+    }
+
+    if updates.Description != nil {
+        incident.Description = *updates.Description
+    }
+
+    if updates.Location != nil {
+        incident.Location = *updates.Location
+    }
+
+    if updates.FullLocation != nil {
+        incident.FullLocation = *updates.FullLocation
+    }
+
+    if updates.Status != nil {
+        incident.Status = *updates.Status
+        if *updates.Status == "closed" {
+            now := time.Now()
+            incident.ClosedAt = &now
+        }
+    }
+
+    if updates.ReporterFullName != nil {
+        incident.UserReported = *updates.ReporterFullName
+    }
+
+    if updates.LateReason != nil {
+        incident.LateReason = *updates.LateReason
+    }
+
+    if updates.UserIncidentID != nil {
+        incident.UserIncidentID = *updates.UserIncidentID
+    }
+
+    if updates.OccurredAt != nil {
+        incident.OccurredAt = *updates.OccurredAt
+    }
+
+    if updates.ImmediateActionsTaken != nil {
+        incident.ImmediateActionsTaken = *updates.ImmediateActionsTaken
+    }
+
+    if updates.Witnesses != nil {
+        incident.Witnesses = models.JSONB(*updates.Witnesses)
+    }
+
+    if updates.EnvironmentalConditions != nil {
+        incident.EnvironmentalConditions = models.JSONB(*updates.EnvironmentalConditions)
+    }
+
+    if updates.EquipmentInvolved != nil {
+        incident.EquipmentInvolved = models.JSONB(*updates.EquipmentInvolved)
+    }
+
+    incident.UpdatedAt = time.Now()
+
+    if err := s.db.Save(&incident).Error; err != nil {
+        return nil, fmt.Errorf("failed to update incident: %w", err)
+    }
+
+    return &incident, nil
 }
 
 // DeleteIncident soft deletes an incident

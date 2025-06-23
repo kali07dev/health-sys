@@ -296,9 +296,12 @@ func (s *IncidentService) calculateStatistics(
 	}
 
 	// Calculate total days open
-	if incident.ClosedAt.IsZero() {
+	// FIX: Check if ClosedAt is nil before trying to dereference it.
+	// A nil pointer indicates the incident is still open.
+	if incident.ClosedAt == nil {
 		stats.TotalDaysOpen = int(time.Since(incident.CreatedAt).Hours() / 24)
 	} else {
+		// If ClosedAt is not nil, we can safely use it in our calculation.
 		stats.TotalDaysOpen = int(incident.ClosedAt.Sub(incident.CreatedAt).Hours() / 24)
 	}
 

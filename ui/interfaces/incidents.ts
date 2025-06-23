@@ -12,6 +12,7 @@ export interface IncidentFormData {
   description: string;
   location: string;
   fulllocation: string;
+  lateReason?: string;
   occurredAt: string;
   immediateActionsTaken?: string;
   reportedBy: string;
@@ -104,10 +105,12 @@ export interface Incident {
   type: 'injury' | 'near_miss' | 'property_damage' | 'environmental' | 'security';
   severityLevel: 'low' | 'medium' | 'high' | 'critical';
   status: 'new' | 'investigating' | 'action_required' | 'resolved' | 'closed';
+  injuryType?: 'injury-fa' | 'injury-lti' | 'injury-mwd' | 'injury-fai' | 'injury-mti';
   title: string;
   description: string;
   location: string;
   fulllocation:string;
+  lateReason?: string;
   occurredAt: string;
   reportedBy: string;
   userReported: string

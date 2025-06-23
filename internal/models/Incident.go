@@ -22,6 +22,7 @@ type Incident struct {
 	Description             string     `gorm:"type:text;not null"`
 	Location                string     `gorm:"size:255;not null"`
 	FullLocation            string     `gorm:"size:255;"`
+	LateReason              string     `gorm:"type:text;"`
 	OccurredAt              time.Time  `gorm:"not null"`
 	ReportedBy              uuid.UUID  `gorm:"type:uuid;not null"`
 	UserReported            string     `gorm:"size:255"`
