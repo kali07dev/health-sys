@@ -677,6 +677,25 @@ export const IncidentsTable = ({
                           </div>
                         </th>
                         <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                          onClick={() => handleSort("status")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                            Status
+                            <span className="ml-1">
+                              {sortField === "status" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden lg:table-cell cursor-pointer"
                           onClick={() => handleSort("occurredAt")}
                         >
