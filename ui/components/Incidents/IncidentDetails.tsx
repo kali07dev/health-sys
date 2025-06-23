@@ -28,7 +28,9 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, attachments
           <DetailItem label="Title" value={incident.title} />
           <DetailItem label="Description" value={incident.description} className="whitespace-pre-wrap break-words" />
           <DetailItem label="Location" value={incident.location} />
+          <DetailItem label="Full Location" value={incident.fulllocation} />
           <DetailItem label="Occurred At" value={new Date(incident.occurredAt).toLocaleString()} />
+          <DetailItem label="Late Reporting Reasons" value={incident.lateReason} />
           <DetailItem label="Reported By Account" value={incident.reportedBy} />
           <DetailItem label="Reported For" value={incident.userReported} />
 
