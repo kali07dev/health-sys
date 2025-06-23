@@ -92,25 +92,25 @@ export function IncidentSummaryView({ summary }: Props) {
         <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6 bg-red-50 p-1 rounded-lg">
           <TabsTrigger 
             value="details" 
-            className="data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
+            className="text-black data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
           >
             Details
           </TabsTrigger>
           <TabsTrigger 
             value="investigation" 
-            className="data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
+            className="text-black data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
           >
             Investigation
           </TabsTrigger>
           <TabsTrigger 
             value="actions" 
-            className="data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
+            className="text-black data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
           >
             Actions
           </TabsTrigger>
           <TabsTrigger 
             value="timeline" 
-            className="data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
+            className="text-black data-[state=active]:bg-red-500 data-[state=active]:text-black rounded-md"
           >
             Timeline
           </TabsTrigger>

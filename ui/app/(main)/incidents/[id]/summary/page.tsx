@@ -21,7 +21,7 @@ export default async function IncidentSummaryPage({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-white p-6 rounded-lg shadow-md">
       <ErrorBoundary fallback={
         <div className="p-8 bg-red-50 rounded-lg shadow-lg text-center">
           <h2 className="text-red-600 text-xl font-bold mb-4">Something went wrong</h2>
@@ -50,9 +50,12 @@ export default async function IncidentSummaryPage({ params }: PageProps) {
 // Separate component to handle data fetching
 async function IncidentSummaryContent({ id }: { id: string }) {
   try {
+
     const summary = await getIncidentSummary(id);
     return <IncidentSummaryView summary={summary} />;
+
   } catch (error) {
+
     console.error('Error fetching incident summary:', error);
     return (
       <div className="p-8 bg-red-50 rounded-lg shadow-lg text-center">
@@ -60,5 +63,6 @@ async function IncidentSummaryContent({ id }: { id: string }) {
         <p className="text-gray-700">We couldn&apos;t load the incident data. Please try again later.</p>
       </div>
     );
+
   }
 }

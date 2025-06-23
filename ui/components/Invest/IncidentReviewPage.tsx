@@ -25,6 +25,9 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
   // const handleCloseModal = () => {
   //   setActiveTab('details');
   // };
+  const handleOpenSummary = () => {
+    router.push(`/incidents/${incidentId}/summary`);
+  };
 
   const handleCloseIncident = async () => {
     try {
@@ -87,15 +90,23 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
               Status: <span className="font-semibold">{incident?.status}</span>
             </p>
           </div>
-          {isAuthorized && incident?.status !== "closed" && (
+          <div className="flex gap-0"> 
             <button
-              onClick={handleCloseIncident}
-              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              onClick={handleOpenSummary}
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
             >
-              <XCircle className="w-5 h-5" />
-              Close Incident
+              View Summary
             </button>
-          )}
+            {isAuthorized && incident?.status !== "closed" && (
+              <button
+                onClick={handleCloseIncident}
+                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+                Close Incident
+              </button>
+            )}
+          </div> 
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
