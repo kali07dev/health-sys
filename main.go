@@ -15,8 +15,8 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "healthsys",
-		Short: "Health System CLI tool for database management",
+		Use:   "safety365",
+		Short: "Safety System CLI tool for database management",
 	}
 
 	rootCmd.AddCommand(cli.MigrateCmd())

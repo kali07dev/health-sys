@@ -112,7 +112,7 @@ func (s *EmailService) SendEmail(to []string, subject string, body template.HTML
         Subject:     subject,
         Title:       subject,
         Message:     body,
-        CompanyName: "Safety System",
+        CompanyName: "Safety365 System",
     }
 	htmlContent, err := s.generateHTMLEmail(template)
 	if err != nil {
@@ -569,7 +569,7 @@ func (s *EmailService) sendVerificationEmail(to []string, verificationLink strin
         Title:   "Welcome! Please Verify Your Account",
         Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #1d1d1f; margin-bottom: 15px;">Welcome to Health System</h3>
+                <h3 style="color: #1d1d1f; margin-bottom: 15px;">Welcome to Safety365 System</h3>
                 <p>To complete your account setup, please click the button below to verify your email address and set up your password.</p>
                 <p>This link will expire in 24 hours for security purposes.</p>
                 <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
@@ -580,7 +580,7 @@ func (s *EmailService) sendVerificationEmail(to []string, verificationLink strin
             verificationLink)),
         ActionLink:  verificationLink,
         ActionText:  "Verify Account",
-        CompanyName: "Health System",
+        CompanyName: "Safety365 System",
     }
 
     return s.SendEmail(to, template.Subject, template.Message)
@@ -603,7 +603,7 @@ func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) err
             resetLink)),
         ActionLink:  resetLink,
         ActionText:  "Reset Password",
-        CompanyName: "Health System",
+        CompanyName: "Safety365 system",
     }
 
     return s.SendEmail(to, template.Subject, template.Message)

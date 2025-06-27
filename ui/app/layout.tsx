@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Safety System",
+  title: "Safety365 System",
   description: "Report and track Incidents",
 }
 
