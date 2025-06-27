@@ -649,3 +649,51 @@ func (s *EmailService) sendLeadInvestigatorAssignedEmail(to []string, investigat
 
     return s.SendEmail(to, template.Subject, template.Message)
 }
+
+// notifyIncidentIsClosed sends a notification when an incident is closed
+func (s *EmailService) NotifyIncidentIsClosed(to []string, incident *models.Incident) error {
+    var closedAt string
+    if incident.ClosedAt != nil {
+        closedAt = incident.ClosedAt.Format("January 2, 2006 3:04 PM")
+    } else {
+        closedAt = time.Now().Format("January 2, 2006 3:04 PM")
+    }
+
+    template := &EmailTemplate{
+        Subject: "✅ Incident Closed: " + incident.Title,
+        Title:   "Incident Resolution Confirmation",
+        Message: template.HTML(fmt.Sprintf(`
+            <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #2e7d32; margin-bottom: 15px;">Incident Successfully Closed</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>Reference #:</strong> %s</p>
+                    <p><strong>Title:</strong> %s</p>
+                    <p><strong>Type:</strong> %s</p>
+                    <p><strong>Severity:</strong> %s</p>
+                    <p><strong>Location:</strong> %s</p>
+                    <p><strong>Occurred At:</strong> %s</p>
+                    <p><strong>Closed At:</strong> %s</p>
+                </div>
+                <div style="margin-top: 15px; color: #2e7d32;">
+                    <p>This incident has been officially closed in the system. All related corrective actions should now be completed.</p>
+                    <p><strong>Next Steps:</strong></p>
+                    <ul style="margin-top: 5px;">
+                        <li>Review the final incident report if needed</li>
+                        <li>Archive any related documentation</li>
+                        <li>Consider lessons learned for future prevention</li>
+                    </ul>
+                </div>
+            </div>`,
+            incident.ReferenceNumber,
+            incident.Title,
+            incident.Type,
+            incident.SeverityLevel,
+            incident.Location,
+            incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
+            closedAt)),
+        ActionLink: fmt.Sprintf("/incidents/%s", incident.ID),
+        ActionText: "View Incident Details",
+    }
+
+    return s.SendEmail(to, template.Subject, template.Message)
+}

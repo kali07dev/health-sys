@@ -242,7 +242,7 @@ func (h *IncidentsHandler) CreateIncident(c *fiber.Ctx) error {
 		"incidentID": incident.ID,
 		"userID":     uuidUserID,
 	})
-	h.employeeSVC.HandleSevereIncidentNotification(&req)
+	go h.employeeSVC.HandleSevereIncidentNotification(&req)
 
 	return c.Status(fiber.StatusCreated).JSON(incident)
 }
@@ -553,6 +553,7 @@ func (h *IncidentsHandler) CloseIncidentHandler(c *fiber.Ctx) error {
 		})
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+	go h.employeeSVC.HandleClosingIncidentNotification(incident)
 
 	utils.LogInfo("Successfully closed incident", map[string]interface{}{
 		"incidentID": id,

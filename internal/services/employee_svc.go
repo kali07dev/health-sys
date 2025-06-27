@@ -199,6 +199,30 @@ func (s *EmployeeService) HandleSevereIncidentNotification(incident *schema.Crea
 	}
 }
 
+// HandleSevereIncidentNotification manages the process of notifying managers for severe incidents
+func (s *EmployeeService) HandleClosingIncidentNotification(incident *models.Incident) {
+
+	emp, err := s.GetEmployeeByUserID(incident.ReportedBy)
+	if err != nil {
+		log.Printf("Failed to retrieve reporter for incident notification: %v", err)
+		return
+	}
+
+	var user models.User
+	if err := s.db.Where("id = ?", emp.UserID).First(&user).Error; err != nil {
+		log.Printf("failed to find user for employee: %v", err)
+	}
+
+	var email []string
+	email = append(email, user.Email)
+
+	// Send notification
+	if err := s.mailService.NotifyIncidentIsClosed(email, incident); err != nil {
+		log.Printf("Failed to send urgent incident notification: %v", err)
+		return
+	}
+}
+
 // isIncidentSevere determines if an incident requires urgent notification
 func (s *EmployeeService) isIncidentSevere(incident *schema.CreateIncidentRequest) bool {
 	// Check severity level

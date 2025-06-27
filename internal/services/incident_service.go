@@ -448,6 +448,8 @@ func (s *IncidentService) CloseIncident(id uuid.UUID) (*models.Incident, error) 
 	return &incident, nil
 }
 
+
+
 // AssignIncidentToUser assigns an incident to a user by updating the AssignedTo field
 func (s *IncidentService) AssignIncidentToUser(id uuid.UUID, userID uuid.UUID) (*models.Incident, error) {
 	var incident models.Incident
