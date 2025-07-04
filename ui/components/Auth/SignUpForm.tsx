@@ -43,9 +43,9 @@ const SignUpForm: React.FC = () => {
       }
 
       // Validate company email domain
-      if (!userData.email.endsWith("@huaxincem.com")) {
-        throw new Error("Your Email is not allowed to create an account on the system, use a company email");
-      }
+      // if (!userData.email.endsWith("@huaxincem.com")) {
+      //   throw new Error("Your Email is not allowed to create an account on the system, use a company email");
+      // }
 
       // Convert start date to ISO format
       const formattedData = {
