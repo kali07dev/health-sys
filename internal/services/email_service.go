@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/smtp"
+	"os"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ type EmailService struct {
 	useTLS       bool
 	timeout      time.Duration
 }
+
 type EmailTemplate struct {
 	Subject     string
 	Title       string
@@ -31,6 +33,7 @@ type EmailTemplate struct {
 	ActionText  string
 	CompanyName string
 }
+
 type NotificationData struct {
 	To        []string
 	Title     string
@@ -59,43 +62,176 @@ func (s *EmailService) SetTimeout(timeout time.Duration) {
 
 // TestConnection tests the SMTP connection without sending an email
 func (s *EmailService) TestConnection() error {
-	log.Println("Testing SMTP Connection...")
+	log.Println("Testing Connection!")
 	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
-	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
 
-	// Case 1: Implicit TLS (e.g., SMTPS on port 465)
-	// The connection is encrypted from the start.
-	if s.useTLS {
-		log.Println("Attempting Implicit TLS connection...")
-		tlsConfig := &tls.Config{
-			ServerName: s.smtpHost,
-			MinVersion: tls.VersionTLS12,
-		}
-		dialer := &net.Dialer{Timeout: s.timeout}
-
-		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
-		if err != nil {
-			return fmt.Errorf("TLS dial failed: %v", err)
-		}
-		defer conn.Close()
-
-		client, err := smtp.NewClient(conn, s.smtpHost)
-		if err != nil {
-			return fmt.Errorf("SMTP client creation after TLS dial failed: %v", err)
-		}
-		defer client.Close()
-
-		if err := client.Auth(auth); err != nil {
-			return fmt.Errorf("authentication failed: %v", err)
-		}
-
-		log.Println("Implicit TLS connection test successful!")
-		return nil
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		ServerName:         s.smtpHost,
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: false, // Set to true only for testing with self-signed certs
 	}
 
-	// Case 2: Plain connection followed by STARTTLS (e.g., on port 587 or 25)
-	// The connection starts in plain text and is then upgraded.
-	log.Println("Attempting STARTTLS connection...")
+	// For port 587, we typically use STARTTLS (not direct TLS)
+	if s.smtpPort == 587 {
+		return s.testSTARTTLS(addr, tlsConfig)
+	}
+
+	// For port 465, use direct TLS
+	if s.smtpPort == 465 {
+		return s.testDirectTLS(addr, tlsConfig)
+	}
+
+	// Default to STARTTLS for other ports
+	return s.testSTARTTLS(addr, tlsConfig)
+}
+
+func (s *EmailService) testSTARTTLS(addr string, tlsConfig *tls.Config) error {
+	// Test basic TCP connection first
+	conn, err := net.DialTimeout("tcp", addr, s.timeout)
+	if err != nil {
+		return fmt.Errorf("TCP connection failed: %v", err)
+	}
+	conn.Close()
+
+	// Test SMTP connection with STARTTLS
+	client, err := smtp.Dial(addr)
+	if err != nil {
+		return fmt.Errorf("SMTP connection failed: %v", err)
+	}
+	defer client.Close()
+
+	// Get hostname for EHLO
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "localhost"
+	}
+
+	// Send EHLO
+	if err := client.Hello(hostname); err != nil {
+		return fmt.Errorf("EHLO failed: %v", err)
+	}
+
+	// Check if server supports STARTTLS
+	if ok, _ := client.Extension("STARTTLS"); !ok {
+		return fmt.Errorf("server doesn't support STARTTLS")
+	}
+
+	// Start TLS
+	if err := client.StartTLS(tlsConfig); err != nil {
+		return fmt.Errorf("STARTTLS failed: %v", err)
+	}
+
+	// Test authentication
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
+	if err := client.Auth(auth); err != nil {
+		return fmt.Errorf("authentication failed: %v", err)
+	}
+
+	log.Println("SMTP connection test successful!")
+	return nil
+}
+
+func (s *EmailService) testDirectTLS(addr string, tlsConfig *tls.Config) error {
+	// Test direct TLS connection
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: s.timeout}, "tcp", addr, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("TLS connection failed: %v", err)
+	}
+	defer conn.Close()
+
+	client, err := smtp.NewClient(conn, s.smtpHost)
+	if err != nil {
+		return fmt.Errorf("SMTP client creation failed: %v", err)
+	}
+	defer client.Close()
+
+	// Get hostname for EHLO
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "localhost"
+	}
+
+	// Send EHLO
+	if err := client.Hello(hostname); err != nil {
+		return fmt.Errorf("EHLO failed: %v", err)
+	}
+
+	// Test authentication
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
+	if err := client.Auth(auth); err != nil {
+		return fmt.Errorf("authentication failed: %v", err)
+	}
+
+	log.Println("SMTP connection test successful!")
+	return nil
+}
+
+// SendEmail sends an email to a list of recipients
+func (s *EmailService) SendEmail(to []string, subject string, body template.HTML) error {
+	if len(to) == 0 {
+		return fmt.Errorf("recipient list cannot be empty")
+	}
+
+	template := &EmailTemplate{
+		Subject:     subject,
+		Title:       subject,
+		Message:     body,
+		CompanyName: "Safety365 System",
+	}
+
+	htmlContent, err := s.generateHTMLEmail(template)
+	if err != nil {
+		return fmt.Errorf("failed to generate HTML email: %v", err)
+	}
+
+	// Create email content
+	headers := make([]string, 0)
+	headers = append(headers, fmt.Sprintf("From: %s", s.smtpUsername))
+	headers = append(headers, fmt.Sprintf("To: %s", strings.Join(to, ", ")))
+	headers = append(headers, fmt.Sprintf("Subject: %s", subject))
+	headers = append(headers, "MIME-Version: 1.0")
+	headers = append(headers, "Content-Type: text/html; charset=UTF-8")
+
+	emailContent := strings.Join(headers, "\r\n") + "\r\n\r\n" + htmlContent
+
+	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
+
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		ServerName:         s.smtpHost,
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: false, // Set to true only for testing with self-signed certs
+	}
+
+	// Use appropriate method based on port and configuration
+	if s.useTLS || s.smtpPort == 465 {
+		return s.sendWithDirectTLS(addr, tlsConfig, emailContent, to)
+	}
+
+	// Default to STARTTLS (typical for port 587)
+	return s.sendWithSTARTTLS(addr, tlsConfig, emailContent, to)
+}
+
+func (s *EmailService) sendWithDirectTLS(addr string, tlsConfig *tls.Config, emailContent string, to []string) error {
+	// Direct TLS connection
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: s.timeout}, "tcp", addr, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("TLS connection failed: %v", err)
+	}
+	defer conn.Close()
+
+	client, err := smtp.NewClient(conn, s.smtpHost)
+	if err != nil {
+		return fmt.Errorf("SMTP client creation failed: %v", err)
+	}
+	defer client.Close()
+
+	return s.sendEmailWithClient(client, emailContent, to)
+}
+
+func (s *EmailService) sendWithSTARTTLS(addr string, tlsConfig *tls.Config, emailContent string, to []string) error {
+	// Plain connection first, then STARTTLS
 	conn, err := net.DialTimeout("tcp", addr, s.timeout)
 	if err != nil {
 		return fmt.Errorf("TCP connection failed: %v", err)
@@ -108,71 +244,53 @@ func (s *EmailService) TestConnection() error {
 	}
 	defer client.Close()
 
-	if err := client.Hello("localhost"); err != nil {
+	// Get hostname for EHLO
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "localhost"
+	}
+
+	// Send EHLO
+	if err := client.Hello(hostname); err != nil {
 		return fmt.Errorf("EHLO failed: %v", err)
 	}
 
-	if ok, _ := client.Extension("STARTTLS"); !ok {
-		return fmt.Errorf("server doesn't support STARTTLS on this port")
-	}
-
-	tlsConfig := &tls.Config{
-		ServerName: s.smtpHost,
-		MinVersion: tls.VersionTLS12,
-	}
+	// Start TLS
 	if err := client.StartTLS(tlsConfig); err != nil {
 		return fmt.Errorf("STARTTLS failed: %v", err)
 	}
 
+	return s.sendEmailWithClient(client, emailContent, to)
+}
+
+func (s *EmailService) sendEmailWithClient(client *smtp.Client, emailContent string, to []string) error {
+	// Authenticate
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
 	if err := client.Auth(auth); err != nil {
 		return fmt.Errorf("authentication failed: %v", err)
 	}
 
-	log.Println("STARTTLS connection test successful!")
-	return nil
-}
-
-// SendEmail sends an email to a list of recipients
-func (s *EmailService) SendEmail(to []string, subject string, body template.HTML) error {
-	if len(to) == 0 {
-		return fmt.Errorf("recipient list cannot be empty")
+	// Set sender
+	if err := client.Mail(s.smtpUsername); err != nil {
+		return fmt.Errorf("failed to set sender: %v", err)
 	}
 
-	// 1. Generate the HTML content from the template (same as before)
-	templateData := &EmailTemplate{
-		Subject:     subject,
-		Title:       subject,
-		Message:     body,
-		CompanyName: "Safety365 System",
+	// Add recipients
+	for _, recipient := range to {
+		if err := client.Rcpt(recipient); err != nil {
+			return fmt.Errorf("failed to add recipient %s: %v", recipient, err)
+		}
 	}
-	htmlContent, err := s.generateHTMLEmail(templateData)
+
+	// Send the email body
+	writer, err := client.Data()
 	if err != nil {
-		return fmt.Errorf("failed to generate HTML email: %v", err)
+		return fmt.Errorf("failed to create message writer: %v", err)
 	}
+	defer writer.Close()
 
-	// 2. Construct the full email message with headers
-	headers := map[string]string{
-		"From":         s.smtpUsername,
-		"To":           strings.Join(to, ", "),
-		"Subject":      subject,
-		"MIME-Version": "1.0",
-		"Content-Type": "text/html; charset=UTF-8",
-	}
-	message := ""
-	for k, v := range headers {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
-	}
-	message += "\r\n" + htmlContent
-
-	// 3. Set up authentication
-	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
-
-	// 4. Send the email 🚀
-	// smtp.SendMail handles the connection, STARTTLS handshake, auth, and sending.
-	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
-	err = smtp.SendMail(addr, auth, s.smtpUsername, to, []byte(message))
-	if err != nil {
-		return fmt.Errorf("failed to send email: %v", err)
+	if _, err := writer.Write([]byte(emailContent)); err != nil {
+		return fmt.Errorf("failed to write message: %v", err)
 	}
 
 	log.Printf("Successfully sent email to %v", to)
