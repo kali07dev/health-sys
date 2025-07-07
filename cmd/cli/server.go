@@ -96,7 +96,7 @@ func RunServer() {
 	// app.Use(validation.CustomValidator())
 
 	// Start reminder job
-	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.UseTLS)
+	emailService := services.NewEmailService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, false)
 	notificationService, err := services.NewNotificationService(dbConn, emailService)
 	if err != nil {
 		log.Fatalf("Failed to initialize notification service: %v", err)

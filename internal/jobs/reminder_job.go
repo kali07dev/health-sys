@@ -13,6 +13,10 @@ func StartReminderJob(notificationService *services.NotificationService, mail *s
 
 	log.Println("Reminder JOB Running successfully!")
 	defer ticker.Stop()
+	err := mail.TestConnection()
+		if err != nil {
+			log.Println("Failed to test conn: %v", err)
+	}
 
 	for range ticker.C {
 		log.Println("Reminder JOB Running successfully!")

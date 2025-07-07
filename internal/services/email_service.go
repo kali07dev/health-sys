@@ -32,12 +32,12 @@ type EmailTemplate struct {
 	CompanyName string
 }
 type NotificationData struct {
-    To       []string
-    Title    string
-    Message  string
-    Action   *models.CorrectiveAction
-    Incident *schema.CreateIncidentRequest
-    Interview *models.InvestigationInterview
+	To        []string
+	Title     string
+	Message   string
+	Action    *models.CorrectiveAction
+	Incident  *schema.CreateIncidentRequest
+	Interview *models.InvestigationInterview
 }
 
 // NewEmailService creates a new EmailService instance with timeout
@@ -59,33 +59,63 @@ func (s *EmailService) SetTimeout(timeout time.Duration) {
 
 // TestConnection tests the SMTP connection without sending an email
 func (s *EmailService) TestConnection() error {
+	log.Println("Testing SMTP Connection...")
 	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
+	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
 
-	// First test basic TCP connection
+	// Case 1: Implicit TLS (e.g., SMTPS on port 465)
+	// The connection is encrypted from the start.
+	if s.useTLS {
+		log.Println("Attempting Implicit TLS connection...")
+		tlsConfig := &tls.Config{
+			ServerName: s.smtpHost,
+			MinVersion: tls.VersionTLS12,
+		}
+		dialer := &net.Dialer{Timeout: s.timeout}
+
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+		if err != nil {
+			return fmt.Errorf("TLS dial failed: %v", err)
+		}
+		defer conn.Close()
+
+		client, err := smtp.NewClient(conn, s.smtpHost)
+		if err != nil {
+			return fmt.Errorf("SMTP client creation after TLS dial failed: %v", err)
+		}
+		defer client.Close()
+
+		if err := client.Auth(auth); err != nil {
+			return fmt.Errorf("authentication failed: %v", err)
+		}
+
+		log.Println("Implicit TLS connection test successful!")
+		return nil
+	}
+
+	// Case 2: Plain connection followed by STARTTLS (e.g., on port 587 or 25)
+	// The connection starts in plain text and is then upgraded.
+	log.Println("Attempting STARTTLS connection...")
 	conn, err := net.DialTimeout("tcp", addr, s.timeout)
 	if err != nil {
 		return fmt.Errorf("TCP connection failed: %v", err)
 	}
-	conn.Close()
 
-	// Test SMTP connection with STARTTLS
-	client, err := smtp.Dial(addr)
+	client, err := smtp.NewClient(conn, s.smtpHost)
 	if err != nil {
-		return fmt.Errorf("SMTP connection failed: %v", err)
+		conn.Close()
+		return fmt.Errorf("SMTP client creation failed: %v", err)
 	}
 	defer client.Close()
 
-	// Try EHLO
 	if err := client.Hello("localhost"); err != nil {
 		return fmt.Errorf("EHLO failed: %v", err)
 	}
 
-	// Check if server supports STARTTLS
 	if ok, _ := client.Extension("STARTTLS"); !ok {
-		return fmt.Errorf("server doesn't support STARTTLS")
+		return fmt.Errorf("server doesn't support STARTTLS on this port")
 	}
 
-	// Try STARTTLS
 	tlsConfig := &tls.Config{
 		ServerName: s.smtpHost,
 		MinVersion: tls.VersionTLS12,
@@ -94,12 +124,11 @@ func (s *EmailService) TestConnection() error {
 		return fmt.Errorf("STARTTLS failed: %v", err)
 	}
 
-	// Try authentication
-	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
 	if err := client.Auth(auth); err != nil {
 		return fmt.Errorf("authentication failed: %v", err)
 	}
 
+	log.Println("STARTTLS connection test successful!")
 	return nil
 }
 
@@ -108,106 +137,42 @@ func (s *EmailService) SendEmail(to []string, subject string, body template.HTML
 	if len(to) == 0 {
 		return fmt.Errorf("recipient list cannot be empty")
 	}
-    template := &EmailTemplate{
-        Subject:     subject,
-        Title:       subject,
-        Message:     body,
-        CompanyName: "Safety365 System",
-    }
-	htmlContent, err := s.generateHTMLEmail(template)
+
+	// 1. Generate the HTML content from the template (same as before)
+	templateData := &EmailTemplate{
+		Subject:     subject,
+		Title:       subject,
+		Message:     body,
+		CompanyName: "Safety365 System",
+	}
+	htmlContent, err := s.generateHTMLEmail(templateData)
 	if err != nil {
 		return fmt.Errorf("failed to generate HTML email: %v", err)
 	}
 
-	// Create email content
-	headers := make([]string, 0)
-	headers = append(headers, fmt.Sprintf("From: %s", s.smtpUsername))
-	headers = append(headers, fmt.Sprintf("To: %s", strings.Join(to, ", ")))
-	headers = append(headers, fmt.Sprintf("Subject: %s", subject))
-	headers = append(headers, "MIME-Version: 1.0")
-	headers = append(headers, "Content-Type: text/html; charset=UTF-8")
-
-	emailContent := strings.Join(headers, "\r\n") + "\r\n\r\n" + htmlContent
-
-	// Set up dialer with timeout
-	dialer := &net.Dialer{
-		Timeout: s.timeout,
+	// 2. Construct the full email message with headers
+	headers := map[string]string{
+		"From":         s.smtpUsername,
+		"To":           strings.Join(to, ", "),
+		"Subject":      subject,
+		"MIME-Version": "1.0",
+		"Content-Type": "text/html; charset=UTF-8",
 	}
-
-	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
-
-	var client *smtp.Client
-	// var err error
-
-	if s.useTLS {
-		// Direct TLS connection
-		conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{
-			ServerName: s.smtpHost,
-			MinVersion: tls.VersionTLS12,
-		})
-		if err != nil {
-			return fmt.Errorf("TLS connection failed: %v", err)
-		}
-		defer conn.Close()
-
-		client, err = smtp.NewClient(conn, s.smtpHost)
-	} else {
-		// Plain connection first, then STARTTLS
-		conn, err := dialer.Dial("tcp", addr)
-		if err != nil {
-			return fmt.Errorf("TCP connection failed: %v", err)
-		}
-
-		client, err = smtp.NewClient(conn, s.smtpHost)
-		if err != nil {
-			conn.Close()
-			return fmt.Errorf("SMTP client creation failed: %v", err)
-		}
-
-		// Send EHLO
-		if err := client.Hello("localhost"); err != nil {
-			client.Close()
-			return fmt.Errorf("EHLO failed: %v", err)
-		}
-
-		// Start TLS
-		if err := client.StartTLS(&tls.Config{
-			ServerName: s.smtpHost,
-			MinVersion: tls.VersionTLS12,
-		}); err != nil {
-			client.Close()
-			return fmt.Errorf("STARTTLS failed: %v", err)
-		}
+	message := ""
+	for k, v := range headers {
+		message += fmt.Sprintf("%s: %s\r\n", k, v)
 	}
-	defer client.Close()
+	message += "\r\n" + htmlContent
 
-	// Authenticate
+	// 3. Set up authentication
 	auth := smtp.PlainAuth("", s.smtpUsername, s.smtpPassword, s.smtpHost)
-	if err := client.Auth(auth); err != nil {
-		return fmt.Errorf("authentication failed: %v", err)
-	}
 
-	// Set sender
-	if err := client.Mail(s.smtpUsername); err != nil {
-		return fmt.Errorf("failed to set sender: %v", err)
-	}
-
-	// Add recipients
-	for _, recipient := range to {
-		if err := client.Rcpt(recipient); err != nil {
-			return fmt.Errorf("failed to add recipient %s: %v", recipient, err)
-		}
-	}
-
-	// Send the email body
-	writer, err := client.Data()
+	// 4. Send the email 🚀
+	// smtp.SendMail handles the connection, STARTTLS handshake, auth, and sending.
+	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
+	err = smtp.SendMail(addr, auth, s.smtpUsername, to, []byte(message))
 	if err != nil {
-		return fmt.Errorf("failed to create message writer: %v", err)
-	}
-	defer writer.Close()
-
-	if _, err := writer.Write([]byte(emailContent)); err != nil {
-		return fmt.Errorf("failed to write message: %v", err)
+		return fmt.Errorf("failed to send email: %v", err)
 	}
 
 	log.Printf("Successfully sent email to %v", to)
@@ -334,15 +299,15 @@ func (s *EmailService) sendActionAssignmentEmail(to []string, action *models.Cor
 	template := &EmailTemplate{
 		Subject: "New Corrective Action Assigned",
 		Title:   "New Task Assignment",
-        Message: template.HTML(fmt.Sprintf(`
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1d1d1f; margin-bottom: 15px;">Task Details</h3>
                 <p><strong>Description:</strong> %s</p>
                 <p><strong>Due Date:</strong> %s</p>
                 <p style="color: #424245; margin-top: 15px;">Please review and begin working on this task as soon as possible.</p>
             </div>`,
-            action.Description,
-            action.DueDate.Format("January 2, 2006"))),
+			action.Description,
+			action.DueDate.Format("January 2, 2006"))),
 		ActionLink: fmt.Sprintf("/actions/%s", action.ID),
 		ActionText: "View Task Details",
 	}
@@ -395,12 +360,13 @@ func (s *EmailService) sendInterviewScheduledEmail(to []string, interview *model
 
 	return s.SendEmail(to, template.Subject, template.Message)
 }
+
 // NotifyUrgentIncident sends urgent notifications to all managers for severe incidents
 func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.CreateIncidentRequest) error {
-    template := &EmailTemplate{
-        Subject: "🚨 URGENT: Critical Incident Reported",
-        Title:   "Critical Incident Alert",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "🚨 URGENT: Critical Incident Reported",
+		Title:   "Critical Incident Alert",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Critical Incident Reported</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -415,51 +381,52 @@ func (s *EmailService) sendUrgentIncidentEmail(to []string, incident *schema.Cre
                     This incident requires immediate attention and review.
                 </p>
             </div>`,
-            incident.Type,
-            incident.SeverityLevel,
-            incident.Location,
-            incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
-            incident.Description,
-            incident.ImmediateActionsTaken)),
-        ActionLink: "/incidents/urgent",
-        ActionText: "Review Incident",
-    }
+			incident.Type,
+			incident.SeverityLevel,
+			incident.Location,
+			incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
+			incident.Description,
+			incident.ImmediateActionsTaken)),
+		ActionLink: "/incidents/urgent",
+		ActionText: "Review Incident",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
+
 // SendNotification handles different types of notifications
 func (s *EmailService) SendNotification(notificationType NotificationType, data *NotificationData) error {
-    var err error
+	var err error
 
-    switch notificationType {
-    case ActionAssigned:
-        err = s.sendActionAssignedEmail(data.To, data.Action)
-    case ActionDueSoon:
-        err = s.sendActionDueSoonEmail(data.To, data.Action)
-    case ActionOverdue:
-        err = s.sendActionOverdueEmail(data.To, data.Action)
-    case InterviewScheduled:
-        err = s.sendInterviewScheduledEmail(data.To, data.Interview)
-    case UrgentIncident:
-        err = s.sendUrgentIncidentEmail(data.To, data.Incident)
-    default:
-        return fmt.Errorf("unknown notification type: %s", notificationType)
-    }
+	switch notificationType {
+	case ActionAssigned:
+		err = s.sendActionAssignedEmail(data.To, data.Action)
+	case ActionDueSoon:
+		err = s.sendActionDueSoonEmail(data.To, data.Action)
+	case ActionOverdue:
+		err = s.sendActionOverdueEmail(data.To, data.Action)
+	case InterviewScheduled:
+		err = s.sendInterviewScheduledEmail(data.To, data.Interview)
+	case UrgentIncident:
+		err = s.sendUrgentIncidentEmail(data.To, data.Incident)
+	default:
+		return fmt.Errorf("unknown notification type: %s", notificationType)
+	}
 
-    if err != nil {
-        log.Printf("Failed to send %s notification: %v", notificationType, err)
-        return err
-    }
+	if err != nil {
+		log.Printf("Failed to send %s notification: %v", notificationType, err)
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 // sendActionAssignedEmail sends a notification for a newly assigned action
 func (s *EmailService) sendActionAssignedEmail(to []string, action *models.CorrectiveAction) error {
-    template := &EmailTemplate{
-        Subject: "New Action Item Assigned",
-        Title:   "Action Item Assignment",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "New Action Item Assigned",
+		Title:   "Action Item Assignment",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1976d2; margin-bottom: 15px;">New Action Item</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -479,25 +446,25 @@ func (s *EmailService) sendActionAssignedEmail(to []string, action *models.Corre
                     </ul>
                 </div>
             </div>`,
-            getPriorityColor(action.Priority),
-            action.Priority,
-            action.Description,
-            action.DueDate.Format("Monday, January 2, 2006"),
-            action.Status,
-            getAdditionalContext(action))),
-        ActionLink: fmt.Sprintf("/actions/%s", action.ID),
-        ActionText: "View Action Details",
-    }
+			getPriorityColor(action.Priority),
+			action.Priority,
+			action.Description,
+			action.DueDate.Format("Monday, January 2, 2006"),
+			action.Status,
+			getAdditionalContext(action))),
+		ActionLink: fmt.Sprintf("/actions/%s", action.ID),
+		ActionText: "View Action Details",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
 
 // sendActionOverdueEmail sends a notification for an overdue action
 func (s *EmailService) sendActionOverdueEmail(to []string, action *models.CorrectiveAction) error {
-    template := &EmailTemplate{
-        Subject: "⚠️ OVERDUE: Action Item Requires Immediate Attention",
-        Title:   "Overdue Action Item",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "⚠️ OVERDUE: Action Item Requires Immediate Attention",
+		Title:   "Overdue Action Item",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #c62828; margin-bottom: 15px;">⚠️ Action Item Overdue</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -510,45 +477,45 @@ func (s *EmailService) sendActionOverdueEmail(to []string, action *models.Correc
                     This action item requires your immediate attention.
                 </p>
             </div>`,
-            action.Description,
-            action.DueDate.Format("January 2, 2006"),
-            int(time.Since(action.DueDate).Hours()/24),
-            action.Status)),
-        ActionLink: fmt.Sprintf("/actions/%s", action.ID),
-        ActionText: "Update Action Item",
-    }
+			action.Description,
+			action.DueDate.Format("January 2, 2006"),
+			int(time.Since(action.DueDate).Hours()/24),
+			action.Status)),
+		ActionLink: fmt.Sprintf("/actions/%s", action.ID),
+		ActionText: "Update Action Item",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
 
 // Helper functions for email templates
 func getPriorityColor(priority string) string {
-    switch strings.ToLower(priority) {
-    case "high":
-        return "#c62828"
-    case "medium":
-        return "#f57c00"
-    default:
-        return "#2e7d32"
-    }
+	switch strings.ToLower(priority) {
+	case "high":
+		return "#c62828"
+	case "medium":
+		return "#f57c00"
+	default:
+		return "#2e7d32"
+	}
 }
 
 func getAdditionalContext(action *models.CorrectiveAction) string {
-    if action.Description == "" {
-        return ""
-    }
-    return fmt.Sprintf(`
+	if action.Description == "" {
+		return ""
+	}
+	return fmt.Sprintf(`
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
             <p><strong>Additional Context:</strong></p>
             <p>%s</p>
         </div>`,
-        action.Description)
+		action.Description)
 }
 func InvestigationAdditionalContext(action *models.Incident) string {
-    if action.Description == "" {
-        return ""
-    }
-    return fmt.Sprintf(`
+	if action.Description == "" {
+		return ""
+	}
+	return fmt.Sprintf(`
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
             <p><strong>Additional Incident Context:</strong></p>
             <p>Description : %s</p>
@@ -556,18 +523,18 @@ func InvestigationAdditionalContext(action *models.Incident) string {
             <p>Location : %s</p>
             <p>ImmediateActionsTaken : %s</p>
         </div>`,
-        action.Description,
-        action.Type,
-        action.Location,
-        action.ImmediateActionsTaken,
-    )
+		action.Description,
+		action.Type,
+		action.Location,
+		action.ImmediateActionsTaken,
+	)
 }
 
 func (s *EmailService) sendVerificationEmail(to []string, verificationLink string) error {
-    template := &EmailTemplate{
-        Subject: "Verify Your Account",
-        Title:   "Welcome! Please Verify Your Account",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "Verify Your Account",
+		Title:   "Welcome! Please Verify Your Account",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1d1d1f; margin-bottom: 15px;">Welcome to Safety365 System</h3>
                 <p>To complete your account setup, please click the button below to verify your email address and set up your password.</p>
@@ -577,20 +544,20 @@ func (s *EmailService) sendVerificationEmail(to []string, verificationLink strin
                 </div>
                 <p style="color: #424245; font-size: 14px;">If you didn't create an account, you can safely ignore this email.</p>
             </div>`,
-            verificationLink)),
-        ActionLink:  verificationLink,
-        ActionText:  "Verify Account",
-        CompanyName: "Safety365 System",
-    }
+			verificationLink)),
+		ActionLink:  verificationLink,
+		ActionText:  "Verify Account",
+		CompanyName: "Safety365 System",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
 
 func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) error {
-    template := &EmailTemplate{
-        Subject: "Reset Your Password",
-        Title:   "Password Reset Request",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "Reset Your Password",
+		Title:   "Password Reset Request",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #f5f5f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1d1d1f; margin-bottom: 15px;">Password Reset Requested</h3>
                 <p>We received a request to reset your password. Click the button below to create a new password.</p>
@@ -600,21 +567,21 @@ func (s *EmailService) sendPasswordResetEmail(to []string, resetLink string) err
                 </div>
                 <p style="color: #424245; font-size: 14px;">If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
             </div>`,
-            resetLink)),
-        ActionLink:  resetLink,
-        ActionText:  "Reset Password",
-        CompanyName: "Safety365 system",
-    }
+			resetLink)),
+		ActionLink:  resetLink,
+		ActionText:  "Reset Password",
+		CompanyName: "Safety365 system",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
 
 // sendLeadInvestigatorAssignedEmail sends a notification for a newly assigned lead investigator
 func (s *EmailService) sendLeadInvestigatorAssignedEmail(to []string, investigation *models.Investigation, incident *models.Incident) error {
-    template := &EmailTemplate{
-        Subject: "You Have Been Assigned As Lead Investigator",
-        Title:   "Lead Investigator Assignment",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "You Have Been Assigned As Lead Investigator",
+		Title:   "Lead Investigator Assignment",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1976d2; margin-bottom: 15px;">Lead Investigator Assignment</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -636,33 +603,33 @@ func (s *EmailService) sendLeadInvestigatorAssignedEmail(to []string, investigat
                     </ul>
                 </div>
             </div>`,
-            investigation.Description,
-            getPriorityColor(incident.SeverityLevel),
-            incident.SeverityLevel,
-            investigation.Description,
-            investigation.StartedAt.Format("Monday, January 2, 2006"),
-            investigation.Status,
-            InvestigationAdditionalContext(incident))),
-        ActionLink: fmt.Sprintf("/investigations/%s", investigation.ID),
-        ActionText: "View Investigation Details",
-    }
+			investigation.Description,
+			getPriorityColor(incident.SeverityLevel),
+			incident.SeverityLevel,
+			investigation.Description,
+			investigation.StartedAt.Format("Monday, January 2, 2006"),
+			investigation.Status,
+			InvestigationAdditionalContext(incident))),
+		ActionLink: fmt.Sprintf("/investigations/%s", investigation.ID),
+		ActionText: "View Investigation Details",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
 
 // notifyIncidentIsClosed sends a notification when an incident is closed
 func (s *EmailService) NotifyIncidentIsClosed(to []string, incident *models.Incident) error {
-    var closedAt string
-    if incident.ClosedAt != nil {
-        closedAt = incident.ClosedAt.Format("January 2, 2006 3:04 PM")
-    } else {
-        closedAt = time.Now().Format("January 2, 2006 3:04 PM")
-    }
+	var closedAt string
+	if incident.ClosedAt != nil {
+		closedAt = incident.ClosedAt.Format("January 2, 2006 3:04 PM")
+	} else {
+		closedAt = time.Now().Format("January 2, 2006 3:04 PM")
+	}
 
-    template := &EmailTemplate{
-        Subject: "✅ Incident Closed: " + incident.Title,
-        Title:   "Incident Resolution Confirmation",
-        Message: template.HTML(fmt.Sprintf(`
+	template := &EmailTemplate{
+		Subject: "✅ Incident Closed: " + incident.Title,
+		Title:   "Incident Resolution Confirmation",
+		Message: template.HTML(fmt.Sprintf(`
             <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #2e7d32; margin-bottom: 15px;">Incident Successfully Closed</h3>
                 <div style="background-color: white; padding: 15px; border-radius: 6px;">
@@ -684,16 +651,16 @@ func (s *EmailService) NotifyIncidentIsClosed(to []string, incident *models.Inci
                     </ul>
                 </div>
             </div>`,
-            incident.ReferenceNumber,
-            incident.Title,
-            incident.Type,
-            incident.SeverityLevel,
-            incident.Location,
-            incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
-            closedAt)),
-        ActionLink: fmt.Sprintf("/incidents/%s", incident.ID),
-        ActionText: "View Incident Details",
-    }
+			incident.ReferenceNumber,
+			incident.Title,
+			incident.Type,
+			incident.SeverityLevel,
+			incident.Location,
+			incident.OccurredAt.Format("January 2, 2006 3:04 PM"),
+			closedAt)),
+		ActionLink: fmt.Sprintf("/incidents/%s", incident.ID),
+		ActionText: "View Incident Details",
+	}
 
-    return s.SendEmail(to, template.Subject, template.Message)
+	return s.SendEmail(to, template.Subject, template.Message)
 }
