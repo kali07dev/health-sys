@@ -200,7 +200,7 @@ func (s *EmailService) SendEmail(to []string, subject string, body template.HTML
 	// Create TLS config
 	tlsConfig := &tls.Config{
 		ServerName:         s.smtpHost,
-		MinVersion:         tls.VersionTLS12,
+		MinVersion:         tls.VersionTLS13,
 		InsecureSkipVerify: false, // Set to true only for testing with self-signed certs
 	}
 

@@ -106,6 +106,7 @@ func (svc *UserService) CreateUserWithEmployee(request *schema.CreateUserWithEmp
 		GoogleID:     &request.GoogleID,
 		MicrosoftID:  &request.MicrosoftID,
 		IsActive:     true, // Default to active
+		IsVerified: true, // Default to verified, TODO: change after Email Server issues are fixed
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
