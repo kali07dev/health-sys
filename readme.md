@@ -215,6 +215,6 @@ CMD ["/safety-system", "server"]
 
 📄 **License**: MIT  
 🐛 **Issue Tracker**: [GitHub Issues](https://github.com/kali07dev/health-sys/issues)  
-📧 **Support**: contact@example.com
+📧 **Support**: hopekalitera@gmail.com
 ```
 
