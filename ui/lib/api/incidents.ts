@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { getSession } from 'next-auth/react'
 import { IncidentFormData } from '@/interfaces/incidents'
+import { showErrorToast, showSuccessToast } from '@/lib/error-handling'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_FILE_TYPES = [
@@ -45,6 +46,7 @@ export class IncidentApiError extends Error {
     super(message)
     this.code = code
     this.details = details
+    this.name = 'IncidentApiError'
   }
 }
 
@@ -52,10 +54,10 @@ function validateFiles(files: File[]): string[] {
   const fileErrors: string[] = []
   files.forEach((file) => {
     if (file.size > MAX_FILE_SIZE) {
-      fileErrors.push(`File ${file.name} exceeds maximum size of 5MB`)
+      fileErrors.push(`${file.name} exceeds the 5MB size limit`)
     }
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      fileErrors.push(`File ${file.name} has unsupported type ${file.type}`)
+      fileErrors.push(`${file.name} has an unsupported file type. Please use PDF, DOC, JPG, or PNG files`)
     }
   })
   return fileErrors
@@ -79,7 +81,7 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
     const fileErrors = validateFiles(files)
     if (fileErrors.length > 0) {
       throw new IncidentApiError(
-        'File validation failed',
+        fileErrors.join('; '),
         'INVALID_FILES',
         fileErrors
       )
@@ -108,16 +110,16 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
 
     if (response.status === 401) {
       throw new IncidentApiError(
-        'Authentication expired',
+        'Your session has expired. Please sign in again.',
         'AUTH_EXPIRED'
       )
     }
 
     if (!response.ok) {
-      const errorData = await response.json()
+      const errorData = await response.json().catch(() => ({}))
       throw new IncidentApiError(
-        errorData.message || 'Failed to submit incident',
-        errorData.code || 'UNKNOWN_ERROR',
+        errorData.message || 'Unable to submit incident report. Please try again.',
+        errorData.code || 'SERVER_ERROR',
         errorData.details
       )
     }
@@ -126,8 +128,25 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Create user-friendly validation messages
+      const validationMessages = error.errors.map(err => {
+        const field = err.path.join('.')
+        switch (err.code) {
+          case 'invalid_type':
+            return `${field} is required`
+          case 'too_small':
+            return `${field} is too short`
+          case 'too_big':
+            return `${field} is too long`
+          case 'invalid_enum_value':
+            return `${field} has an invalid value`
+          default:
+            return `${field}: ${err.message}`
+        }
+      })
+      
       throw new IncidentApiError(
-        'Validation error',
+        validationMessages.join('; '),
         'VALIDATION_ERROR',
         error.errors
       )
@@ -136,7 +155,7 @@ export async function submitIncident(formData: IncidentFormData, files: File[]) 
       throw error
     }
     throw new IncidentApiError(
-      'Failed to submit incident',
+      'Unable to submit incident report due to a connection issue. Please check your internet connection and try again.',
       'NETWORK_ERROR',
       error
     )
@@ -170,16 +189,16 @@ export async function submitIncidentWithoutAttachments(formData: IncidentFormDat
 
     if (response.status === 401) {
       throw new IncidentApiError(
-        'Authentication expired',
+        'Your session has expired. Please sign in again.',
         'AUTH_EXPIRED'
       );
     }
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new IncidentApiError(
-        errorData.message || 'Failed to submit incident',
-        errorData.code || 'UNKNOWN_ERROR',
+        errorData.message || 'Unable to submit incident report. Please try again.',
+        errorData.code || 'SERVER_ERROR',
         errorData.details
       );
     }
@@ -188,8 +207,25 @@ export async function submitIncidentWithoutAttachments(formData: IncidentFormDat
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Create user-friendly validation messages
+      const validationMessages = error.errors.map(err => {
+        const field = err.path.join('.')
+        switch (err.code) {
+          case 'invalid_type':
+            return `${field} is required`
+          case 'too_small':
+            return `${field} is too short`
+          case 'too_big':
+            return `${field} is too long`
+          case 'invalid_enum_value':
+            return `${field} has an invalid value`
+          default:
+            return `${field}: ${err.message}`
+        }
+      })
+      
       throw new IncidentApiError(
-        'Validation error',
+        validationMessages.join('; '),
         'VALIDATION_ERROR',
         error.errors
       );
@@ -198,7 +234,7 @@ export async function submitIncidentWithoutAttachments(formData: IncidentFormDat
       throw error;
     }
     throw new IncidentApiError(
-      'Failed to submit incident',
+      'Unable to submit incident report due to a connection issue. Please check your internet connection and try again.',
       'NETWORK_ERROR',
       error
     );

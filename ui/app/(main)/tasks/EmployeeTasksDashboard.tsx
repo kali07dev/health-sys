@@ -6,7 +6,7 @@ import { CorrectiveAction } from '@/interfaces/incidents';
 import { Loader2, AlertCircle, Eye } from 'lucide-react';
 import { ViewActionPanel } from '@/components/CorrectiveActions/ViewActionPanel';
 import { ActionEvidence } from '@/components/CorrectiveActions/ActionEvidence';
-import { toast } from 'react-hot-toast';
+import { showErrorToast, showSuccessToast } from '@/lib/error-handling';
 
 interface EmployeeTasksDashboardProps {
   userRole: string;
@@ -33,8 +33,8 @@ export default function EmployeeTasksDashboard({
         setError(null);
       } catch (error) {
         console.error(error);
-        setError('Failed to fetch your assigned corrective actions');
-        toast.error('Failed to fetch your assigned corrective actions');
+        setError('Unable to load your assigned tasks');
+        showErrorToast(error, 'Unable to load your assigned corrective actions');
       } finally {
         setLoading(false);
       }
@@ -51,8 +51,8 @@ export default function EmployeeTasksDashboard({
       setError(null);
     } catch (error) {
       console.error(error);
-      setError('Failed to fetch your assigned corrective actions');
-      toast.error('Failed to fetch your assigned corrective actions');
+      setError('Unable to load your assigned tasks');
+      showErrorToast(error, 'Unable to load your assigned corrective actions');
     } finally {
       setLoading(false);
     }
@@ -70,6 +70,7 @@ export default function EmployeeTasksDashboard({
   const handleModalSubmit = () => {
     setActiveModal(null);
     setSelectedAction(null);
+    showSuccessToast("Action updated successfully", "Your changes have been saved");
     fetchActions(); // Refresh actions after submission
   };
 
