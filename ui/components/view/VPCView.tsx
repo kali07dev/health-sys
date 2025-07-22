@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { VPCCard } from "./VPCCard"
 import { VPCDetailsSidebar } from "./VPCDetailsSidebar"
@@ -29,7 +29,7 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
   console.log("User Role:", userRole)
 
 
-  const fetchVPCs = async () => {
+  const fetchVPCs = useCallback(async () => {
     try {
       setLoading(true)
       const apiResponse = await VPCAPI.listAllVPCs({
@@ -58,11 +58,11 @@ export default function VPCView({ userId, userRole }: VPCViewProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.pageSize, searchQuery])
 
   useEffect(() => {
     fetchVPCs()
-  }, [pagination.page, pagination.pageSize, searchQuery])
+  }, [fetchVPCs])
 
   const handleSelectVPC = async (vpc: VPC) => {
     try {

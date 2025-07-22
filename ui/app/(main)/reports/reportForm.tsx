@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { type ReportRequest, reportsApi } from "@/utils/reportsAPI"
-import { toast } from "sonner"
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling"
 import { Loader2, FileType, FileSpreadsheet, ChevronRight, Calendar, Clock } from "lucide-react"
 
 type ReportType = {
@@ -35,7 +35,7 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
 
   const handleGenerateReport = async () => {
     if (!selectedReport || !dateRange.startDate || !dateRange.endDate) {
-      toast.error("Please fill in all required fields")
+      showErrorToast({ code: 'VALIDATION_ERROR' }, "Please fill in all required fields")
       return
     }
 
@@ -49,10 +49,9 @@ export default function ReportForm({ reportTypes }: ReportFormProps) {
       }
 
       await reportsApi.downloadReport(request)
-      toast.success("Report generated successfully")
-    } catch {
-      toast.error("Failed to generate report")
-      //console.error(error);
+      showSuccessToast("Report generated successfully", "Your report has been downloaded")
+    } catch (error) {
+      showErrorToast(error, "Unable to generate report")
     } finally {
       setLoading(false)
     }

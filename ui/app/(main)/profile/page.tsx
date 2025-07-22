@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { userService, type ProfileUpdateRequest } from "@/utils/userAPI"
 import { Loader2 } from "lucide-react"
-import { toast } from "react-hot-toast"
+import { showErrorToast, showSuccessToast } from "@/lib/error-handling"
 
 type EmployeeProfile = {
   ID: string
@@ -65,8 +65,8 @@ export default function UserProfile() {
         ConfirmPassword: "",
         UserID: data.ID,
       })
-    } catch {
-      toast.error("Failed to load profile")
+    } catch (error) {
+      showErrorToast(error, "Unable to load your profile information")
     } finally {
       setLoading(false)
     }
@@ -76,18 +76,18 @@ export default function UserProfile() {
     e.preventDefault()
 
     if (updateData.Password && updateData.Password !== updateData.ConfirmPassword) {
-      toast.error("Passwords do not match")
+      showErrorToast({ code: 'PASSWORDS_MISMATCH' })
       return
     }
 
     setSaving(true)
     try {
       await userService.updateUserProfile(updateData)
-      toast.success("Profile updated successfully")
+      showSuccessToast("Profile updated successfully", "Your changes have been saved")
       // Reload profile to clear password fields
       await loadProfile()
-    } catch {
-      toast.error("Failed to update profile")
+    } catch (error) {
+      showErrorToast(error, "Unable to update your profile")
     } finally {
       setSaving(false)
     }
