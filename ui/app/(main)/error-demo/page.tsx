@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react'
 import { showErrorToast, showSuccessToast, showInfoToast } from '@/lib/error-handling'
-import { validateRequiredFields, validatePasswordMatch, validateFileUpload } from '@/lib/form-validation'
+import { validateFileUpload } from '@/lib/form-validation'
 import { ErrorDisplay, FormError, InlineError } from '@/components/ui/error-display'
 
 export default function ErrorDemoPage() {
@@ -264,7 +264,7 @@ export default function ErrorDemoPage() {
           </ul>
           <p className="mt-4">
             Each error shows a clear title, detailed message, and actionable guidance with a 💡 icon.
-            Retryable errors show a "Try Again" button, and toast duration varies by error type.
+            Retryable errors show a &quot;Try Again&quot; button, and toast duration varies by error type.
           </p>
         </div>
       </div>

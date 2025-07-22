@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   UserPlus, 
   Pencil, 
@@ -47,7 +47,7 @@ export default function TemporaryEmployeesPage() {
       Position: searchTerm
     }
     filterEmployees(criteria)
-  }, [searchTerm, employees])
+  }, [searchTerm, employees, filterEmployees])
 
   const fetchEmployees = async () => {
     setLoading(true)
@@ -66,7 +66,7 @@ export default function TemporaryEmployeesPage() {
     }
   }
 
-  const filterEmployees = (criteria: SearchCriteria) => {
+  const filterEmployees = useCallback((criteria: SearchCriteria) => {
     // If no search term, show all employees
     if (!searchTerm.trim()) {
       setFilteredEmployees(employees)
@@ -80,7 +80,7 @@ export default function TemporaryEmployeesPage() {
       (criteria.Position && emp.Position.toLowerCase().includes(criteria.Position.toLowerCase()))
     )
     setFilteredEmployees(filtered)
-  }
+  }, [searchTerm, employees])
 
   const handleCreateEmployee = async (request: CreateTemporaryEmployeeRequest) => {
     try {

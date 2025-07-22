@@ -25,6 +25,18 @@ export interface ErrorContext {
   retryable?: boolean
 }
 
+// Interface for error objects that can be passed to error handling functions
+export interface AppError {
+  code?: string
+  message?: string
+  response?: {
+    data?: {
+      code?: string
+      message?: string
+    }
+  }
+}
+
 /**
  * Gets user-friendly error context from error code or message
  */
@@ -60,7 +72,7 @@ export function getErrorContext(errorCode?: string, customMessage?: string): Err
 /**
  * Displays an error toast with appropriate styling and messaging
  */
-export function showErrorToast(error: any, customMessage?: string) {
+export function showErrorToast(error: unknown, customMessage?: string) {
   let errorCode: string | undefined
   let errorMessage: string | undefined
 
@@ -130,7 +142,7 @@ export function showInfoToast(message: string, details?: string) {
 /**
  * Helper to determine if an error suggests a retry action
  */
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
   const errorCode = error?.code || error?.response?.data?.code
   if (errorCode && ERROR_MESSAGES[errorCode]) {
     return ERROR_MESSAGES[errorCode].retryable || false

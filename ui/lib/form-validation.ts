@@ -7,7 +7,7 @@ import { showErrorToast } from './error-handling'
  * Validates required form fields and shows user-friendly error messages
  */
 export function validateRequiredFields(
-  data: Record<string, any>, 
+  data: Record<string, unknown>, 
   requiredFields: Array<{ field: string; label: string }>
 ): boolean {
   const missingFields = requiredFields.filter(({ field }) => {

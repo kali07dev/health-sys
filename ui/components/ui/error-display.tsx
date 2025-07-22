@@ -6,7 +6,7 @@ import { AlertCircle, RefreshCw, WifiOff, ShieldAlert } from 'lucide-react'
 import { ErrorType, getErrorContext } from '@/lib/error-handling'
 
 interface ErrorDisplayProps {
-  error: any
+  error: unknown
   customMessage?: string
   onRetry?: () => void
   className?: string

@@ -2,7 +2,6 @@
 import { z } from 'zod'
 import { getSession } from 'next-auth/react'
 import { IncidentFormData } from '@/interfaces/incidents'
-import { showErrorToast, showSuccessToast } from '@/lib/error-handling'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_FILE_TYPES = [
