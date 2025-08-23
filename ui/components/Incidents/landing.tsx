@@ -98,7 +98,6 @@ export const IncidentsTable = ({
   }
   const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} incidents`
 
-
   
   // Sorting state
   const [sortField, setSortField] = useState<SortField>("occurredAt")
@@ -300,11 +299,11 @@ export const IncidentsTable = ({
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Incidents</h1>
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+          <h1 className="text-2xl font-semibold text-gray-900">Incidents</h1>
+          <p className="mt-2 text-sm text-gray-700">
             A list of all incidents in your organization including their reference number, type, severity, and status.
           </p>
         </div>
@@ -312,7 +311,7 @@ export const IncidentsTable = ({
           <Link href="/incidents/closed" passHref>
           <Button
           variant="outline"
-          className="w-full text-sm sm:text-base border-red-300 text-red-600 dark:text-red-400 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/50 px-2 sm:px-4"
+          className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
         >
               View Closed Incidents
             </Button>
@@ -334,7 +333,7 @@ export const IncidentsTable = ({
           <Button
             size="sm"
             variant="outline"
-            className="bg-white text-red-700 dark:text-red-400 border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-800/50 dark:bg-gray-700"
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -343,7 +342,7 @@ export const IncidentsTable = ({
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-white text-red-700 dark:text-red-400 border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-800/50 dark:bg-gray-700"
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
           >
             <CalendarClock className="h-4 w-4 mr-1" />
             View Reports
@@ -354,37 +353,37 @@ export const IncidentsTable = ({
       {/* Search and Filter Bar */}
       <div className="mt-6 flex flex-col sm:flex-row gap-4">
         <div className="relative w-full">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Search incidents..."
-            className="pl-8 w-full dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600"
+            className="pl-8 w-full"
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
           />
           {filters.search && (
             <button className="absolute right-2 top-2.5" onClick={() => handleFilterChange("search", "")}>
-              <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <X className="h-4 w-4 text-gray-500" />
             </button>
           )}
         </div>
 
         <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+            <Button variant="outline" className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
               Filters
               {getActiveFiltersCount() > 0 && <Badge className="ml-1 bg-red-600">{getActiveFiltersCount()}</Badge>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-md">
+          <PopoverContent className="w-80 p-4 bg-white border shadow-md">
             <div className="space-y-4">
               <div className="space-y-2">
-                <h3 className="font-medium text-gray-900 dark:text-white">Filter Options</h3>
+                <h3 className="font-medium text-gray-900">Filter Options</h3>
                 {getActiveFiltersCount() > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-0 h-auto text-xs"
+                    className="text-red-600 hover:text-red-800 p-0 h-auto text-xs"
                     onClick={clearFilters}
                   >
                     Clear all filters
@@ -393,78 +392,76 @@ export const IncidentsTable = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="type-filter" className="text-gray-700 dark:text-gray-300">Incident Type</Label>
+                <Label htmlFor="type-filter" className="text-gray-700">Incident Type</Label>
                 <Select value={filters.type} onValueChange={(value) => handleFilterChange("type", value)}>
-                  <SelectTrigger id="type-filter" className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  <SelectTrigger id="type-filter">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-700">
-                    <SelectItem value="all" className="dark:text-gray-200">All types</SelectItem>
-                    <SelectItem value="injury" className="dark:text-gray-200">Injury</SelectItem>
-                    <SelectItem value="near_miss" className="dark:text-gray-200">Near Miss</SelectItem>
-                    <SelectItem value="property_damage" className="dark:text-gray-200">Property Damage</SelectItem>
-                    <SelectItem value="environmental" className="dark:text-gray-200">Environmental</SelectItem>
-                    <SelectItem value="security" className="dark:text-gray-200">Security</SelectItem>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="injury">Injury</SelectItem>
+                    <SelectItem value="near_miss">Near Miss</SelectItem>
+                    <SelectItem value="property_damage">Property Damage</SelectItem>
+                    <SelectItem value="environmental">Environmental</SelectItem>
+                    <SelectItem value="security">Security</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status-filter" className="text-gray-700 dark:text-gray-300">Status</Label>
+                <Label htmlFor="status-filter" className="text-gray-700">Status</Label>
                 <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger id="status-filter" className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  <SelectTrigger id="status-filter">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-700">
-                    <SelectItem value="all" className="dark:text-gray-200">All statuses</SelectItem>
-                    <SelectItem value="new" className="dark:text-gray-200">New</SelectItem>
-                    <SelectItem value="investigating" className="dark:text-gray-200">Investigating</SelectItem>
-                    <SelectItem value="action_required" className="dark:text-gray-200">Action Required</SelectItem>
-                    <SelectItem value="resolved" className="dark:text-gray-200">Resolved</SelectItem>
-                    <SelectItem value="closed" className="dark:text-gray-200">Closed</SelectItem>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="investigating">Investigating</SelectItem>
+                    <SelectItem value="action_required">Action Required</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="severity-filter" className="text-gray-700 dark:text-gray-300">Severity</Label>
+                <Label htmlFor="severity-filter" className="text-gray-700">Severity</Label>
                 <Select value={filters.severity} onValueChange={(value) => handleFilterChange("severity", value)}>
-                  <SelectTrigger id="severity-filter" className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  <SelectTrigger id="severity-filter">
                     <SelectValue placeholder="All severities" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-700">
-                    <SelectItem value="all" className="dark:text-gray-200">All severities</SelectItem>
-                    <SelectItem value="low" className="dark:text-gray-200">Low</SelectItem>
-                    <SelectItem value="medium" className="dark:text-gray-200">Medium</SelectItem>
-                    <SelectItem value="high" className="dark:text-gray-200">High</SelectItem>
-                    <SelectItem value="critical" className="dark:text-gray-200">Critical</SelectItem>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All severities</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Date Range</Label>
+                <Label className="text-gray-700">Date Range</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label htmlFor="date-from" className="text-xs text-gray-700 dark:text-gray-400">
+                    <Label htmlFor="date-from" className="text-xs text-gray-700">
                       From
                     </Label>
                     <Input
                       id="date-from"
                       type="date"
-                      className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       value={filters.dateRange.from || ""}
                       onChange={(e) => handleDateRangeChange("from", e.target.value || null)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="date-to" className="text-xs text-gray-700 dark:text-gray-400">
+                    <Label htmlFor="date-to" className="text-xs text-gray-700">
                       To
                     </Label>
                     <Input
                       id="date-to"
                       type="date"
-                      className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       value={filters.dateRange.to || ""}
                       onChange={(e) => handleDateRangeChange("to", e.target.value || null)}
                     />
@@ -485,19 +482,19 @@ export const IncidentsTable = ({
 
       {/* Check if filtered incidents array is empty */}
       {filteredAndSortedIncidents.length === 0 ? (
-        <Card className="mt-8 border-2 border-dotted border-red-300 dark:bg-gray-800 dark:border-red-700/50">
+        <Card className="mt-8 border-2 border-dotted border-red-300">
           <CardContent className="flex flex-col items-center justify-center p-8">
             <div className="rounded-full bg-red-100 p-3 mb-4">
-              <Search className="h-8 w-8 text-red-600 dark:text-red-500" />
+              <Search className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Incidents Found</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Incidents Found</h3>
+            <p className="text-gray-500 text-center max-w-md">
               {incidents.length === 0
                 ? "No incidents are currently reported in the system."
                 : "No incidents match your current filter criteria."}
             </p>
             {incidents.length > 0 && filteredAndSortedIncidents.length === 0 && (
-              <Button variant="outline" className="mt-4 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700" onClick={clearFilters}>
+              <Button variant="outline" className="mt-4" onClick={clearFilters}>
                 Clear All Filters
               </Button>
             )}
@@ -508,20 +505,20 @@ export const IncidentsTable = ({
           {/* Mobile Card View */}
           <div className="mt-8 grid gap-4 md:hidden">
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-700 dark:text-white" />
+            <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
             </div>
           )}
             {filteredAndSortedIncidents.map((incident) => (
               <Card
                 key={incident.id}
-                className="overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow"
+                className="overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
               >
-                <CardContent className="p-4 bg-white dark:bg-gray-800">
+                <CardContent className="p-4 bg-white">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">{incident.title}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                      <h3 className="font-medium text-gray-900">{incident.title}</h3>
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                         <User className="h-3 w-3 opacity-50" />
                         {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
                       </p>
@@ -535,7 +532,7 @@ export const IncidentsTable = ({
                             : incident.severityLevel === "medium"
                               ? "bg-yellow-500 hover:bg-yellow-600"
                               : "bg-green-500 hover:bg-green-600"
-                      } // Text inside these badges is typically white due to dark bg
+                      }
                     >
                       {incident.severityLevel.toUpperCase()}
                     </Badge>
@@ -543,18 +540,18 @@ export const IncidentsTable = ({
 
                   <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
                     <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-                      <span className="text-gray-500 dark:text-gray-400 truncate">{incident.location}</span>
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-500 truncate">{incident.location}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-                      <span className="text-gray-500 dark:text-gray-400">{getTimeAgo(incident.occurredAt)}</span>
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-500">{getTimeAgo(incident.occurredAt)}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                     <Badge
-                      className={ // Text inside these badges is typically white due to dark bg
+                      className={
                         incident.status === "new"
                           ? "bg-blue-600 hover:bg-blue-700"
                           : incident.status === "investigating"
@@ -574,7 +571,7 @@ export const IncidentsTable = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        className="text-red-600 hover:text-red-900"
                         onClick={() => handleViewIncident(incident)}
                       >
                         View
@@ -582,7 +579,7 @@ export const IncidentsTable = ({
                       {userRole !== "employee" && (
                         <Link
                           href={`/incidents/${incident.id}/review`}
-                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 h-8 px-3 py-1"
+                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-8 px-3 py-1"
                         >
                           Review
                         </Link>
@@ -597,14 +594,14 @@ export const IncidentsTable = ({
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
                       <tr>
                         <th
                           className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
                           onClick={() => handleSort("title")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Incident Details
                             <span className="ml-1">
                               {sortField === "title" ? (
@@ -623,7 +620,7 @@ export const IncidentsTable = ({
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell cursor-pointer"
                           onClick={() => handleSort("location")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Location
                             <span className="ml-1">
                               {sortField === "location" ? (
@@ -642,7 +639,7 @@ export const IncidentsTable = ({
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden md:table-cell cursor-pointer"
                           onClick={() => handleSort("type")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Type
                             <span className="ml-1">
                               {sortField === "type" ? (
@@ -661,7 +658,7 @@ export const IncidentsTable = ({
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
                           onClick={() => handleSort("severityLevel")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Severity
                             <span className="ml-1">
                               {sortField === "severityLevel" ? (
@@ -680,7 +677,7 @@ export const IncidentsTable = ({
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
                           onClick={() => handleSort("status")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Status
                             <span className="ml-1">
                               {sortField === "status" ? (
@@ -699,7 +696,7 @@ export const IncidentsTable = ({
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden lg:table-cell cursor-pointer"
                           onClick={() => handleSort("occurredAt")}
                         >
-                          <div className="flex items-center gap-1 text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-1 text-gray-900">
                             Timing
                             <span className="ml-1">
                               {sortField === "occurredAt" ? (
@@ -719,32 +716,32 @@ export const IncidentsTable = ({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                    <tbody className="divide-y divide-gray-200 bg-white">
                       {filteredAndSortedIncidents.map((incident) => (
-                        <tr key={incident.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <tr key={incident.id} className="hover:bg-gray-50 transition-colors">
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                             <div className="flex items-center">
                               <div>
-                                <div className="font-medium text-gray-900 dark:text-white">{incident.title}</div>
-                                <div className="text-gray-500 dark:text-gray-300 text-xs flex items-center gap-1">
+                                <div className="font-medium text-gray-900">{incident.title}</div>
+                                <div className="text-gray-500 text-xs flex items-center gap-1">
                                   <User className="h-3 w-3 opacity-50" />
                                   {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 hidden sm:table-cell">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
                             <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-400" />
+                              <MapPin className="h-4 w-4 text-gray-400" />
                               {incident.location}
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 hidden md:table-cell">
                             {formatIncidentType(incident.type)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
                             <Badge
-                              className={ // Text inside these badges is typically white due to dark bg
+                              className={
                                 incident.severityLevel === "critical"
                                   ? "bg-red-600 hover:bg-red-700"
                                   : incident.severityLevel === "high"
@@ -759,7 +756,7 @@ export const IncidentsTable = ({
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm hidden md:table-cell">
                             <Badge
-                              className={ // Text inside these badges is typically white due to dark bg
+                              className={
                                 incident.status === "new"
                                   ? "bg-blue-600 hover:bg-blue-700"
                                   : incident.status === "investigating"
@@ -776,19 +773,19 @@ export const IncidentsTable = ({
                                 .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1))}
                             </Badge>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 hidden lg:table-cell">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden lg:table-cell">
                             <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1 text-gray-400 dark:text-gray-400" />
+                              <Calendar className="h-4 w-4 mr-1 text-gray-400" />
                               <div>
                                 <div>{formatDate(incident.occurredAt)}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">{getTimeAgo(incident.occurredAt)}</div>
+                                <div className="text-xs text-gray-500">{getTimeAgo(incident.occurredAt)}</div>
                               </div>
                             </div>
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <Button
                               variant="ghost"
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-2"
+                              className="text-red-600 hover:text-red-900 mr-2"
                               onClick={() => handleViewIncident(incident)}
                             >
                               View
@@ -796,7 +793,7 @@ export const IncidentsTable = ({
                             {userRole !== "employee" && (
                               <Link
                                 href={`/incidents/${incident.id}/review`}
-                                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 h-10 px-4 py-2"
+                                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-10 px-4 py-2"
                               >
                                 Review
                               </Link>
@@ -815,9 +812,9 @@ export const IncidentsTable = ({
 
       {/* View Incident Slide-over */}
       <Sheet open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto max-h-screen bg-white dark:bg-gray-800">
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto max-h-screen bg-white">
           <SheetHeader>
-            <SheetTitle className="text-gray-900 dark:text-white">Incident Details</SheetTitle>
+            <SheetTitle className="text-gray-900">Incident Details</SheetTitle>
           </SheetHeader>
           {selectedIncident && <IncidentDetails incident={selectedIncident} />}
         </SheetContent>
@@ -825,9 +822,9 @@ export const IncidentsTable = ({
 
       {/* Create Incident Modal */}
       <Sheet open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <SheetContent className="w-full sm:max-w-xl bg-white dark:bg-gray-800">
+        <SheetContent className="w-full sm:max-w-xl bg-white">
           <SheetHeader>
-            <SheetTitle className="text-gray-900 dark:text-white">Report New Incident</SheetTitle>
+            <SheetTitle className="text-gray-900">Report New Incident</SheetTitle>
           </SheetHeader>
           <IncidentForm onSuccess={handleCreateSuccess} />
         </SheetContent>
@@ -841,8 +838,8 @@ export const IncidentsTable = ({
       )}
 
       {/* Pagination component */}
-      <div className="w-full bg-gray-50 dark:bg-gray-900 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="w-full bg-gray-50 p-4">
+            <div className="text-sm text-gray-500">
                 {paginationInfo}
               </div>
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -852,12 +849,12 @@ export const IncidentsTable = ({
               value={pageSize.toString()} 
               onValueChange={(value) => handlePageSizeChange(Number(value))}
             >
-              <SelectTrigger className="w-full sm:w-[140px] bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600 border-red-300 focus:ring-red-200">
+              <SelectTrigger className="w-full sm:w-[140px] bg-white border-red-300 focus:ring-red-200">
                 <SelectValue placeholder={`${pageSize} entries`} />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-700">
+              <SelectContent className="bg-white">
                 {[10, 20, 30, 40, 50].map((size) => (
-                  <SelectItem key={size} value={size.toString()} className="dark:text-gray-200">
+                  <SelectItem key={size} value={size.toString()}>
                     {size} entries
                   </SelectItem>
                 ))}
@@ -867,7 +864,7 @@ export const IncidentsTable = ({
 
           {/* Pagination Controls */}
           <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 sm:mb-0">
+            <div className="text-sm text-gray-600 mb-2 sm:mb-0">
               Page {currentPage} of {totalPages}
             </div>
 
@@ -877,7 +874,7 @@ export const IncidentsTable = ({
                 size="sm"
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="w-full sm:w-auto border-red-300 text-red-600 dark:text-red-400 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/50 disabled:opacity-50"
+                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
                 Previous
               </Button>
@@ -886,7 +883,7 @@ export const IncidentsTable = ({
                 size="sm"
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="w-full sm:w-auto border-red-300 text-red-600 dark:text-red-400 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/50 disabled:opacity-50"
+                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
                 Next
               </Button>
@@ -897,4 +894,3 @@ export const IncidentsTable = ({
     </div>
   )
 }
-
