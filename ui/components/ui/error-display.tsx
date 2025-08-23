@@ -13,7 +13,23 @@ interface ErrorDisplayProps {
 }
 
 export function ErrorDisplay({ error, customMessage, onRetry, className = '' }: ErrorDisplayProps) {
-  const context = getErrorContext(error?.code, customMessage || error?.message)
+  const code =
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in (error as Record<string, unknown>) &&
+    typeof (error as Record<string, unknown>).code === 'string'
+      ? (error as Record<string, unknown>).code as string
+      : undefined
+  const message =
+    customMessage ||
+    (typeof error === 'object' &&
+      error !== null &&
+      'message' in (error as Record<string, unknown>) &&
+      typeof (error as Record<string, unknown>).message === 'string'
+      ? (error as Record<string, unknown>).message as string
+      : undefined)
+      
+  const context = getErrorContext(code, message)
 
   const getIcon = () => {
     switch (context.type) {

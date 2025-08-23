@@ -35,9 +35,26 @@ export default function TemporaryEmployeesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const filterEmployees = useCallback((criteria: SearchCriteria) => {
+    // If no search term, show all employees
+    if (!searchTerm.trim()) {
+      setFilteredEmployees(employees)
+      return
+    }
+
+    const filtered = employees.filter(emp => 
+      (criteria.FirstName && emp.FirstName.toLowerCase().includes(criteria.FirstName.toLowerCase())) ||
+      (criteria.LastName && emp.LastName.toLowerCase().includes(criteria.LastName.toLowerCase())) ||
+      (criteria.Department && emp.Department.toLowerCase().includes(criteria.Department.toLowerCase())) ||
+      (criteria.Position && emp.Position.toLowerCase().includes(criteria.Position.toLowerCase()))
+    )
+    setFilteredEmployees(filtered)
+  }, [searchTerm, employees])
   useEffect(() => {
     fetchEmployees()
   }, [])
+
+  
 
   useEffect(() => {
     const criteria: SearchCriteria = {
@@ -66,21 +83,21 @@ export default function TemporaryEmployeesPage() {
     }
   }
 
-  const filterEmployees = useCallback((criteria: SearchCriteria) => {
-    // If no search term, show all employees
-    if (!searchTerm.trim()) {
-      setFilteredEmployees(employees)
-      return
-    }
+  // const filterEmployees = useCallback((criteria: SearchCriteria) => {
+  //   // If no search term, show all employees
+  //   if (!searchTerm.trim()) {
+  //     setFilteredEmployees(employees)
+  //     return
+  //   }
 
-    const filtered = employees.filter(emp => 
-      (criteria.FirstName && emp.FirstName.toLowerCase().includes(criteria.FirstName.toLowerCase())) ||
-      (criteria.LastName && emp.LastName.toLowerCase().includes(criteria.LastName.toLowerCase())) ||
-      (criteria.Department && emp.Department.toLowerCase().includes(criteria.Department.toLowerCase())) ||
-      (criteria.Position && emp.Position.toLowerCase().includes(criteria.Position.toLowerCase()))
-    )
-    setFilteredEmployees(filtered)
-  }, [searchTerm, employees])
+  //   const filtered = employees.filter(emp => 
+  //     (criteria.FirstName && emp.FirstName.toLowerCase().includes(criteria.FirstName.toLowerCase())) ||
+  //     (criteria.LastName && emp.LastName.toLowerCase().includes(criteria.LastName.toLowerCase())) ||
+  //     (criteria.Department && emp.Department.toLowerCase().includes(criteria.Department.toLowerCase())) ||
+  //     (criteria.Position && emp.Position.toLowerCase().includes(criteria.Position.toLowerCase()))
+  //   )
+  //   setFilteredEmployees(filtered)
+  // }, [searchTerm, employees])
 
   const handleCreateEmployee = async (request: CreateTemporaryEmployeeRequest) => {
     try {

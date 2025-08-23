@@ -77,16 +77,20 @@ export function showErrorToast(error: unknown, customMessage?: string) {
   let errorMessage: string | undefined
 
   // Extract error information from different error types
-  if (error?.code) {
-    errorCode = error.code
-    errorMessage = error.message || customMessage
-  } else if (error?.response?.data) {
-    errorCode = error.response.data.code
-    errorMessage = error.response.data.message || customMessage
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const err = error as { code?: string; message?: string }
+    errorCode = err.code
+    errorMessage = err.message || customMessage
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } else if (typeof error === "object" && error !== null && "response" in error && (error as any).response?.data) {
+    const err = error as { response?: { data?: { code?: string; message?: string } } }
+    errorCode = err.response?.data?.code
+    errorMessage = err.response?.data?.message || customMessage
   } else if (typeof error === "string") {
     errorMessage = error
-  } else if (error?.message) {
-    errorMessage = error.message
+  } else if (typeof error === "object" && error !== null && "message" in error) {
+    const err = error as { message?: string }
+    errorMessage = err.message
   }
 
   const context = getErrorContext(errorCode, errorMessage)
@@ -143,7 +147,19 @@ export function showInfoToast(message: string, details?: string) {
  * Helper to determine if an error suggests a retry action
  */
 export function isRetryableError(error: unknown): boolean {
-  const errorCode = error?.code || error?.response?.data?.code
+  let errorCode: string | undefined
+  if (typeof error === "object" && error !== null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ("code" in error && typeof (error as any).code === "string") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      errorCode = (error as any).code
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } else if ("response" in error && (error as any).response?.data?.code) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      errorCode = (error as any).response.data.code
+    }
+  }
+
   if (errorCode && ERROR_MESSAGES[errorCode]) {
     return ERROR_MESSAGES[errorCode].retryable || false
   }
