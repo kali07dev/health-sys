@@ -30,26 +30,26 @@ export default function PageHeader() {
   const segments = getSegments(pathname);
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-lg bg-gradient-to-r from-gray-900 to-gray-800 p-6 shadow-lg">
+    <div className="relative mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-gray-900 to-gray-800 p-4 shadow-lg">
       {/* Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-red-600/10 blur-3xl"></div>
-        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-blue-900/10 blur-3xl"></div>
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-red-600/10 blur-2xl"></div>
+        <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-blue-900/10 blur-2xl"></div>
       </div>
 
       {/* Content */}
       <div className="relative">
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center space-x-1 text-sm font-medium text-gray-400">
+        <nav className="flex items-center space-x-1 text-xs font-medium text-gray-400">
           <Link 
             href="/"
             className="flex items-center transition-colors hover:text-white"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-3 w-3" />
           </Link>
 
           {segments.length > 0 && (
-            <ChevronRight className="h-4 w-4 text-gray-600" />
+            <ChevronRight className="h-3 w-3 text-gray-600" />
           )}
 
           {segments.map((segment, index) => (
@@ -61,7 +61,7 @@ export default function PageHeader() {
               transition={{ delay: index * 0.1 }}
             >
               {index > 0 && (
-                <ChevronRight className="h-4 w-4 text-gray-600" />
+                <ChevronRight className="h-3 w-3 text-gray-600" />
               )}
               
               <Link
@@ -80,8 +80,8 @@ export default function PageHeader() {
 
         {/* Page Title */}
         <motion.h1 
-          className="mt-2 text-3xl font-bold tracking-tight text-white"
-          initial={{ opacity: 0, y: 20 }}
+          className="mt-1 text-xl font-bold tracking-tight text-white"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
@@ -92,9 +92,9 @@ export default function PageHeader() {
 
         {/* Subtle Accent Line */}
         <motion.div
-          className="mt-4 h-0.5 w-20 bg-gradient-to-r from-red-500 to-blue-900"
+          className="mt-2 h-0.5 w-12 bg-gradient-to-r from-red-500 to-blue-900"
           initial={{ width: 0 }}
-          animate={{ width: 80 }}
+          animate={{ width: 48 }}
           transition={{ delay: 0.3 }}
         />
       </div>
