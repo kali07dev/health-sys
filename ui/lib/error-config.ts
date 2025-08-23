@@ -1,7 +1,8 @@
 // lib/error-config.ts
 "use client"
 
-import { ErrorType, ErrorContext } from './error-handling'
+import { ErrorContext } from './error-handling'
+import { ErrorType } from './error-types'
 
 /**
  * Configuration for error messages and user guidance
@@ -9,17 +10,17 @@ import { ErrorType, ErrorContext } from './error-handling'
  */
 export const ERROR_MESSAGES: Record<string, ErrorContext> = {
   // Validation errors (user can fix)
-  "VALIDATION_ERROR": {
-    type: ErrorType.USER_INPUT,
-    title: "Please check your input",
-    message: "Some information is missing or incorrect. Please review the highlighted fields.",
-    suggestedAction: "Check required fields and correct any validation errors"
-  },
   "INVALID_FILES": {
     type: ErrorType.USER_INPUT,
     title: "File validation failed",
     message: "One or more files don't meet the requirements.",
     suggestedAction: "Ensure files are under 5MB and in supported formats (PDF, DOC, JPG, PNG)"
+  },
+    "VALIDATION_ERROR": {
+    type: ErrorType.USER_INPUT,
+    title: "Please check your input",
+    message: "Some information is missing or incorrect. Please review the highlighted fields.",
+    suggestedAction: "Check required fields and correct any validation errors"
   },
   "PASSWORDS_MISMATCH": {
     type: ErrorType.USER_INPUT,

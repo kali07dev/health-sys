@@ -3,7 +3,8 @@
 
 import React from 'react'
 import { AlertCircle, RefreshCw, WifiOff, ShieldAlert } from 'lucide-react'
-import { ErrorType, getErrorContext } from '@/lib/error-handling'
+import { getErrorContext } from '@/lib/error-handling'
+import { ErrorType } from '@/lib/error-types'
 
 interface ErrorDisplayProps {
   error: unknown
