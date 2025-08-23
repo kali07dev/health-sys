@@ -86,9 +86,31 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Incident Review: {incident?.referenceNumber}
             </h1>
-            <p className="mt-2 text-gray-600">
-              Status: <span className="font-semibold">{incident?.status}</span>
-            </p>
+            <div className="mt-2">
+              Status: &nbsp;
+              <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                incident?.status === 'new'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                : incident?.status === 'investigating'
+                ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                : incident?.status === 'action_required'
+                ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                : incident?.status === 'resolved'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : incident?.status === 'closed'
+                ? 'bg-gray-50 text-gray-700 border border-gray-200'
+                : 'bg-gray-50 text-gray-500 border border-gray-200'
+              }`}
+              >
+              {incident?.status === 'new' && 'New'}
+              {incident?.status === 'investigating' && 'Investigating'}
+              {incident?.status === 'action_required' && 'Action Required'}
+              {incident?.status === 'resolved' && 'Resolved'}
+              {incident?.status === 'closed' && 'Closed'}
+              {!incident?.status && 'Unknown'}
+              </span>
+            </div>
           </div>
             <div className="flex gap-2"> 
             <button
