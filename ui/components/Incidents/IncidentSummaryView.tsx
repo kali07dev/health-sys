@@ -167,7 +167,7 @@ export function IncidentSummaryView({ summary }: Props) {
         <TabsContent value="investigation">
           <Card className="p-6 bg-white shadow-lg rounded-lg border-l-4 border-red-500">
             {summary.investigation ? (
-              <div className="space-y-6">
+              <div className="space-y-6 text-black">
                 <div>
                   <h3 className="text-lg font-semibold mb-4 text-red-700">Investigation Details</h3>
                   <dl className="space-y-4">
