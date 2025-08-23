@@ -90,23 +90,23 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
               Status: <span className="font-semibold">{incident?.status}</span>
             </p>
           </div>
-          <div className="flex gap-0"> 
+            <div className="flex gap-2"> 
             <button
               onClick={handleOpenSummary}
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded-xl text-sm transition-colors"
             >
               View Summary
             </button>
             {isAuthorized && incident?.status !== "closed" && (
               <button
-                onClick={handleCloseIncident}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              onClick={handleCloseIncident}
+              className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded-xl text-sm transition-colors"
               >
-                <XCircle className="w-5 h-5" />
-                Close Incident
+              <XCircle className="w-4 h-4" />
+              Close Incident
               </button>
             )}
-          </div> 
+            </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
