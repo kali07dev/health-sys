@@ -15,12 +15,12 @@ export interface Employee {
 
 interface SearchEmployeeProps {
   onSelect: (employee: Employee) => void;
+  defaultValue?: string;
 }
 
-export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect }) => {
+export const SearchEmployee: React.FC<SearchEmployeeProps> = ({ onSelect, defaultValue }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery,
-     setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(defaultValue || '');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
