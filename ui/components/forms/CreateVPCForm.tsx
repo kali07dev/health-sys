@@ -388,8 +388,8 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-black text-white hover:bg-gray-800 px-6 py-3 rounded-none
-                      dark:bg-black dark:text-white dark:hover:bg-gray-800"
+            className="bg-red-600 text-white hover:bg-red-700 px-6 py-3 rounded-full
+                      dark:bg-red-500 dark:text-white dark:hover:bg-red-600"
           >
             {isSubmitting ? "Submitting..." : "Submit Safety Report"}
           </Button>
