@@ -1,0 +1,886 @@
+"use client"
+
+import { useState, useMemo } from "react"
+import Link from "next/link"
+import { format, formatDistance } from "date-fns"
+import { Loader2, ChevronUp, ChevronDown, Search, Filter, ArrowUpDown, Calendar, MapPin, User, X } from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/dashCard"
+import type { Hazard } from "@/interfaces/hazards"
+import HazardForm from "./HazardForm"
+import HazardDetails from "./HazardDetails"
+import { toast } from "react-hot-toast"
+import InfoPanel from "@/components/ui/InfoPanel"
+import { CalendarClock, Plus, AlertTriangle } from "lucide-react"
+import { hazardAPI } from "@/utils/hazardAPI"
+
+interface HazardsTableProps {
+  initialHazards: Hazard[]
+  userRole: string
+  totalHazards: number
+  initialPage: number
+  totalPages: number
+  pageSize: number
+}
+
+// Type definitions for sorting and filtering
+type SortField = "title" | "location" | "type" | "riskLevel" | "status" | "createdAt"
+type SortDirection = "asc" | "desc"
+type FilterState = {
+  search: string
+  type: string
+  status: string
+  riskLevel: string
+  dateRange: {
+    from: string | null
+    to: string | null
+  }
+}
+
+export const HazardsTable = ({
+  initialHazards,
+  userRole,
+  totalHazards,
+  initialPage,
+  totalPages: initialTotalPages,
+  pageSize: initialPageSize,
+}: HazardsTableProps) => {
+  const [selectedHazard, setSelectedHazard] = useState<Hazard | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  const [hazards, setHazards] = useState<Hazard[]>(initialHazards)
+  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [pageSize, setPageSize] = useState(initialPageSize)
+  const [totalPages, setTotalPages] = useState(initialTotalPages)
+  const [loading, setLoading] = useState(false)
+
+  // Fetch hazards when page or page size changes
+  const fetchHazards = async (page: number, pageSize: number) => {
+    setLoading(true)
+    try {
+      const response = await hazardAPI.getAllHazardsFiltered({ page, pageSize })
+      setHazards(response.data)
+      setCurrentPage(response.page)
+      setTotalPages(response.totalPages)
+      setPageSize(response.pageSize)
+    } catch {
+      toast.error("Failed to load hazards")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Page change handler
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== currentPage) {
+      fetchHazards(newPage, pageSize)
+    }
+  }
+
+  // Page size change handler
+  const handlePageSizeChange = (newPageSize: number) => {
+    fetchHazards(1, newPageSize) // Reset to first page
+  }
+
+  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalHazards)} of ${totalHazards} hazards`
+
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField>("createdAt")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+
+  // Filtering state
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    type: "",
+    status: "",
+    riskLevel: "",
+    dateRange: {
+      from: null,
+      to: null,
+    },
+  })
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+
+  const handleViewHazard = (hazard: Hazard) => {
+    setSelectedHazard(hazard)
+  }
+
+  const handleCreateSuccess = (newHazard: Hazard) => {
+    console.log(newHazard)
+    toast.success("Hazard Successfully Reported")
+    window.location.reload()
+  }
+
+  // Enhanced formatting helpers
+  const formatHazardType = (type: string) => {
+    if (!type) return "Unknown"
+    return type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  }
+
+  const getTimeAgo = (dateString: string) => {
+    try {
+      return formatDistance(new Date(dateString), new Date(), { addSuffix: true })
+    } catch (e) {
+      console.log(e)
+      return "Unknown time"
+    }
+  }
+
+  // Sort handler
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  // Filter handlers
+  const handleFilterChange = (key: keyof FilterState, value: string | { from: string | null; to: string | null }) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const handleDateRangeChange = (key: "from" | "to", value: string | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      dateRange: {
+        ...prev.dateRange,
+        [key]: value,
+      },
+    }))
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      type: "",
+      status: "",
+      riskLevel: "",
+      dateRange: {
+        from: null,
+        to: null,
+      },
+    })
+  }
+
+  // Apply sorting and filtering
+  const filteredAndSortedHazards = useMemo(() => {
+    // First apply filters
+    let result = [...hazards]
+
+    // Text search across multiple fields
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase()
+      result = result.filter(
+        (hazard) =>
+          hazard.referenceNumber.toLowerCase().includes(searchTerm) ||
+          hazard.title.toLowerCase().includes(searchTerm) ||
+          hazard.description.toLowerCase().includes(searchTerm) ||
+          hazard.location.toLowerCase().includes(searchTerm),
+      )
+    }
+
+    // Type filter
+    if (filters.type) {
+      result = result.filter((hazard) => hazard.type === filters.type)
+    }
+
+    // Status filter
+    if (filters.status) {
+      result = result.filter((hazard) => hazard.status === filters.status)
+    }
+
+    // Risk level filter
+    if (filters.riskLevel) {
+      result = result.filter((hazard) => hazard.riskLevel === filters.riskLevel)
+    }
+
+    // Date range filter
+    if (filters.dateRange.from) {
+      const fromDate = new Date(filters.dateRange.from)
+      result = result.filter((hazard) => new Date(hazard.createdAt) >= fromDate)
+    }
+
+    if (filters.dateRange.to) {
+      const toDate = new Date(filters.dateRange.to)
+      toDate.setHours(23, 59, 59, 999)
+      result = result.filter((hazard) => new Date(hazard.createdAt) <= toDate)
+    }
+
+    // Then sort
+    return result.sort((a, b) => {
+      let valueA: string | number | undefined
+      let valueB: string | number | undefined
+
+      switch (sortField) {
+        case "title":
+          valueA = a.title
+          valueB = b.title
+          break
+        case "location":
+          valueA = a.location
+          valueB = b.location
+          break
+        case "type":
+          valueA = a.type
+          valueB = b.type
+          break
+        case "riskLevel":
+          const riskOrder = { extreme: 4, high: 3, medium: 2, low: 1 }
+          valueA = riskOrder[a.riskLevel as keyof typeof riskOrder]
+          valueB = riskOrder[b.riskLevel as keyof typeof riskOrder]
+          break
+        case "status":
+          const statusOrder = { new: 1, assessing: 2, action_required: 3, resolved: 4, closed: 5 }
+          valueA = statusOrder[a.status as keyof typeof statusOrder]
+          valueB = statusOrder[b.status as keyof typeof statusOrder]
+          break
+        case "createdAt":
+          valueA = new Date(a.createdAt).getTime()
+          valueB = new Date(b.createdAt).getTime()
+          break
+        default:
+          valueA = a[sortField]
+          valueB = b[sortField]
+      }
+
+      if (valueA < valueB) return sortDirection === "asc" ? -1 : 1
+      if (valueA > valueB) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
+  }, [hazards, sortField, sortDirection, filters])
+
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM d, yyyy h:mm a")
+    } catch (e) {
+      console.log(e)
+      return "Invalid date"
+    }
+  }
+
+  // Helper for getting active filters count
+  const getActiveFiltersCount = () => {
+    let count = 0
+    if (filters.search) count++
+    if (filters.type) count++
+    if (filters.status) count++
+    if (filters.riskLevel) count++
+    if (filters.dateRange.from || filters.dateRange.to) count++
+    return count
+  }
+
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="sm:flex-auto">
+          <h1 className="text-2xl font-semibold text-gray-900">Hazards</h1>
+          <p className="mt-2 text-sm text-gray-700">
+            A list of all hazards in your organization including their reference number, type, risk level, and status.
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
+          <Link href="/hazards/closed" passHref>
+            <Button
+              variant="outline"
+              className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
+            >
+              View Closed Hazards
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
+          >
+            Report New Hazard
+          </Button>
+        </div>
+      </div>
+
+      <InfoPanel title="Hazard Reporting Tools" icon={<AlertTriangle className="h-5 w-5 text-red-600" />}>
+        <p className="text-sm">
+          This page allows you to create, view, and manage safety hazards. Use the <strong>New Hazard</strong>{" "}
+          button to report new hazards. All hazards require assessment within 24 hours of submission.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            New Hazard
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
+          >
+            <CalendarClock className="h-4 w-4 mr-1" />
+            View Reports
+          </Button>
+        </div>
+      </InfoPanel>
+
+      {/* Search and Filter Bar */}
+      <div className="mt-6 flex flex-col sm:flex-row gap-4">
+        <div className="relative w-full">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search hazards..."
+            className="pl-8 w-full"
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+          />
+          {filters.search && (
+            <button className="absolute right-2 top-2.5" onClick={() => handleFilterChange("search", "")}>
+              <X className="h-4 w-4 text-gray-500" />
+            </button>
+          )}
+        </div>
+
+        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+              {getActiveFiltersCount() > 0 && <Badge className="ml-1 bg-red-600">{getActiveFiltersCount()}</Badge>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4 bg-white border shadow-md">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-medium text-gray-900">Filter Options</h3>
+                {getActiveFiltersCount() > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-800 p-0 h-auto text-xs"
+                    onClick={clearFilters}
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="type-filter" className="text-gray-700">Hazard Type</Label>
+                <Select value={filters.type} onValueChange={(value) => handleFilterChange("type", value)}>
+                  <SelectTrigger id="type-filter">
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="unsafe_act">Unsafe Act</SelectItem>
+                    <SelectItem value="unsafe_condition">Unsafe Condition</SelectItem>
+                    <SelectItem value="environmental">Environmental</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status-filter" className="text-gray-700">Status</Label>
+                <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
+                  <SelectTrigger id="status-filter">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="assessing">Assessing</SelectItem>
+                    <SelectItem value="action_required">Action Required</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="risk-filter" className="text-gray-700">Risk Level</Label>
+                <Select value={filters.riskLevel} onValueChange={(value) => handleFilterChange("riskLevel", value)}>
+                  <SelectTrigger id="risk-filter">
+                    <SelectValue placeholder="All risk levels" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All risk levels</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="extreme">Extreme</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-700">Date Range</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="date-from" className="text-xs text-gray-700">
+                      From
+                    </Label>
+                    <Input
+                      id="date-from"
+                      type="date"
+                      value={filters.dateRange.from || ""}
+                      onChange={(e) => handleDateRangeChange("from", e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="date-to" className="text-xs text-gray-700">
+                      To
+                    </Label>
+                    <Input
+                      id="date-to"
+                      type="date"
+                      value={filters.dateRange.to || ""}
+                      onChange={(e) => handleDateRangeChange("to", e.target.value || null)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => setIsFilterOpen(false)}
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Check if filtered hazards array is empty */}
+      {filteredAndSortedHazards.length === 0 ? (
+        <Card className="mt-8 border-2 border-dotted border-red-300">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <div className="rounded-full bg-red-100 p-3 mb-4">
+              <Search className="h-8 w-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Hazards Found</h3>
+            <p className="text-gray-500 text-center max-w-md">
+              {hazards.length === 0
+                ? "No hazards are currently reported in the system."
+                : "No hazards match your current filter criteria."}
+            </p>
+            {hazards.length > 0 && filteredAndSortedHazards.length === 0 && (
+              <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                Clear All Filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Mobile Card View */}
+          <div className="mt-8 grid gap-4 md:hidden">
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
+              </div>
+            )}
+            {filteredAndSortedHazards.map((hazard) => (
+              <Card
+                key={hazard.id}
+                className="overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <CardContent className="p-4 bg-white">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{hazard.title}</h3>
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                        <User className="h-3 w-3 opacity-50" />
+                        {hazard.userHazardID || hazard.referenceNumber}
+                      </p>
+                    </div>
+                    <Badge
+                      className={
+                        hazard.riskLevel === "extreme"
+                          ? "bg-red-600 hover:bg-red-700"
+                          : hazard.riskLevel === "high"
+                            ? "bg-orange-500 hover:bg-orange-600"
+                            : hazard.riskLevel === "medium"
+                              ? "bg-yellow-500 hover:bg-yellow-600"
+                              : "bg-green-500 hover:bg-green-600"
+                      }
+                    >
+                      {hazard.riskLevel.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-500 truncate">{hazard.location}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-500">{getTimeAgo(hazard.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                    <Badge
+                      className={
+                        hazard.status === "new"
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : hazard.status === "assessing"
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : hazard.status === "action_required"
+                              ? "bg-red-600 hover:bg-red-700"
+                              : hazard.status === "resolved"
+                                ? "bg-yellow-500 hover:bg-yellow-600"
+                                : "bg-green-600 hover:bg-green-700"
+                      }
+                    >
+                      {hazard.status
+                        .replace("_", " ")
+                        .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1))}
+                    </Badge>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleViewHazard(hazard)}
+                      >
+                        View
+                      </Button>
+                      {userRole !== "employee" && (
+                        <Link
+                          href={`/hazards/${hazard.id}/review`}
+                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-8 px-3 py-1"
+                        >
+                          Review
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="mt-8 flow-root hidden md:block">
+            <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
+                          onClick={() => handleSort("title")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Hazard Details
+                            <span className="ml-1">
+                              {sortField === "title" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell cursor-pointer"
+                          onClick={() => handleSort("location")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Location
+                            <span className="ml-1">
+                              {sortField === "location" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden md:table-cell cursor-pointer"
+                          onClick={() => handleSort("type")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Type
+                            <span className="ml-1">
+                              {sortField === "type" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                          onClick={() => handleSort("riskLevel")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Risk Level
+                            <span className="ml-1">
+                              {sortField === "riskLevel" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                          onClick={() => handleSort("status")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Status
+                            <span className="ml-1">
+                              {sortField === "status" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden lg:table-cell cursor-pointer"
+                          onClick={() => handleSort("createdAt")}
+                        >
+                          <div className="flex items-center gap-1 text-gray-900">
+                            Timing
+                            <span className="ml-1">
+                              {sortField === "createdAt" ? (
+                                sortDirection === "asc" ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                        <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {filteredAndSortedHazards.map((hazard) => (
+                        <tr key={hazard.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                            <div className="flex items-center">
+                              <div>
+                                <div className="font-medium text-gray-900">{hazard.title}</div>
+                                <div className="text-gray-500 text-xs flex items-center gap-1">
+                                  <User className="h-3 w-3 opacity-50" />
+                                  {hazard.userHazardID || hazard.referenceNumber}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4 text-gray-400" />
+                              {hazard.location}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 hidden md:table-cell">
+                            {formatHazardType(hazard.type)}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                            <Badge
+                              className={
+                                hazard.riskLevel === "extreme"
+                                  ? "bg-red-600 hover:bg-red-700"
+                                  : hazard.riskLevel === "high"
+                                    ? "bg-orange-500 hover:bg-orange-600"
+                                    : hazard.riskLevel === "medium"
+                                      ? "bg-yellow-500 hover:bg-yellow-600"
+                                      : "bg-green-500 hover:bg-green-600"
+                              }
+                            >
+                              {hazard.riskLevel.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm hidden md:table-cell">
+                            <Badge
+                              className={
+                                hazard.status === "new"
+                                  ? "bg-blue-600 hover:bg-blue-700"
+                                  : hazard.status === "assessing"
+                                    ? "bg-purple-600 hover:bg-purple-700"
+                                    : hazard.status === "action_required"
+                                      ? "bg-red-600 hover:bg-red-700"
+                                      : hazard.status === "resolved"
+                                        ? "bg-yellow-500 hover:bg-yellow-600"
+                                        : "bg-green-600 hover:bg-green-700"
+                              }
+                            >
+                              {hazard.status
+                                .replace("_", " ")
+                                .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1))}
+                            </Badge>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden lg:table-cell">
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                              <div>
+                                <div>{formatDate(hazard.createdAt)}</div>
+                                <div className="text-xs text-gray-500">{getTimeAgo(hazard.createdAt)}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                            <Button
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-900 mr-2"
+                              onClick={() => handleViewHazard(hazard)}
+                            >
+                              View
+                            </Button>
+                            {userRole !== "employee" && (
+                              <Link
+                                href={`/hazards/${hazard.id}/review`}
+                                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-10 px-4 py-2"
+                              >
+                                Review
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* View Hazard Slide-over */}
+      <Sheet open={!!selectedHazard} onOpenChange={() => setSelectedHazard(null)}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto max-h-screen bg-white">
+          <SheetHeader>
+            <SheetTitle className="text-gray-900">Hazard Details</SheetTitle>
+          </SheetHeader>
+          {selectedHazard && <HazardDetails hazard={selectedHazard} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Create Hazard Modal */}
+      <Sheet open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <SheetContent className="w-full sm:max-w-xl bg-white">
+          <SheetHeader>
+            <SheetTitle className="text-gray-900">Report New Hazard</SheetTitle>
+          </SheetHeader>
+          <HazardForm onSuccess={handleCreateSuccess} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      )}
+
+      {/* Pagination component */}
+      <div className="w-full bg-gray-50 p-4">
+        <div className="text-sm text-gray-500">
+          {paginationInfo}
+        </div>
+        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {/* Page Size Selector */}
+          <div className="w-full sm:w-auto">
+            <Select 
+              value={pageSize.toString()} 
+              onValueChange={(value) => handlePageSizeChange(Number(value))}
+            >
+              <SelectTrigger className="w-full sm:w-[140px] bg-white border-red-300 focus:ring-red-200">
+                <SelectValue placeholder={`${pageSize} entries`} />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {[10, 20, 30, 40, 50].map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size} entries
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+              Page {currentPage} of {totalPages}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                Previous
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
