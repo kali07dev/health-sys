@@ -183,7 +183,8 @@ export const incidentAPI = {
     api.post<{ message: string }>(`/incidents/${id}/close-investigation`).then(res => res.data),
 
   assignIncident: async (incidentId: string, userId: string) => {
-    return api.post<{ message: string }>(`/incidents/${incidentId}/assign`, { userId }).then(res => res.data);
+    const res = await api.post<{ message: string; }>(`/incidents/${incidentId}/assign`, { userId });
+    return res.data;
   },
 };
 
