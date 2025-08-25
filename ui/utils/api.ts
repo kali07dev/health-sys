@@ -106,25 +106,25 @@ export const incidentAPI = {
       page?: number; 
       pageSize?: number; 
     }) => 
-  api.get<{ 
-    data: Incident[]; 
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  }>(`/incidents`, { params }).then((res) => res.data),
+    api.get<{ 
+      data: Incident[]; 
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>(`/incidents`, { params }).then((res) => res.data),
 
   getClosedIncidentsFiltered: (params?: { 
     page?: number; 
     pageSize?: number; 
   }) => 
-api.get<{ 
-  data: Incident[]; 
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}>(`/incidents/closed`, { params }).then((res) => res.data),
+    api.get<{ 
+      data: Incident[]; 
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>(`/incidents/closed`, { params }).then((res) => res.data),
 
   getIncidentsByEmployee: (employeeId: string) => 
     api.get<Incident[]>(`/incidents/employee/${employeeId}`).then((res) => res.data),
@@ -181,6 +181,10 @@ api.get<{
 
   closeInvestigation: (id: string) => 
     api.post<{ message: string }>(`/incidents/${id}/close-investigation`).then(res => res.data),
+
+  assignIncident: async (incidentId: string, userId: string) => {
+    return api.post<{ message: string }>(`/incidents/${incidentId}/assign`, { userId }).then(res => res.data);
+  },
 };
 
 export const useAuthorization = () => {
