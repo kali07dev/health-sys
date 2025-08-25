@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useSession } from "next-auth/react"
+// import { useSession } from "next-auth/react"
 import {
   ShieldCheck,
   Building2,
@@ -33,7 +33,7 @@ import { dashboardAPI } from "@/utils/adminApi"
 import { useTranslations } from 'next-intl'
 
 export default function SafetyDashboard() {
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
   const [dashboardData, setDashboardData] = useState<AdminDashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -223,12 +223,12 @@ export default function SafetyDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
-      <div className="mb-6 sm:mb-8">
+      {/* <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-red-600">{t('title')}</h1>
         <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
           {t('welcome', { email: session?.user?.email ?? "" })}
         </p>
-      </div>
+      </div> */}
 
       {/* Quick Actions Grid */}
       <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-gray-900">{t('quickActions')}</h2>

@@ -292,9 +292,9 @@ export const HazardsTable = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Hazards</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          {/* <p className="mt-2 text-sm text-gray-700">
             A list of all hazards in your organization including their reference number, type, risk level, and status.
-          </p>
+          </p> */}
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
           <Link href="/hazards/closed" passHref>
