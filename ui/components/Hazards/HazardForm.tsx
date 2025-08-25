@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { hazardAPI } from "@/utils/hazardAPI"
 import type { Hazard, CreateHazardRequest } from "@/interfaces/hazards"
+import { SearchEmployee, Employee } from "@/components/SearchAllEmployees"
+
 
 interface HazardFormProps {
   onSuccess: (hazard: Hazard) => void
@@ -17,6 +19,10 @@ interface HazardFormProps {
 
 export default function HazardForm({ onSuccess }: HazardFormProps) {
   const [loading, setLoading] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [reporterFullName, setreporterFullName] = useState("")
+  // const [showLateReportingReason, setShowLateReportingReason] = useState(false)
+  // const [lateReportingReason, setLateReportingReason] = useState("")
   const [formData, setFormData] = useState<CreateHazardRequest>({
     type: 'unsafe_condition',
     riskLevel: 'medium',
@@ -25,8 +31,17 @@ export default function HazardForm({ onSuccess }: HazardFormProps) {
     location: '',
     fullLocation: '',
     recommendedAction: '',
-    reporterFullName: ''
+    reporterFullName: reporterFullName
   })
+
+  const handleEmployeeSelect = (employee: Employee) => {
+    const employeeFullName = `${employee.firstName} ${employee.lastName}`
+    setSelectedEmployee(employee)
+    setreporterFullName(employeeFullName)
+  }
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,15 +137,16 @@ export default function HazardForm({ onSuccess }: HazardFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="location" className="text-gray-700">Location *</Label>
-              <Input
-                id="location"
-                type="text"
-                placeholder="e.g., Building A, Floor 2"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                required
-                maxLength={255}
-              />
+              <Select value={formData.location} onValueChange={(value) => handleSelectChange("location", value)}>
+                <SelectTrigger className="h-12 text-base bg-white text-black">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-black">
+                  <SelectItem value="balaka">Balaka</SelectItem>
+                  <SelectItem value="lunzu">lunzu</SelectItem>
+                  <SelectItem value="makata">Makata</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -161,13 +177,12 @@ export default function HazardForm({ onSuccess }: HazardFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="reporterFullName" className="text-gray-700">Reporter Name</Label>
-            <Input
-              id="reporterFullName"
-              type="text"
-              placeholder="Your full name (optional)"
-              value={formData.reporterFullName}
-              onChange={(e) => handleInputChange('reporterFullName', e.target.value)}
-            />
+            <SearchEmployee onSelect={handleEmployeeSelect} />
+              {selectedEmployee && (
+                <div className="mt-2 text-sm text-gray-500">
+                  Selected: {`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} ({selectedEmployee.position})
+                </div>
+              )}
           </div>
 
           {/* Add some bottom padding to ensure the submit button area is accessible */}
