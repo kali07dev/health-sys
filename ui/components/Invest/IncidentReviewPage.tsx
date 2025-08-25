@@ -2,12 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Loader2, XCircle } from 'lucide-react';
+import { Loader2, XCircle, UserPlus, UserCheck, FileText, Settings } from 'lucide-react';
 import { incidentAPI } from '@/utils/api';
 import { Incident, IncidentAttachment } from '@/interfaces/incidents'; 
 import IncidentDetails from '../Incidents/IncidentDetails';
 import { InvestigationPanel } from './InvestigationPanel';
 import { CorrectiveActionsPanel } from '../CorrectiveActions/CorrectiveActionsPanel';
+import { AssignIncidentModal } from '../Incidents/AssignIncidentModal';
 import { useRouter } from 'next/navigation';
 
 interface IncidentReviewPageProps {
@@ -21,10 +22,8 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
   const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
-  // const handleCloseModal = () => {
-  //   setActiveTab('details');
-  // };
   const handleOpenSummary = () => {
     router.push(`/incidents/${incidentId}/summary`);
   };
@@ -36,14 +35,11 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
         return;
       }
 
-      // Confirm before closing
       const confirmed = window.confirm('Are you sure you want to close this incident?');
       if (!confirmed) return;
 
-      incidentAPI.closeIncident(incidentId);
+      await incidentAPI.closeIncident(incidentId);
       toast.success('Incident closed successfully');
-      
-      // Optionally redirect or refresh
       router.push('/incidents');
     } catch (error) {
       console.error('Error closing incident:', error);
@@ -51,95 +47,139 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
     }
   };
 
+  const handleAssignmentComplete = () => {
+    // Refresh incident data
+    fetchIncident();
+  };
+
   const isAuthorized = ['admin', 'safety_officer', 'manager'].includes(session?.role ?? '');
 
+  const fetchIncident = async () => {
+    try {
+      const response = await incidentAPI.getIncident(incidentId);
+      setIncident(response.incident);
+      setAttachments(response.attachments);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchIncident = async () => {
-      try {
-        const response = await incidentAPI.getIncident(incidentId);
-        setIncident(response.incident);
-        setAttachments(response.attachments);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchIncident();
   }, [incidentId]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading incident details...</p>
+        </div>
       </div>
     );
   }
 
+  const getStatusConfig = (status: string) => {
+    const configs = {
+      new: { color: 'bg-blue-500', text: 'New', icon: '🆕' },
+      investigating: { color: 'bg-yellow-500', text: 'Investigating', icon: '🔍' },
+      action_required: { color: 'bg-orange-500', text: 'Action Required', icon: '⚠️' },
+      resolved: { color: 'bg-green-500', text: 'Resolved', icon: '✅' },
+      closed: { color: 'bg-gray-500', text: 'Closed', icon: '🔒' },
+    };
+    return configs[status as keyof typeof configs] || configs.new;
+  };
+
+  const statusConfig = getStatusConfig(incident?.status || 'new');
+
   return (
-      // <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
-        <Toaster position="top-right" />
-  
-        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Incident Review: {incident?.referenceNumber}
-            </h1>
-            <div className="mt-2">
-              Status: &nbsp;
-              <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                incident?.status === 'new'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : incident?.status === 'investigating'
-                ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                : incident?.status === 'action_required'
-                ? 'bg-orange-50 text-orange-700 border border-orange-200'
-                : incident?.status === 'resolved'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : incident?.status === 'closed'
-                ? 'bg-gray-50 text-gray-700 border border-gray-200'
-                : 'bg-gray-50 text-gray-500 border border-gray-200'
-              }`}
+    <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
+      
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Title and Status */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                  {incident?.referenceNumber}
+                </h1>
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium text-white ${statusConfig.color}`}>
+                  <span>{statusConfig.icon}</span>
+                  {statusConfig.text}
+                </div>
+              </div>
+              <p className="text-gray-600 max-w-2xl">
+                {incident?.title}
+              </p>
+              {incident?.assignedTo && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                  <UserCheck className="w-4 h-4" />
+                  <span>Assigned to: <strong>{incident.assignedTo}</strong></span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              {isAuthorized && (
+                <button
+                  onClick={() => setShowAssignModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-sm"
+                >
+                  {incident?.assignedTo ? (
+                    <>
+                      <Settings className="w-4 h-4" />
+                      Reassign
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Assign
+                    </>
+                  )}
+                </button>
+              )}
+              
+              <button
+                onClick={handleOpenSummary}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-colors shadow-sm"
               >
-              {incident?.status === 'new' && 'New'}
-              {incident?.status === 'investigating' && 'Investigating'}
-              {incident?.status === 'action_required' && 'Action Required'}
-              {incident?.status === 'resolved' && 'Resolved'}
-              {incident?.status === 'closed' && 'Closed'}
-              {!incident?.status && 'Unknown'}
-              </span>
+                <FileText className="w-4 h-4" />
+                View Summary
+              </button>
+
+              {isAuthorized && incident?.status !== "closed" && (
+                <button
+                  onClick={handleCloseIncident}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors shadow-sm"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Close Incident
+                </button>
+              )}
             </div>
           </div>
-            <div className="flex gap-2"> 
-            <button
-              onClick={handleOpenSummary}
-              className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded-xl text-sm transition-colors"
-            >
-              View Summary
-            </button>
-            {isAuthorized && incident?.status !== "closed" && (
-              <button
-              onClick={handleCloseIncident}
-              className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded-xl text-sm transition-colors"
-              >
-              <XCircle className="w-4 h-4" />
-              Close Incident
-              </button>
-            )}
-            </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-            <nav className="flex -mb-px">
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="flex overflow-x-auto">
               <button
                 onClick={() => setActiveTab("details")}
-                className={`${
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === "details"
-                    ? "border-red-500 text-red-600 dark:text-red-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                    ? "border-blue-500 text-blue-600 bg-blue-50"
+                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                }`}
               >
                 Details
               </button>
@@ -147,21 +187,21 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
                 <>
                   <button
                     onClick={() => setActiveTab("investigation")}
-                    className={`${
+                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === "investigation"
-                        ? "border-red-500 text-red-600 dark:text-red-400"
-                        : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                        ? "border-blue-500 text-blue-600 bg-blue-50"
+                        : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                    }`}
                   >
                     Investigation
                   </button>
                   <button
                     onClick={() => setActiveTab("actions")}
-                    className={`${
+                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === "actions"
-                        ? "border-red-500 text-red-600 dark:text-red-400"
-                        : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                        ? "border-blue-500 text-blue-600 bg-blue-50"
+                        : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                    }`}
                   >
                     Actions
                   </button>
@@ -180,7 +220,18 @@ const IncidentReviewPage = ({ incidentId }: IncidentReviewPageProps) => {
           </div>
         </div>
       </div>
-    )
+
+      {/* Assign Incident Modal */}
+      {showAssignModal && incident && (
+        <AssignIncidentModal
+          isOpen={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          incidentId={incidentId}
+          onAssignmentComplete={handleAssignmentComplete}
+        />
+      )}
+    </div>
+  )
 };
 
 export default IncidentReviewPage;

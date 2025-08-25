@@ -109,12 +109,15 @@ export interface Incident {
   title: string;
   description: string;
   location: string;
-  fulllocation:string;
+  fulllocation: string;
   lateReason?: string;
   occurredAt: string;
   reportedBy: string;
-  userReported: string
+  userReported: string;
   assignedTo?: string;
+  assignedToName?: string; // Add this field for display name
+  assignedById?: string; // Add this field to track who assigned it
+  assignedAt?: string; // Add this field to track when it was assigned
   immediateActionsTaken?: string;
   witnesses?: string[];
   environmentalConditions?: Record<string, string>;

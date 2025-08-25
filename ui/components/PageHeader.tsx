@@ -110,7 +110,7 @@ export default function PageHeader() {
         />
         
         {/* Description text with fade-in */}
-        <motion.p 
+        {/* <motion.p 
           className="mt-2 text-xs text-gray-500 font-light"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -119,7 +119,7 @@ export default function PageHeader() {
           {segments.length > 0 
             ? `Manage your ${segments[segments.length - 1].label.toLowerCase()} settings and preferences`
             : 'Welcome to your dashboard'}
-        </motion.p>
+        </motion.p> */}
       </div>
     </div>
   );
