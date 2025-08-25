@@ -21,17 +21,17 @@
   --notification-success-text: #065F46;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
     
     /* You could adjust these for dark mode if needed */
-    --primary-light: #FF8080;
-    --primary-main: #FF3B30;
-    --primary-dark: #B32620;
-  }
-}
+    /* --primary-light: #FF8080; */
+    /* --primary-main: #FF3B30; */
+    /* --primary-dark: #B32620; */
+  /* } */
+/* } */ 
 
 body {
   color: black;

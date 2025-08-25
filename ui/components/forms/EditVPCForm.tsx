@@ -1,11 +1,11 @@
 "use client"
 
 import type React from "react"
-import { submitVPC, submitVPCWithoutAttachments } from "@/lib/api/vpc"
+import { updateVPC, updateVPCWithoutAttachments } from "@/lib/api/vpc"
 import DepartmentDropdown from "@/components/DepartmentDropdown"
-import { SearchEmployee, Employee } from '@/components/SearchAllEmployees'; 
+import { SearchEmployee, Employee } from '@/components/SearchAllEmployees'
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,37 +16,66 @@ import { AlertCircle, Upload, FileText, Trash2, ChevronDown, ChevronUp, Plus } f
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Image from "next/image"
 
-interface CreateVPCFormProps {
-  userId: string
+interface VPCData {
+  id: string
+  vpcNumber: string
+  reportedBy: string
+  reportedDate: string
+  department: string
+  description: string
+  vpcType: string
+  actionTaken: string
+  incidentRelatesTo: string
 }
 
-export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
+interface EditVPCFormProps {
+  userId: string
+  vpcData: VPCData
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function EditVPCForm({ userId, vpcData }: EditVPCFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [evidenceExpanded, setEvidenceExpanded] = useState(true)
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [reportedBy, setreportedBy] = useState('');
-  
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [reportedBy, setReportedBy] = useState('')
 
   const [formData, setFormData] = useState({
     vpcNumber: "",
-    reportedBy: reportedBy,
+    reportedBy: "",
     department: "",
     description: "",
     vpcType: "",
     actionTaken: "",
     incidentRelatesTo: "",
   })
-  console.log("User ID:", userId)
+
+  // Initialize form with existing VPC data
+  useEffect(() => {
+    if (vpcData) {
+      setFormData({
+        vpcNumber: vpcData.vpcNumber || "",
+        reportedBy: vpcData.reportedBy || "",
+        department: vpcData.department || "",
+        description: vpcData.description || "",
+        vpcType: vpcData.vpcType || "",
+        actionTaken: vpcData.actionTaken || "",
+        incidentRelatesTo: vpcData.incidentRelatesTo || "",
+      })
+      setReportedBy(vpcData.reportedBy || "")
+    }
+  }, [vpcData])
 
   const handleEmployeeSelect = (employee: Employee) => {
-      const employeeFullName = `${employee.firstName} ${employee.lastName}`;
-      setSelectedEmployee(employee); // Store the selected employee's details
-      setreportedBy(employeeFullName);
-  };
+    const employeeFullName = `${employee.firstName} ${employee.lastName}`
+    setSelectedEmployee(employee)
+    setReportedBy(employeeFullName)
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -83,22 +112,23 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
     setError(null)
 
     try {
-      const vpcData = {
+      const updatedVpcData = {
         ...formData,
         reportedBy: reportedBy,
-        reportedDate: new Date().toISOString(),
+        reportedDate: new Date(vpcData.reportedDate).toISOString(),
       }
 
       const response = 
         files.length > 0 
-          ? await submitVPC(vpcData, files) 
-          : await submitVPCWithoutAttachments(vpcData)
-      console.log("VPC created successfully:", response)
+          ? await updateVPC(vpcData.id, updatedVpcData, files) 
+          : await updateVPCWithoutAttachments(vpcData.id, updatedVpcData)
+      
+      console.log("VPC updated successfully:", response)
       router.push("/vpc")
       router.refresh()
     } catch (err) {
       console.error(err)
-      setError("An error occurred while creating the VPC. Please try again.")
+      setError("An error occurred while updating the VPC. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -107,8 +137,9 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
   return (
     <div className="max-w-4xl mx-auto bg-white p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-normal text-black mb-1">Safety Observation Report</h1>
-        <p className="font-normal text-gray-600">Document workplace conditions with precision</p>
+        <h1 className="text-2xl font-normal text-black mb-1">Edit Safety Observation Report</h1>
+        <p className="font-normal text-gray-600">Update workplace conditions documentation</p>
+        <p className="text-sm text-blue-600 mt-2">Editing VPC: {vpcData?.vpcNumber}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -127,11 +158,14 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
               <Label className="text-xs font-medium uppercase tracking-wide text-gray-700">
                 Reported By
               </Label>
-              <SearchEmployee onSelect={handleEmployeeSelect} />
-                            {selectedEmployee && (
-                               <div className="mt-2 text-sm text-gray-500">
-                                  Selected: {`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} ({selectedEmployee.position})
-                                </div>
+              <SearchEmployee 
+                onSelect={handleEmployeeSelect} 
+                defaultValue={formData.reportedBy}
+              />
+              {selectedEmployee && (
+                <div className="mt-2 text-sm text-gray-500">
+                  Selected: {`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} ({selectedEmployee.position})
+                </div>
               )}
             </div>
 
@@ -158,72 +192,26 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                 className="grid grid-cols-2 gap-4 pt-2"
                 required
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="safe-act" 
-                    id="vpc-type-safe-act" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-safe-act" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Safe Act
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="safe-condition" 
-                    id="vpc-type-safe-condition" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-safe-condition" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Safe Condition
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="safe-behavior" 
-                    id="vpc-type-safe-behavior" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-safe-behavior" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Safe Behavior
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="unsafe-act" 
-                    id="vpc-type-unsafe-act" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-unsafe-act" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Unsafe Act
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="unsafe-condition" 
-                    id="vpc-type-unsafe-condition" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-unsafe-condition" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Unsafe Condition
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="unsafe-behavior" 
-                    id="vpc-type-unsafe-behavior" 
-                    className="text-black border-gray-400 focus:ring-black
-                               dark:text-black dark:border-gray-400 dark:focus:ring-black"
-                  />
-                  <Label htmlFor="vpc-type-unsafe-behavior" className="cursor-pointer text-gray-800 dark:text-gray-800">
-                    Unsafe Behavior
-                  </Label>
-                </div>
+                {[
+                  { value: "safe-act", label: "Safe Act" },
+                  { value: "safe-condition", label: "Safe Condition" },
+                  { value: "safe-behavior", label: "Safe Behavior" },
+                  { value: "unsafe-act", label: "Unsafe Act" },
+                  { value: "unsafe-condition", label: "Unsafe Condition" },
+                  { value: "unsafe-behavior", label: "Unsafe Behavior" }
+                ].map((type) => (
+                  <div key={type.value} className="flex items-center space-x-2">
+                    <RadioGroupItem 
+                      value={type.value} 
+                      id={`vpc-type-${type.value}`}
+                      className="text-black border-gray-400 focus:ring-black
+                                 dark:text-black dark:border-gray-400 dark:focus:ring-black"
+                    />
+                    <Label htmlFor={`vpc-type-${type.value}`} className="cursor-pointer text-gray-800 dark:text-gray-800">
+                      {type.label}
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
           </div>
@@ -360,7 +348,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
               ) : (
                 <div className="border-2 border-dashed border-gray-200 p-8 text-center bg-white dark:bg-white">
                   <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">No evidence documentation attached</p>
+                  <p className="text-gray-500 mb-4">No new evidence documentation attached</p>
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -376,7 +364,7 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
                                dark:border-gray-300 dark:text-gray-700 dark:hover:bg-gray-50 dark:hover:text-black"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload Evidence
+                    Add New Evidence
                   </Button>
                 </div>
               )}
@@ -388,10 +376,10 @@ export default function CreateVPCForm({ userId }: CreateVPCFormProps) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-red-600 text-white hover:bg-red-700 px-6 py-3 rounded-full
-                      dark:bg-red-500 dark:text-white dark:hover:bg-red-600"
+            className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-full
+                      dark:bg-blue-500 dark:text-white dark:hover:bg-blue-600"
           >
-            {isSubmitting ? "Submitting..." : "Submit Safety Report"}
+            {isSubmitting ? "Updating..." : "Update Safety Report"}
           </Button>
         </div>
       </form>

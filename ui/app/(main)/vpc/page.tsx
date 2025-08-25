@@ -13,14 +13,12 @@ import Link from "next/link"
 import ReportGenerationModal from "@/components/reports/ReportGenerationModal"
 import WelcomeModalProvider from "@/components/modals/welcome-modal-provider"
 
-// This component will wrap the part that needs session data
+
 function VPCPageContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
-  // We'll use the WelcomeModalProvider instead of managing state here
-  // as it handles localStorage and first-visit logic
 
   useEffect(() => {
     if (status === "loading") return // Wait for session to load

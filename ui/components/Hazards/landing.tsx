@@ -4,7 +4,6 @@ import { useState, useMemo } from "react"
 import Link from "next/link"
 import { format, formatDistance } from "date-fns"
 import { Loader2, ChevronUp, ChevronDown, Search, Filter, ArrowUpDown, Calendar, MapPin, User, X } from "lucide-react"
-// import { useToast } from "@/components/ui/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,71 +14,66 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Card,
   CardContent,
-  // CardDescription,
-  // CardHeader,
-  // CardTitle,
 } from "@/components/ui/dashCard"
-import type { Incident } from "@/interfaces/incidents"
-import IncidentForm from "./IncidentForm"
-import IncidentDetails from "./IncidentDetails"
+import type { Hazard } from "@/interfaces/hazards"
+import HazardForm from "./HazardForm"
+import HazardDetails from "./HazardDetails"
 import { toast } from "react-hot-toast"
 import InfoPanel from "@/components/ui/InfoPanel"
-import { CalendarClock, Plus, FileText } from "lucide-react"
-import { incidentAPI } from "@/utils/api"
+import { CalendarClock, Plus, AlertTriangle } from "lucide-react"
+import { hazardAPI } from "@/utils/hazardAPI"
 
-interface IncidentsTableProps {
-  initialIncidents: Incident[]
+interface HazardsTableProps {
+  initialHazards: Hazard[]
   userRole: string
-  totalIncidents: number
+  totalHazards: number
   initialPage: number
   totalPages: number
   pageSize: number
 }
 
 // Type definitions for sorting and filtering
-type SortField = "title" | "location" | "type" | "severityLevel" | "status" | "occurredAt"
+type SortField = "title" | "location" | "type" | "riskLevel" | "status" | "createdAt"
 type SortDirection = "asc" | "desc"
 type FilterState = {
   search: string
   type: string
   status: string
-  severity: string
+  riskLevel: string
   dateRange: {
     from: string | null
     to: string | null
   }
 }
 
-export const IncidentsTable = ({
-  initialIncidents,
+export const HazardsTable = ({
+  initialHazards,
   userRole,
-  totalIncidents,
+  totalHazards,
   initialPage,
   totalPages: initialTotalPages,
   pageSize: initialPageSize,
-}: IncidentsTableProps) => {
-  // const [incidents] = useState<Incident[]>(initialIncidents)
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
+}: HazardsTableProps) => {
+  const [selectedHazard, setSelectedHazard] = useState<Hazard | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  // const [loading] = useState(false)
 
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents)
+  const [hazards, setHazards] = useState<Hazard[]>(initialHazards)
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [pageSize, setPageSize] = useState(initialPageSize)
   const [totalPages, setTotalPages] = useState(initialTotalPages)
   const [loading, setLoading] = useState(false)
 
-  // Fetch incidents when page or page size changes
-  const fetchIncidents = async (page: number, pageSize: number) => {
+  // Fetch hazards when page or page size changes
+  const fetchHazards = async (page: number, pageSize: number) => {
     setLoading(true)
     try {
-      const response = await incidentAPI.getAllIncidentsFiltered({ page, pageSize })
-      setIncidents(response.data)
+      const response = await hazardAPI.getAllHazardsFiltered({ page, pageSize })
+      setHazards(response.data)
       setCurrentPage(response.page)
       setTotalPages(response.totalPages)
       setPageSize(response.pageSize)
     } catch {
-      toast.error("Failed to load incidents")
+      toast.error("Failed to load hazards")
     } finally {
       setLoading(false)
     }
@@ -88,19 +82,19 @@ export const IncidentsTable = ({
   // Page change handler
   const handlePageChange = (newPage: number) => {
     if (newPage !== currentPage) {
-      fetchIncidents(newPage, pageSize)
+      fetchHazards(newPage, pageSize)
     }
   }
 
   // Page size change handler
   const handlePageSizeChange = (newPageSize: number) => {
-    fetchIncidents(1, newPageSize) // Reset to first page
+    fetchHazards(1, newPageSize) // Reset to first page
   }
-  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalIncidents)} of ${totalIncidents} incidents`
 
-  
+  const paginationInfo = `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalHazards)} of ${totalHazards} hazards`
+
   // Sorting state
-  const [sortField, setSortField] = useState<SortField>("occurredAt")
+  const [sortField, setSortField] = useState<SortField>("createdAt")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
   // Filtering state
@@ -108,7 +102,7 @@ export const IncidentsTable = ({
     search: "",
     type: "",
     status: "",
-    severity: "",
+    riskLevel: "",
     dateRange: {
       from: null,
       to: null,
@@ -116,23 +110,19 @@ export const IncidentsTable = ({
   })
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  const handleViewIncident = (incident: Incident) => {
-    setSelectedIncident(incident)
+  const handleViewHazard = (hazard: Hazard) => {
+    setSelectedHazard(hazard)
   }
 
-  const handleCreateSuccess = (newIncident: Incident) => {
-    console.log(newIncident)
-    toast.success("Incident Successfully Created")
+  const handleCreateSuccess = (newHazard: Hazard) => {
+    console.log(newHazard)
+    toast.success("Hazard Successfully Reported")
     window.location.reload()
-
-    // setIncidents([...incidents, newIncident]);
-    // setIsCreateModalOpen(false);
-    // toast.success("Incident Successfully Created");
   }
 
   // Enhanced formatting helpers
-  const formatIncidentType = (type: string) => {
-    if (!type) return "Unknown" // Handle undefined or null type
+  const formatHazardType = (type: string) => {
+    if (!type) return "Unknown"
     return type
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -147,6 +137,7 @@ export const IncidentsTable = ({
       return "Unknown time"
     }
   }
+
   // Sort handler
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -180,7 +171,7 @@ export const IncidentsTable = ({
       search: "",
       type: "",
       status: "",
-      severity: "",
+      riskLevel: "",
       dateRange: {
         from: null,
         to: null,
@@ -189,47 +180,47 @@ export const IncidentsTable = ({
   }
 
   // Apply sorting and filtering
-  const filteredAndSortedIncidents = useMemo(() => {
+  const filteredAndSortedHazards = useMemo(() => {
     // First apply filters
-    let result = [...incidents]
+    let result = [...hazards]
 
     // Text search across multiple fields
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
       result = result.filter(
-        (incident) =>
-          incident.referenceNumber.toLowerCase().includes(searchTerm) ||
-          incident.title.toLowerCase().includes(searchTerm) ||
-          incident.description.toLowerCase().includes(searchTerm) ||
-          incident.location.toLowerCase().includes(searchTerm),
+        (hazard) =>
+          hazard.referenceNumber.toLowerCase().includes(searchTerm) ||
+          hazard.title.toLowerCase().includes(searchTerm) ||
+          hazard.description.toLowerCase().includes(searchTerm) ||
+          hazard.location.toLowerCase().includes(searchTerm),
       )
     }
 
     // Type filter
     if (filters.type) {
-      result = result.filter((incident) => incident.type === filters.type)
+      result = result.filter((hazard) => hazard.type === filters.type)
     }
 
     // Status filter
     if (filters.status) {
-      result = result.filter((incident) => incident.status === filters.status)
+      result = result.filter((hazard) => hazard.status === filters.status)
     }
 
-    // Severity filter
-    if (filters.severity) {
-      result = result.filter((incident) => incident.severityLevel === filters.severity)
+    // Risk level filter
+    if (filters.riskLevel) {
+      result = result.filter((hazard) => hazard.riskLevel === filters.riskLevel)
     }
 
     // Date range filter
     if (filters.dateRange.from) {
       const fromDate = new Date(filters.dateRange.from)
-      result = result.filter((incident) => new Date(incident.occurredAt) >= fromDate)
+      result = result.filter((hazard) => new Date(hazard.createdAt) >= fromDate)
     }
 
     if (filters.dateRange.to) {
       const toDate = new Date(filters.dateRange.to)
-      toDate.setHours(23, 59, 59, 999) // Set to end of day
-      result = result.filter((incident) => new Date(incident.occurredAt) <= toDate)
+      toDate.setHours(23, 59, 59, 999)
+      result = result.filter((hazard) => new Date(hazard.createdAt) <= toDate)
     }
 
     // Then sort
@@ -250,21 +241,19 @@ export const IncidentsTable = ({
           valueA = a.type
           valueB = b.type
           break
-        case "severityLevel":
-          // Sort by severity level with custom order
-          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
-          valueA = severityOrder[a.severityLevel as keyof typeof severityOrder]
-          valueB = severityOrder[b.severityLevel as keyof typeof severityOrder]
+        case "riskLevel":
+          const riskOrder = { extreme: 4, high: 3, medium: 2, low: 1 }
+          valueA = riskOrder[a.riskLevel as keyof typeof riskOrder]
+          valueB = riskOrder[b.riskLevel as keyof typeof riskOrder]
           break
         case "status":
-          // Sort by status with custom order
-          const statusOrder = { new: 1, investigating: 2, action_required: 3, resolved: 4, closed: 5 }
+          const statusOrder = { new: 1, assessing: 2, action_required: 3, resolved: 4, closed: 5 }
           valueA = statusOrder[a.status as keyof typeof statusOrder]
           valueB = statusOrder[b.status as keyof typeof statusOrder]
           break
-        case "occurredAt":
-          valueA = new Date(a.occurredAt).getTime()
-          valueB = new Date(b.occurredAt).getTime()
+        case "createdAt":
+          valueA = new Date(a.createdAt).getTime()
+          valueB = new Date(b.createdAt).getTime()
           break
         default:
           valueA = a[sortField]
@@ -275,7 +264,7 @@ export const IncidentsTable = ({
       if (valueA > valueB) return sortDirection === "asc" ? 1 : -1
       return 0
     })
-  }, [incidents, sortField, sortDirection, filters])
+  }, [hazards, sortField, sortDirection, filters])
 
   // Format date helper
   const formatDate = (dateString: string) => {
@@ -293,7 +282,7 @@ export const IncidentsTable = ({
     if (filters.search) count++
     if (filters.type) count++
     if (filters.status) count++
-    if (filters.severity) count++
+    if (filters.riskLevel) count++
     if (filters.dateRange.from || filters.dateRange.to) count++
     return count
   }
@@ -301,34 +290,34 @@ export const IncidentsTable = ({
   return (
     <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        {/* <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Incidents</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all incidents in your organization including their reference number, type, severity, and status.
-          </p>
-        </div> 
+        <div className="sm:flex-auto">
+          <h1 className="text-2xl font-semibold text-gray-900">Hazards</h1>
+          {/* <p className="mt-2 text-sm text-gray-700">
+            A list of all hazards in your organization including their reference number, type, risk level, and status.
+          </p> */}
+        </div>
         <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
-          <Link href="/incidents/closed" passHref>
-          <Button
-          variant="outline"
-          className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
-        >
-              View Closed Incidents
+          <Link href="/hazards/closed" passHref>
+            <Button
+              variant="outline"
+              className="w-full text-sm sm:text-base border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-4"
+            >
+              View Closed Hazards
             </Button>
           </Link>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
           >
-            Report New Incident
+            Report New Hazard
           </Button>
         </div>
-        */}
       </div>
-      <InfoPanel title="Incident Reporting Tools" icon={<FileText className="h-5 w-5 text-red-600" />}>
+
+      <InfoPanel title="Hazard Reporting Tools" icon={<AlertTriangle className="h-5 w-5 text-red-600" />}>
         <p className="text-sm">
-          This page allows you to create, view, and manage safety incidents. Use the <strong>New Incident</strong>{" "}
-          button to report new issues. All incidents require review within 24 hours of submission.
+          This page allows you to create, view, and manage safety hazards. Use the <strong>New Hazard</strong>{" "}
+          button to report new hazards. All hazards require assessment within 24 hours of submission.
         </p>
         <div className="flex flex-wrap gap-2 mt-3">
           <Button
@@ -338,18 +327,16 @@ export const IncidentsTable = ({
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-1" />
-            New Incident
+            New Hazard
           </Button>
-          <Link href="/incidents/closed" passHref>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="bg-white text-green-700 border-green-200 hover:bg-green-50"
-            >
-              <CalendarClock className="h-4 w-4 mr-1" />
-              View Closed Incidents
-            </Button>
-          </Link>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
+          >
+            <CalendarClock className="h-4 w-4 mr-1" />
+            View Reports
+          </Button>
         </div>
       </InfoPanel>
 
@@ -358,7 +345,7 @@ export const IncidentsTable = ({
         <div className="relative w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search incidents..."
+            placeholder="Search hazards..."
             className="pl-8 w-full"
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
@@ -395,18 +382,16 @@ export const IncidentsTable = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="type-filter" className="text-gray-700">Incident Type</Label>
+                <Label htmlFor="type-filter" className="text-gray-700">Hazard Type</Label>
                 <Select value={filters.type} onValueChange={(value) => handleFilterChange("type", value)}>
                   <SelectTrigger id="type-filter">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     <SelectItem value="all">All types</SelectItem>
-                    <SelectItem value="injury">Injury</SelectItem>
-                    <SelectItem value="near_miss">Near Miss</SelectItem>
-                    <SelectItem value="property_damage">Property Damage</SelectItem>
+                    <SelectItem value="unsafe_act">Unsafe Act</SelectItem>
+                    <SelectItem value="unsafe_condition">Unsafe Condition</SelectItem>
                     <SelectItem value="environmental">Environmental</SelectItem>
-                    <SelectItem value="security">Security</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -420,7 +405,7 @@ export const IncidentsTable = ({
                   <SelectContent className="bg-white">
                     <SelectItem value="all">All statuses</SelectItem>
                     <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="investigating">Investigating</SelectItem>
+                    <SelectItem value="assessing">Assessing</SelectItem>
                     <SelectItem value="action_required">Action Required</SelectItem>
                     <SelectItem value="resolved">Resolved</SelectItem>
                     <SelectItem value="closed">Closed</SelectItem>
@@ -429,17 +414,17 @@ export const IncidentsTable = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="severity-filter" className="text-gray-700">Severity</Label>
-                <Select value={filters.severity} onValueChange={(value) => handleFilterChange("severity", value)}>
-                  <SelectTrigger id="severity-filter">
-                    <SelectValue placeholder="All severities" />
+                <Label htmlFor="risk-filter" className="text-gray-700">Risk Level</Label>
+                <Select value={filters.riskLevel} onValueChange={(value) => handleFilterChange("riskLevel", value)}>
+                  <SelectTrigger id="risk-filter">
+                    <SelectValue placeholder="All risk levels" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="all">All severities</SelectItem>
+                    <SelectItem value="all">All risk levels</SelectItem>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="extreme">Extreme</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -483,20 +468,20 @@ export const IncidentsTable = ({
         </Popover>
       </div>
 
-      {/* Check if filtered incidents array is empty */}
-      {filteredAndSortedIncidents.length === 0 ? (
+      {/* Check if filtered hazards array is empty */}
+      {filteredAndSortedHazards.length === 0 ? (
         <Card className="mt-8 border-2 border-dotted border-red-300">
           <CardContent className="flex flex-col items-center justify-center p-8">
             <div className="rounded-full bg-red-100 p-3 mb-4">
               <Search className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Incidents Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Hazards Found</h3>
             <p className="text-gray-500 text-center max-w-md">
-              {incidents.length === 0
-                ? "No incidents are currently reported in the system."
-                : "No incidents match your current filter criteria."}
+              {hazards.length === 0
+                ? "No hazards are currently reported in the system."
+                : "No hazards match your current filter criteria."}
             </p>
-            {incidents.length > 0 && filteredAndSortedIncidents.length === 0 && (
+            {hazards.length > 0 && filteredAndSortedHazards.length === 0 && (
               <Button variant="outline" className="mt-4" onClick={clearFilters}>
                 Clear All Filters
               </Button>
@@ -507,66 +492,66 @@ export const IncidentsTable = ({
         <>
           {/* Mobile Card View */}
           <div className="mt-8 grid gap-4 md:hidden">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/50">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
-            </div>
-          )}
-            {filteredAndSortedIncidents.map((incident) => (
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
+              </div>
+            )}
+            {filteredAndSortedHazards.map((hazard) => (
               <Card
-                key={incident.id}
+                key={hazard.id}
                 className="overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
               >
                 <CardContent className="p-4 bg-white">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-gray-900">{incident.title}</h3>
+                      <h3 className="font-medium text-gray-900">{hazard.title}</h3>
                       <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                         <User className="h-3 w-3 opacity-50" />
-                        {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
+                        {hazard.userHazardID || hazard.referenceNumber}
                       </p>
                     </div>
                     <Badge
                       className={
-                        incident.severityLevel === "critical"
+                        hazard.riskLevel === "extreme"
                           ? "bg-red-600 hover:bg-red-700"
-                          : incident.severityLevel === "high"
+                          : hazard.riskLevel === "high"
                             ? "bg-orange-500 hover:bg-orange-600"
-                            : incident.severityLevel === "medium"
+                            : hazard.riskLevel === "medium"
                               ? "bg-yellow-500 hover:bg-yellow-600"
                               : "bg-green-500 hover:bg-green-600"
                       }
                     >
-                      {incident.severityLevel.toUpperCase()}
+                      {hazard.riskLevel.toUpperCase()}
                     </Badge>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-500 truncate">{incident.location}</span>
+                      <span className="text-gray-500 truncate">{hazard.location}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-500">{getTimeAgo(incident.occurredAt)}</span>
+                      <span className="text-gray-500">{getTimeAgo(hazard.createdAt)}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                     <Badge
                       className={
-                        incident.status === "new"
+                        hazard.status === "new"
                           ? "bg-blue-600 hover:bg-blue-700"
-                          : incident.status === "investigating"
+                          : hazard.status === "assessing"
                             ? "bg-purple-600 hover:bg-purple-700"
-                            : incident.status === "action_required"
+                            : hazard.status === "action_required"
                               ? "bg-red-600 hover:bg-red-700"
-                              : incident.status === "resolved"
+                              : hazard.status === "resolved"
                                 ? "bg-yellow-500 hover:bg-yellow-600"
                                 : "bg-green-600 hover:bg-green-700"
                       }
                     >
-                      {incident.status
+                      {hazard.status
                         .replace("_", " ")
                         .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1))}
                     </Badge>
@@ -575,13 +560,13 @@ export const IncidentsTable = ({
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => handleViewIncident(incident)}
+                        onClick={() => handleViewHazard(hazard)}
                       >
                         View
                       </Button>
                       {userRole !== "employee" && (
                         <Link
-                          href={`/incidents/${incident.id}/review`}
+                          href={`/hazards/${hazard.id}/review`}
                           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-8 px-3 py-1"
                         >
                           Review
@@ -593,6 +578,8 @@ export const IncidentsTable = ({
               </Card>
             ))}
           </div>
+
+          {/* Desktop Table View */}
           <div className="mt-8 flow-root hidden md:block">
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -605,7 +592,7 @@ export const IncidentsTable = ({
                           onClick={() => handleSort("title")}
                         >
                           <div className="flex items-center gap-1 text-gray-900">
-                            Incident Details
+                            Hazard Details
                             <span className="ml-1">
                               {sortField === "title" ? (
                                 sortDirection === "asc" ? (
@@ -659,12 +646,12 @@ export const IncidentsTable = ({
                         </th>
                         <th
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                          onClick={() => handleSort("severityLevel")}
+                          onClick={() => handleSort("riskLevel")}
                         >
                           <div className="flex items-center gap-1 text-gray-900">
-                            Severity
+                            Risk Level
                             <span className="ml-1">
-                              {sortField === "severityLevel" ? (
+                              {sortField === "riskLevel" ? (
                                 sortDirection === "asc" ? (
                                   <ChevronUp className="h-4 w-4" />
                                 ) : (
@@ -697,12 +684,12 @@ export const IncidentsTable = ({
                         </th>
                         <th
                           className="whitespace-nowrap px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden lg:table-cell cursor-pointer"
-                          onClick={() => handleSort("occurredAt")}
+                          onClick={() => handleSort("createdAt")}
                         >
                           <div className="flex items-center gap-1 text-gray-900">
                             Timing
                             <span className="ml-1">
-                              {sortField === "occurredAt" ? (
+                              {sortField === "createdAt" ? (
                                 sortDirection === "asc" ? (
                                   <ChevronUp className="h-4 w-4" />
                                 ) : (
@@ -720,15 +707,15 @@ export const IncidentsTable = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredAndSortedIncidents.map((incident) => (
-                        <tr key={incident.id} className="hover:bg-gray-50 transition-colors">
+                      {filteredAndSortedHazards.map((hazard) => (
+                        <tr key={hazard.id} className="hover:bg-gray-50 transition-colors">
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                             <div className="flex items-center">
                               <div>
-                                <div className="font-medium text-gray-900">{incident.title}</div>
+                                <div className="font-medium text-gray-900">{hazard.title}</div>
                                 <div className="text-gray-500 text-xs flex items-center gap-1">
                                   <User className="h-3 w-3 opacity-50" />
-                                  {incident.userIncidentID? incident.userIncidentID :  incident.referenceNumber}
+                                  {hazard.userHazardID || hazard.referenceNumber}
                                 </div>
                               </div>
                             </div>
@@ -736,42 +723,42 @@ export const IncidentsTable = ({
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
                             <div className="flex items-center gap-1">
                               <MapPin className="h-4 w-4 text-gray-400" />
-                              {incident.location}
+                              {hazard.location}
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 hidden md:table-cell">
-                            {formatIncidentType(incident.type)}
+                            {formatHazardType(hazard.type)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
                             <Badge
                               className={
-                                incident.severityLevel === "critical"
+                                hazard.riskLevel === "extreme"
                                   ? "bg-red-600 hover:bg-red-700"
-                                  : incident.severityLevel === "high"
+                                  : hazard.riskLevel === "high"
                                     ? "bg-orange-500 hover:bg-orange-600"
-                                    : incident.severityLevel === "medium"
+                                    : hazard.riskLevel === "medium"
                                       ? "bg-yellow-500 hover:bg-yellow-600"
                                       : "bg-green-500 hover:bg-green-600"
                               }
                             >
-                              {incident.severityLevel.toUpperCase()}
+                              {hazard.riskLevel.toUpperCase()}
                             </Badge>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm hidden md:table-cell">
                             <Badge
                               className={
-                                incident.status === "new"
+                                hazard.status === "new"
                                   ? "bg-blue-600 hover:bg-blue-700"
-                                  : incident.status === "investigating"
+                                  : hazard.status === "assessing"
                                     ? "bg-purple-600 hover:bg-purple-700"
-                                    : incident.status === "action_required"
+                                    : hazard.status === "action_required"
                                       ? "bg-red-600 hover:bg-red-700"
-                                      : incident.status === "resolved"
+                                      : hazard.status === "resolved"
                                         ? "bg-yellow-500 hover:bg-yellow-600"
                                         : "bg-green-600 hover:bg-green-700"
                               }
                             >
-                              {incident.status
+                              {hazard.status
                                 .replace("_", " ")
                                 .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1))}
                             </Badge>
@@ -780,8 +767,8 @@ export const IncidentsTable = ({
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1 text-gray-400" />
                               <div>
-                                <div>{formatDate(incident.occurredAt)}</div>
-                                <div className="text-xs text-gray-500">{getTimeAgo(incident.occurredAt)}</div>
+                                <div>{formatDate(hazard.createdAt)}</div>
+                                <div className="text-xs text-gray-500">{getTimeAgo(hazard.createdAt)}</div>
                               </div>
                             </div>
                           </td>
@@ -789,13 +776,13 @@ export const IncidentsTable = ({
                             <Button
                               variant="ghost"
                               className="text-red-600 hover:text-red-900 mr-2"
-                              onClick={() => handleViewIncident(incident)}
+                              onClick={() => handleViewHazard(hazard)}
                             >
                               View
                             </Button>
                             {userRole !== "employee" && (
                               <Link
-                                href={`/incidents/${incident.id}/review`}
+                                href={`/hazards/${hazard.id}/review`}
                                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600 hover:text-red-900 h-10 px-4 py-2"
                               >
                                 Review
@@ -813,23 +800,23 @@ export const IncidentsTable = ({
         </>
       )}
 
-      {/* View Incident Slide-over */}
-      <Sheet open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
+      {/* View Hazard Slide-over */}
+      <Sheet open={!!selectedHazard} onOpenChange={() => setSelectedHazard(null)}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto max-h-screen bg-white">
           <SheetHeader>
-            <SheetTitle className="text-gray-900">Incident Details</SheetTitle>
+            <SheetTitle className="text-gray-900">Hazard Details</SheetTitle>
           </SheetHeader>
-          {selectedIncident && <IncidentDetails incident={selectedIncident} />}
+          {selectedHazard && <HazardDetails hazard={selectedHazard} />}
         </SheetContent>
       </Sheet>
 
-      {/* Create Incident Modal */}
+      {/* Create Hazard Modal */}
       <Sheet open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <SheetContent className="w-full sm:max-w-xl bg-white">
           <SheetHeader>
-            <SheetTitle className="text-gray-900">Report New Incident</SheetTitle>
+            <SheetTitle className="text-gray-900">Report New Hazard</SheetTitle>
           </SheetHeader>
-          <IncidentForm onSuccess={handleCreateSuccess} />
+          <HazardForm onSuccess={handleCreateSuccess} />
         </SheetContent>
       </Sheet>
 
@@ -842,9 +829,9 @@ export const IncidentsTable = ({
 
       {/* Pagination component */}
       <div className="w-full bg-gray-50 p-4">
-            <div className="text-sm text-gray-500">
-                {paginationInfo}
-              </div>
+        <div className="text-sm text-gray-500">
+          {paginationInfo}
+        </div>
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Page Size Selector */}
           <div className="w-full sm:w-auto">

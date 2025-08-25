@@ -48,6 +48,7 @@ const vpcSchema = z.object({
   incidentRelatesTo: z.string(),
 })
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export class VPCApiError extends Error {
   code: string
   details?: unknown
@@ -186,8 +187,7 @@ export async function submitVPCWithoutAttachments(formData: VPC) {
     const validatedData = vpcSchema.parse(formData);
 
     // Submit to backend with auth header
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiBaseUrl}/api/v1/vpcs`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/vpcs`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.token}`,
@@ -248,4 +248,88 @@ export async function submitVPCWithoutAttachments(formData: VPC) {
       error
     );
   }
+}
+
+interface API_RResponse {
+  data: VPC
+  message: string
+  status: string
+}
+export async function getVPCById(id: string, authToken?: string): Promise<API_RResponse> {
+  if (!authToken) {
+    throw new VPCApiError('Authentication required', 'AUTH_REQUIRED');
+  }
+  const response = await fetch(`${API_BASE_URL}/api/v1/vpcs/${id}`, {
+    method: 'GET',
+    headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch VPC')
+  }
+
+  return response.json()
+}
+
+export const updateVPC = async (id: string, vpcData: VPC, attachments?: File[]) => {
+  const session = await getSession();
+    if (!session?.token) {
+      throw new VPCApiError(
+        'Authentication required',
+        'AUTH_REQUIRED'
+      );
+  }
+  const formData = new FormData()
+  
+  // Add VPC data
+  formData.append('vpcData', JSON.stringify(vpcData))
+  
+  // Add attachments if any
+  if (attachments && attachments.length > 0) {
+    attachments.forEach((file) => {
+      formData.append('attachments', file)
+    })
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/vpcs/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${session.token}`,
+    },
+    body: formData,
+  })
+
+
+  if (!response.ok) {
+    throw new Error('Failed to update VPC')
+  }
+
+  return response.json()
+}
+
+export const updateVPCWithoutAttachments = async (id: string, vpcData: VPC) => {
+  const session = await getSession();
+    if (!session?.token) {
+      throw new VPCApiError(
+        'Authentication required',
+        'AUTH_REQUIRED'
+      );
+  }
+  const response = await fetch(`${API_BASE_URL}/api/v1/vpcs/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${session.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(vpcData),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update VPC')
+  }
+
+  return response.json()
 }

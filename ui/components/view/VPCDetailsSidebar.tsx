@@ -15,8 +15,8 @@ import { ChevronDown, ChevronUp, FileText as FileTextLucide, PrinterIcon, FileTe
 import Image from "next/image";
 import Link from "next/link"; // For navigation
 import { Button } from "@/components/ui/button";
+import { PencilIcon } from "@heroicons/react/24/outline";
 
-// ... (VPCAttachment and VPC interfaces remain the same) ...
 interface VPCAttachment {
   id: string;
   fileName: string;
@@ -24,7 +24,7 @@ interface VPCAttachment {
   storagePath: string;
   fileSize: number;
   createdAt: string;
-  uploader: string; // Assuming this is an employee ID or name
+  uploader: string; 
 }
 
 interface UserBasicInfo {
@@ -35,7 +35,7 @@ interface UserBasicInfo {
 interface VPC {
   id: string;
   vpcNumber: string;
-  reportedBy: string; // Might be an ID, needs clarification if it should be user's name
+  reportedBy: string; 
   reportedDate: string;
   department: string;
   description: string;
@@ -79,7 +79,6 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
-    // ... (your existing function) ...
     try {
         const date = new Date(dateString);
         return date.toLocaleDateString("en-US", {
@@ -103,9 +102,17 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 sticky top-0 bg-slate-50 z-10">
           <h2 className="text-xl font-semibold text-slate-800">VPC Details</h2>
           <div className="flex items-center gap-2">
+            <Link href={`/vpc/edit/${vpc.id}`} passHref legacyBehavior>
+              <a
+                className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-blue-600 transition-colors"
+                title="Edit VPC"
+              >
+                <PencilIcon className="h-5 w-5" />
+              </a>
+            </Link>
             <Link href={`/reports/vpc/${vpc.id}/preview`} passHref legacyBehavior>
               <a
-                target="_blank" // Open preview in new tab
+                target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-red-600 transition-colors"
                 title="Generate Report Preview"
@@ -125,23 +132,33 @@ export const VPCDetailsSidebar = ({ vpc, onClose }: VPCDetailsSidebarProps) => {
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getVpcTypeColor(vpc.vpcType)}`}>
               {vpc.vpcType?.toUpperCase() || "N/A"}
             </span>
-            <Link href={`/reports/vpc/${vpc.id}/preview`} passHref legacyBehavior>
-              <a
-                target="_blank" // Open preview in new tab
-                rel="noopener noreferrer"
-                className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-red-600 transition-colors"
-                title="Generate Report Preview"
-              >
+            <div className="flex gap-2">
+              <Link href={`/vpc/edit/${vpc.id}`}>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-white text-red-600 border-red-500 hover:bg-red-50 hover:text-red-700 shadow-sm"
+                  className="bg-white text-blue-600 border-blue-500 hover:bg-blue-50 hover:text-blue-700 shadow-sm rounded-full"
                 >
-                  <ReportIcon className="h-4 w-4 mr-2" />
-                  Generate Report
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit VPC
                 </Button>
-              </a>
-            </Link>
+              </Link>
+              <Link href={`/reports/vpc/${vpc.id}/preview`} passHref legacyBehavior>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-white text-red-600 border-red-500 hover:bg-red-50 hover:text-red-700 shadow-sm rounded-full"
+                  >
+                    <ReportIcon className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                </a>
+              </Link>
+            </div>
             <div className="flex items-center text-xs text-slate-500">
               <ClockIcon className="h-4 w-4 mr-1.5 text-slate-400" />
               <span>{formatDate(vpc.reportedDate)}</span>

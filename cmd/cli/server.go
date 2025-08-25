@@ -12,6 +12,7 @@ import (
 	"github.com/hopkali04/health-sys/internal/jobs"
 	"github.com/hopkali04/health-sys/internal/middleware"
 	"github.com/hopkali04/health-sys/internal/services"
+	"github.com/hopkali04/health-sys/internal/routes"
 	"github.com/hopkali04/health-sys/internal/services/dashboard"
 	"github.com/hopkali04/health-sys/internal/services/token"
 	"github.com/hopkali04/health-sys/internal/services/user"
@@ -122,6 +123,7 @@ func RunServer() {
 	vpcHandler := api.NewVPCHandler(vpc_svc)
 
 	vpcReportHandler := api.NewVPCReportHandler(reports.NewVPCReportService(dbConn))
+	NewHazardHandler := api.NewHazardHandler(services.NewHazardService(dbConn))
 	
 	employeeService := services.NewTemporaryEmployeeService(dbConn)
 	tempEmplHandler := api.NewTemporaryEmployeeHandler(employeeService)
@@ -139,6 +141,8 @@ func RunServer() {
 	api.SetupNotificationSettingsRoutes(app, notifySettings)
 	api.SetupVpcReports(app, vpcReportHandler)
 	api.SetupTemporaryEmployeeRoutes(app, tempEmplHandler)
+
+	routes.SetupHazardRoutes(app, NewHazardHandler)
 
 	api.SetupReportsRoutes(app, reportH)
 	app.Get("/panic", func(c *fiber.Ctx) error {

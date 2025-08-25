@@ -72,10 +72,11 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-lg">
         <h2 className="text-2xl font-medium mb-6 text-gray-900">Add Corrective Action</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
+        <form onSubmit={handleSubmit}>
+          {/* First row - Description spans full width */}
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Description
             </label>
@@ -90,89 +91,108 @@ export const CreateActionModal: React.FC<CreateActionModalProps> = ({
               placeholder="Enter description"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Action Type
-            </label>
-            <div className="relative">
-              <select
-                value={formData.actionType}
-                onChange={(e) =>
-                  setFormData({ ...formData, actionType: e.target.value })
-                }
-                className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
-                required
-              >
-                <option value="">Select action type</option>
-                <option value="Process Improvement">Process Improvement</option>
-                <option value="Training Required">Training Required</option>
-                <option value="Equipment Repair">Equipment Repair</option>
-                <option value="Policy Update">Policy Update</option>
-                <option value="Safety Measure">Safety Measure</option>
-                <option value="Documentation Update">Documentation Update</option>
-                <option value="System Configuration">System Configuration</option>
-                <option value="Root Cause Analysis">Root Cause Analysis</option>
-                <option value="Preventive Maintenance">Preventive Maintenance</option>
-                <option value="Personnel Action">Personnel Action</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
-                <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Priority
-            </label>
-            <div className="relative">
-              <select
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' })
-                }
-                className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
-                <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Assigned To
-            </label>
-            <div className="bg-gray-50 rounded-lg border border-gray-300 p-3">
-              <SearchEmployee onSelect={handleEmployeeSelect} />
-              {selectedEmployee && (
-                <div className="mt-3 text-sm text-gray-700 bg-blue-50 p-2 rounded-md">
-                  Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+
+          {/* Two-column section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Left column */}
+            <div className="space-y-6">
+              {/* Action Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Action Type
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.actionType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, actionType: e.target.value })
+                    }
+                    className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
+                    required
+                  >
+                    <option value="">Select action type</option>
+                    <option value="Process Improvement">Process Improvement</option>
+                    <option value="Training Required">Training Required</option>
+                    <option value="Equipment Repair">Equipment Repair</option>
+                    <option value="Policy Update">Policy Update</option>
+                    <option value="Safety Measure">Safety Measure</option>
+                    <option value="Documentation Update">Documentation Update</option>
+                    <option value="System Configuration">System Configuration</option>
+                    <option value="Root Cause Analysis">Root Cause Analysis</option>
+                    <option value="Preventive Maintenance">Preventive Maintenance</option>
+                    <option value="Personnel Action">Personnel Action</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                    <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Due Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Due Date
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.dueDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dueDate: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-6">
+              {/* Priority */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Priority
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.priority}
+                    onChange={(e) =>
+                      setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' | 'critical' })
+                    }
+                    className="appearance-none mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 pr-8"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                    <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assigned To */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Assigned To
+                </label>
+                <div className="bg-gray-50 rounded-lg border border-gray-300 p-3">
+                  <SearchEmployee onSelect={handleEmployeeSelect} />
+                  {selectedEmployee && (
+                    <div className="mt-3 text-sm text-gray-700 bg-blue-50 p-2 rounded-md">
+                      Selected: {`${selectedEmployee.FirstName} ${selectedEmployee.LastName}`} ({selectedEmployee.EmployeeNumber})
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Due Date
-            </label>
-            <input
-              type="datetime-local"
-              value={formData.dueDate}
-              onChange={(e) =>
-                setFormData({ ...formData, dueDate: e.target.value })
-              }
-              className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-              required
-            />
-          </div>
+
+          {/* Buttons */}
           <div className="flex justify-end space-x-4 mt-8">
             <button
               type="button"
