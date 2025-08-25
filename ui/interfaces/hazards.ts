@@ -42,3 +42,20 @@ export interface UpdateHazardRequest {
   userHazardID?: string
   reporterFullName?: string
 }
+
+export interface HazardFilterParams {
+  page?: number
+  pageSize?: number
+  type?: string
+  status?: string
+  riskLevel?: string
+  search?: string
+}
+
+export interface HazardListResponse {
+  data: Hazard[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
