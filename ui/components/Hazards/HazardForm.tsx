@@ -52,138 +52,149 @@ export default function HazardForm({ onSuccess }: HazardFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="type" className="text-gray-700">Hazard Type *</Label>
-          <Select 
-            value={formData.type} 
-            onValueChange={(value) => handleInputChange('type', value)}
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-6 p-1">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-gray-700">Hazard Type *</Label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleInputChange('type', value)}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select hazard type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="unsafe_act">Unsafe Act</SelectItem>
+                  <SelectItem value="unsafe_condition">Unsafe Condition</SelectItem>
+                  <SelectItem value="environmental">Environmental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="riskLevel" className="text-gray-700">Risk Level *</Label>
+              <Select 
+                value={formData.riskLevel} 
+                onValueChange={(value) => handleInputChange('riskLevel', value)}
+              >
+                <SelectTrigger id="riskLevel">
+                  <SelectValue placeholder="Select risk level" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="extreme">Extreme</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-gray-700">Hazard Title *</Label>
+            <Input
+              id="title"
+              type="text"
+              placeholder="Brief description of the hazard"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              required
+              maxLength={255}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-gray-700">Detailed Description *</Label>
+            <Textarea
+              id="description"
+              placeholder="Provide a detailed description of the hazard..."
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              required
+              rows={4}
+              className="w-full resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-gray-700">Location *</Label>
+              <Input
+                id="location"
+                type="text"
+                placeholder="e.g., Building A, Floor 2"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                required
+                maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fullLocation" className="text-gray-700">Full Location Details *</Label>
+              <Input
+                id="fullLocation"
+                type="text"
+                placeholder="Complete address or detailed location"
+                value={formData.fullLocation}
+                onChange={(e) => handleInputChange('fullLocation', e.target.value)}
+                required
+                maxLength={255}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="recommendedAction" className="text-gray-700">Recommended Action</Label>
+            <Textarea
+              id="recommendedAction"
+              placeholder="Suggest actions to address this hazard..."
+              value={formData.recommendedAction}
+              onChange={(e) => handleInputChange('recommendedAction', e.target.value)}
+              rows={3}
+              className="w-full resize-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reporterFullName" className="text-gray-700">Reporter Name</Label>
+            <Input
+              id="reporterFullName"
+              type="text"
+              placeholder="Your full name (optional)"
+              value={formData.reporterFullName}
+              onChange={(e) => handleInputChange('reporterFullName', e.target.value)}
+            />
+          </div>
+
+          {/* Add some bottom padding to ensure the submit button area is accessible */}
+          <div className="pb-20"></div>
+        </form>
+      </div>
+
+      {/* Fixed submit button at the bottom */}
+      <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-white">
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
+            onClick={handleSubmit}
           >
-            <SelectTrigger id="type">
-              <SelectValue placeholder="Select hazard type" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              <SelectItem value="unsafe_act">Unsafe Act</SelectItem>
-              <SelectItem value="unsafe_condition">Unsafe Condition</SelectItem>
-              <SelectItem value="environmental">Environmental</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="riskLevel" className="text-gray-700">Risk Level *</Label>
-          <Select 
-            value={formData.riskLevel} 
-            onValueChange={(value) => handleInputChange('riskLevel', value)}
-          >
-            <SelectTrigger id="riskLevel">
-              <SelectValue placeholder="Select risk level" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="extreme">Extreme</SelectItem>
-            </SelectContent>
-          </Select>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Reporting...
+              </>
+            ) : (
+              "Report Hazard"
+            )}
+          </Button>
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="title" className="text-gray-700">Hazard Title *</Label>
-        <Input
-          id="title"
-          type="text"
-          placeholder="Brief description of the hazard"
-          value={formData.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
-          required
-          maxLength={255}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description" className="text-gray-700">Detailed Description *</Label>
-        <Textarea
-          id="description"
-          placeholder="Provide a detailed description of the hazard..."
-          value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
-          required
-          rows={4}
-          className="w-full resize-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="location" className="text-gray-700">Location *</Label>
-          <Input
-            id="location"
-            type="text"
-            placeholder="e.g., Building A, Floor 2"
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            required
-            maxLength={255}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="fullLocation" className="text-gray-700">Full Location Details *</Label>
-          <Input
-            id="fullLocation"
-            type="text"
-            placeholder="Complete address or detailed location"
-            value={formData.fullLocation}
-            onChange={(e) => handleInputChange('fullLocation', e.target.value)}
-            required
-            maxLength={255}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="recommendedAction" className="text-gray-700">Recommended Action</Label>
-        <Textarea
-          id="recommendedAction"
-          placeholder="Suggest actions to address this hazard..."
-          value={formData.recommendedAction}
-          onChange={(e) => handleInputChange('recommendedAction', e.target.value)}
-          rows={3}
-          className="w-full resize-none"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="reporterFullName" className="text-gray-700">Reporter Name</Label>
-        <Input
-          id="reporterFullName"
-          type="text"
-          placeholder="Your full name (optional)"
-          value={formData.reporterFullName}
-          onChange={(e) => handleInputChange('reporterFullName', e.target.value)}
-        />
-      </div>
-
-      <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-        <Button
-          type="submit"
-          disabled={loading}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Reporting...
-            </>
-          ) : (
-            "Report Hazard"
-          )}
-        </Button>
-      </div>
-    </form>
+    </div>
   )
 }
