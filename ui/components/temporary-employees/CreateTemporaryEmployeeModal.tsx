@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { X, Loader2 } from 'lucide-react'
 import { CreateTemporaryEmployeeRequest } from '@/types/temporaryEmployee'
+import LocationDropdown from "@/components/locationDropDown";
+import DepartmentDropdown from "@/components/DepartmentDropdown";
 
 interface CreateTemporaryEmployeeModalProps {
   isOpen: boolean
@@ -52,6 +54,20 @@ export function CreateTemporaryEmployeeModal({
     }))
   }
 
+  const handleDepartmentChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      Department: value
+    }))
+  }
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      OfficeLocation: e.target.value
+    }))
+  }
+
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -95,12 +111,10 @@ export function CreateTemporaryEmployeeModal({
               
               <div>
                 <label className="block text-sm font-medium text-black">Department</label>
-                <input
-                  type="text"
-                  name="Department"
-                  value={formData.Department}
-                  onChange={handleChange}
-                  className="mt-1 text-black block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                <DepartmentDropdown
+                  value={formData.Department ?? ''}
+                  onChange={handleDepartmentChange}
+                  placeholder="Select Department"
                 />
               </div>
               
@@ -128,12 +142,12 @@ export function CreateTemporaryEmployeeModal({
               
               <div>
                 <label className="block text-sm font-medium text-black">Office Location</label>
-                <input
-                  type="text"
+                <LocationDropdown
+                  id="OfficeLocation"
                   name="OfficeLocation"
-                  value={formData.OfficeLocation}
-                  onChange={handleChange}
-                  className="mt-1 text-black block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={formData.OfficeLocation ?? ""}
+                  onChange={handleLocationChange}
+                  required
                 />
               </div>
             </div>

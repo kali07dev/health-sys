@@ -8,6 +8,7 @@ import {
   Search, 
   ListChecks, 
   Shield,
+  Biohazard,
   ShieldCheck
 } from "lucide-react"
 import Link from "next/link"
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const sidebarItems = [
     { icon: LayoutDashboard, label: t('dashboard'), href: "/" },
     { icon: AlertTriangle, label: t('incidents'), href: "/incidents" },
+    { icon: Biohazard, label: t('hazards'), href: "/hazards" },
     { icon: ShieldCheck, label: t('vpc'), href: "/vpc" },
     { icon: Search, label: t('investigation'), href: "/investigation" },
     { icon: ListChecks, label: t('assignedTasks'), href: "/actions" },

@@ -78,6 +78,7 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "incidents": "Incidents",
+    "hazards":"hazards",
     "vpc": "VPC",
     "investigation": "Investigations",
     "assignedTasks": "Assigned Tasks",
