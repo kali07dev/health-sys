@@ -301,12 +301,12 @@ export const IncidentsTable = ({
   return (
     <div className="px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div className="sm:flex-auto">
+        {/* <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Incidents</h1>
           <p className="mt-2 text-sm text-gray-700">
             A list of all incidents in your organization including their reference number, type, severity, and status.
           </p>
-        </div>
+        </div> 
         <div className="mt-4 sm:mt-0 sm:ml-0 sm:flex-none flex gap-2">
           <Link href="/incidents/closed" passHref>
           <Button
@@ -323,6 +323,7 @@ export const IncidentsTable = ({
             Report New Incident
           </Button>
         </div>
+        */}
       </div>
       <InfoPanel title="Incident Reporting Tools" icon={<FileText className="h-5 w-5 text-red-600" />}>
         <p className="text-sm">
@@ -339,14 +340,16 @@ export const IncidentsTable = ({
             <Plus className="h-4 w-4 mr-1" />
             New Incident
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="bg-white text-red-700 border-red-200 hover:bg-red-50"
-          >
-            <CalendarClock className="h-4 w-4 mr-1" />
-            View Reports
-          </Button>
+          <Link href="/incidents/closed" passHref>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="bg-white text-green-700 border-green-200 hover:bg-green-50"
+            >
+              <CalendarClock className="h-4 w-4 mr-1" />
+              View Closed Incidents
+            </Button>
+          </Link>
         </div>
       </InfoPanel>
 
