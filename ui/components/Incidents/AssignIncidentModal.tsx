@@ -70,7 +70,9 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
       
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+        <div className={`relative w-full transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all ${
+          showConfirmation ? 'max-w-md' : 'max-w-lg'
+        }`}>
           {/* Header */}
           <div className="relative px-6 pt-6 pb-4">
             <div className="flex items-center justify-between">
@@ -118,7 +120,10 @@ export const AssignIncidentModal: React.FC<AssignIncidentModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Search and select employee
                   </label>
-                  <SearchEmployee onSelect={handleEmployeeSelect} />
+                  {/* Increased height container for search results */}
+                  <div className="min-h-[200px]">
+                    <SearchEmployee onSelect={handleEmployeeSelect} />
+                  </div>
                 </div>
 
                 {selectedEmployee && (
