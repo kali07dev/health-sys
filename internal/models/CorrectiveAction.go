@@ -21,6 +21,12 @@ type CorrectiveAction struct {
 	VerificationRequired bool       `gorm:"default:false"`
 	VerifiedBy           *uuid.UUID `gorm:"type:uuid"`
 	VerifiedAt           *time.Time
+	PreviousDueDate      *time.Time   `gorm:"size:255"`
+	ExtensionReason      string    `gorm:"type:text"`
+	ExtensionRequestedAt *time.Time   `gorm:"size:255"`
+	ExtensionRequestedBy *string   `gorm:"size:255"`
+	ExtensionRequestedByID *uuid.UUID `gorm:"type:uuid"`
+	ExtensionStatus      string    `gorm:"size:50"`
 	CreatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt            time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 
