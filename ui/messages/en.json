@@ -260,7 +260,17 @@
     "messages": {
       "actionInProgress": "Action marked as in progress",
       "actionUpdated": "Action updated successfully",
-      "loadFailed": "Failed to load your corrective actions"
+      "loadFailed": "Failed to load your corrective actions",
+      "extensionRequested": "Extension request submitted successfully",
+      "requestFailed": "Failed to submit request",
+      "inProgressSuccess": "Action marked as in progress"
+    },
+    "actions": {
+      "markInProgress": "Mark as In Progress",
+      "markCompleted": "Mark as Completed",
+      "uploadEvidence": "Upload Evidence",
+      "verifyAction": "Verify Action",
+      "requestExtension": "Request Due Date Extension"
     }
   }
 }
