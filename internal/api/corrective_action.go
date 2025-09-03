@@ -464,3 +464,94 @@ func (h *CorrectiveActionHandler) LabelAsCompleted(c *fiber.Ctx) error {
 	})
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Action labeled as completed successfully"})
 }
+
+// RequestExtension handles requests to extend the due date of a corrective action
+func (h *CorrectiveActionHandler) RequestExtension(c *fiber.Ctx) error {
+	utils.LogInfo("Processing request to extend corrective action due date", map[string]interface{}{
+		"path": c.Path(),
+		"id":   c.Params("id"),
+	})
+
+	actionID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		utils.LogError("Invalid corrective action ID format", map[string]interface{}{
+			"actionID": c.Params("id"),
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid action ID format",
+		})
+	}
+
+	var req schema.ExtensionRequest
+	if err := c.BodyParser(&req); err != nil {
+		utils.LogError("Failed to parse request body", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Failed to parse request body",
+			"details": err.Error(),
+		})
+	}
+
+	// Get user ID from context
+	userID := c.Locals("userID")
+	if userID == nil {
+		utils.LogError("Unauthorized access attempt", map[string]interface{}{
+			"actionID": actionID,
+		})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		utils.LogError("Invalid user ID format in context", map[string]interface{}{
+			"actionID": actionID,
+			"userID":   userID,
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Invalid user ID format",
+		})
+	}
+
+	// Set the requestedBy field
+	req.RequestedBy = userIDStr
+
+	utils.LogDebug("Requesting extension for corrective action", map[string]interface{}{
+		"actionID":    actionID,
+		"reason":      req.Reason,
+		"newDueDate":  req.NewDueDate,
+		"requestedBy": userIDStr,
+	})
+
+	err = h.CorrectiveActionservice.RequestExtension(c.Context(), actionID, req)
+	if err != nil {
+		utils.LogError("Failed to request extension", map[string]interface{}{
+			"actionID": actionID,
+			"error":    err.Error(),
+		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to request extension",
+			"details": err.Error(),
+		})
+	}
+
+	// Notify appropriate parties about the extension request
+	action, _ := h.CorrectiveActionservice.InternalGetByID(c.Context(), actionID)
+	if action != nil {
+		// Get employee who requested the extension
+		emp, _ := h.CorrectiveActionservice.GetEmployeeByUserID(uuid.MustParse(userIDStr))
+		if emp != nil {
+			h.NotificationSVC.NotifyExtensionRequested(action, emp)
+		}
+	}
+
+	utils.LogInfo("Successfully requested extension for corrective action", map[string]interface{}{
+		"actionID": actionID,
+	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Extension request submitted successfully",
+	})
+}
