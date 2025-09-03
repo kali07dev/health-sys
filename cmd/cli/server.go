@@ -43,7 +43,7 @@ func RunServer() {
 	NewIncidentHandler := services.NewIncidentService(dbConn)
 	// NewNotificationHandler := notification.NewService(NotiRepo)
 	NewDashboardHandler := dashboard.NewService(DashRepo)
-	NewCorrectiveActionHandler := services.NewCorrectiveActionService(dbConn)
+	correctiveActionSVCInitializer := services.NewCorrectiveActionService(dbConn)
 
 	NewDepartmentHandler := services.NewDepartmentService(dbConn)
 	DepHandler := api.NewDepartmentHandler(NewDepartmentHandler)
@@ -128,10 +128,12 @@ func RunServer() {
 	employeeService := services.NewTemporaryEmployeeService(dbConn)
 	tempEmplHandler := api.NewTemporaryEmployeeHandler(employeeService)
 
+	correctiveSvcHandler := api.NewCorrectiveActionHandler(correctiveActionSVCInitializer, notificationService)
+
 	go jobs.StartReminderJob(notificationService, emailService)
 
 	// Setup routes
-	api.SetupRoutes(app, userHandler, NewIncidentHandler, notificationService, NewDashboardHandler, NewCorrectiveActionHandler, AttachmentSVC, EmployeeSVC)
+	api.SetupRoutes(app, userHandler, NewIncidentHandler, notificationService, NewDashboardHandler, AttachmentSVC, EmployeeSVC)
 	api.SetupEmployeeRoutes(app, EmpHandler)
 	api.SetupInvestigationRoutes(app, InvHandler)
 	api.SetupDepartmentRoutes(app, DepHandler)
@@ -143,6 +145,7 @@ func RunServer() {
 	api.SetupTemporaryEmployeeRoutes(app, tempEmplHandler)
 
 	routes.SetupHazardRoutes(app, NewHazardHandler)
+	routes.SetupCorrectiveActionRoutes(app, correctiveSvcHandler)
 
 	api.SetupReportsRoutes(app, reportH)
 	app.Get("/panic", func(c *fiber.Ctx) error {

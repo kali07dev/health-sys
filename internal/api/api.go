@@ -20,10 +20,9 @@ type SvcImpl struct {
 
 func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services.IncidentService,
 	notificationService *services.NotificationService, dashboardService dashboard.Service,
-	correctiveSVC *services.CorrectiveActionService, attachSVC *services.AttachmentService, empSVC *services.EmployeeService) {
+	attachSVC *services.AttachmentService, empSVC *services.EmployeeService) {
 
 	incidentImpl := NewIncidentsHandler(incidentService, attachSVC, empSVC)
-	correctiveActionHandler := NewCorrectiveActionHandler(correctiveSVC, notificationService)
 	app.Get("/api/me", middleware.AuthMiddleware(), func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"user": fiber.Map{
@@ -89,20 +88,6 @@ func SetupRoutes(app *fiber.App, userSVC *UserHandler, incidentService *services
 
 	apiIncidents.Post("/incidents/:id/close", middleware.AuthMiddleware(), middleware.PermissionMiddleware(middleware.PermissionManageIncidents), incidentImpl.CloseIncidentHandler)
 
-	app.Post("/api/v1/actions/:id/evidence", middleware.AuthMiddleware(), correctiveActionHandler.CreateActionEvidenceWithAttachments)
-
-	// Corrective action routes
-	// Define routes
-	app.Get("/api/v1/incidents/:incidentID/actions", correctiveActionHandler.GetCorrectiveActionsByIncidentID)
-	app.Get("/api/v1/incidents/:id/user", correctiveActionHandler.GetCorrectiveActionsByEmployeeID)
-	app.Post("/api/v1/actions", correctiveActionHandler.CreateCorrectiveAction)
-	app.Get("/api/v1/actions/:id", correctiveActionHandler.GetCorrectiveActionByID)
-	app.Put("/api/v1/actions/:id", middleware.AuthMiddleware(), correctiveActionHandler.UpdateCorrectiveAction)
-	app.Post("/api/v1/actions/:id/admin", middleware.AuthMiddleware(), correctiveActionHandler.AdminCompleteActionAndVerify)
-	app.Delete("/api/v1/actions/:id", correctiveActionHandler.DeleteCorrectiveAction)
-
-	app.Post("/api/v1/actions/:id/complete", middleware.AuthMiddleware(), correctiveActionHandler.LabelAsCompleted)
-	app.Post("/api/v1/actions/:id/verify", middleware.AuthMiddleware(), correctiveActionHandler.VerifyCompletion)
 
 	// Admin-only route
 	app.Post("/api/users", middleware.AuthMiddleware(), middleware.RoleMiddleware(middleware.RoleAdmin),
