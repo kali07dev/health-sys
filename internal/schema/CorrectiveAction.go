@@ -11,6 +11,14 @@ import (
 type CompletionNoted struct {
 	Notes string `json:"completionNotes"`
 }
+
+// ExtensionRequest represents a request to extend a corrective action's due date
+type ExtensionRequest struct {
+	Reason      string `json:"reason" validate:"required"`
+	NewDueDate  string `json:"newDueDate" validate:"required"`
+	RequestedBy string `json:"requestedBy" validate:"required"`
+}
+
 type CreateCorrectiveActionRequest struct {
 	IncidentID           string `json:"incidentId" validate:"required,uuid4"`
 	CompletedBy          string `json:"completedby" validate:"omitempty,uuid4"`
