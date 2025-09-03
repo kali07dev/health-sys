@@ -12,13 +12,16 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { CorrectiveAction } from '@/interfaces/incidents';
 import { incidentAPI } from '@/utils/api';
 import FeedbackForm from './FeedbackForm';
 import EvidenceUploader from './EvidenceUploader';
+import ExtensionRequestForm from './ExtensionRequestForm';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface ActionDetailsSidebarProps {
   action: CorrectiveAction;
@@ -41,12 +44,16 @@ export default function ActionDetailsSidebar({
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const t = useTranslations('correctiveActions');
 
   const BE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
   const canAddEvidence = action.status !== 'completed' && action.status !== 'verified';
   const isAdminOrSafetyOfficer = userRole === 'admin' || userRole === 'safety_officer' || userRole === 'manager';
-
+  
+  // Check if action is approaching due date or overdue but still open
+  const canRequestExtension = (action.status === 'pending' || action.status === 'in_progress' || action.status === 'overdue');
+  
   // Get status icon and color
   const getStatusDetails = (status: string) => {
     switch (status) {
@@ -106,10 +113,10 @@ export default function ActionDetailsSidebar({
           status: 'in_progress'
         });
         onActionUpdated();
-        toast.success('Action marked as in progress');
+        toast.success(t('messages.inProgressSuccess'));
       } catch (error) {
         console.error(error);
-        toast.error('Failed to update action status');
+        toast.error(t('messages.updateFailed'));
       } finally {
         setIsSubmitting(false);
       }
@@ -146,7 +153,7 @@ export default function ActionDetailsSidebar({
               {statusDetails.icon}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Corrective Action</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('common.correctiveAction')}</h2>
               <p className={`text-sm font-medium ${statusDetails.color}`}>
                 {action.status.charAt(0).toUpperCase() + action.status.slice(1).replace('_', ' ')}
               </p>
@@ -197,16 +204,16 @@ export default function ActionDetailsSidebar({
           <div className="flex items-start space-x-3">
             <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-gray-700">Due Date</p>
+              <p className="text-sm font-medium text-gray-700">{t('common.dueDate')}</p>
               <p className="text-base text-gray-900">{formattedDueDate}</p>
               
               {action.status !== 'completed' && action.status !== 'verified' && (
                 <p className={`text-sm mt-1 ${daysDiff < 0 ? 'text-red-600 font-medium' : daysDiff <= 3 ? 'text-amber-600 font-medium' : 'text-gray-500'}`}>
                   {daysDiff < 0 
-                    ? `${Math.abs(daysDiff)} days overdue` 
+                    ? `${Math.abs(daysDiff)} ${t('common.daysOverdue')}` 
                     : daysDiff === 0 
-                      ? 'Due today' 
-                      : `${daysDiff} days remaining`}
+                      ? t('common.dueToday')
+                      : `${daysDiff} ${t('common.daysRemaining')}`}
                 </p>
               )}
             </div>
@@ -312,7 +319,7 @@ export default function ActionDetailsSidebar({
                     className="w-full mt-4 py-2 px-4 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload Evidence
+                    {t('actions.uploadEvidence')}
                   </button>
                 )}
               </div>
@@ -420,7 +427,7 @@ export default function ActionDetailsSidebar({
                 ) : (
                   <Clock className="h-4 w-4 mr-2" />
                 )}
-                Mark as In Progress
+                {t('actions.markInProgress')}
               </button>
             )}
             
@@ -430,7 +437,18 @@ export default function ActionDetailsSidebar({
                 className="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Mark as Completed
+                {t('actions.markCompleted')}
+              </button>
+            )}
+            
+            {/* Extension Request Button - only show if action is not completed/verified */}
+            {canRequestExtension && (
+              <button
+                onClick={() => handleSectionToggle('extension')}
+                className="w-full py-2 px-4 bg-amber-100 text-amber-800 border border-amber-300 rounded-md hover:bg-amber-200 flex items-center justify-center"
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {t('actions.requestExtension')}
               </button>
             )}
             
@@ -440,7 +458,7 @@ export default function ActionDetailsSidebar({
                 className="w-full py-2 px-4 bg-white text-red-600 border border-red-600 rounded-md hover:bg-red-50 flex items-center justify-center"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Evidence
+                {t('actions.uploadEvidence')}
               </button>
             )}
 
@@ -451,7 +469,7 @@ export default function ActionDetailsSidebar({
                 className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Verify Action
+                {t('actions.verifyAction')}
               </button>
             )}
           </div>
@@ -461,6 +479,18 @@ export default function ActionDetailsSidebar({
             <div className="pt-4 border-t">
               <FeedbackForm 
                 actionId={action.id}
+                onCancel={() => setActiveSection(null)}
+                onSubmitSuccess={onActionUpdated}
+              />
+            </div>
+          )}
+          
+          {/* Extension Request Form */}
+          {activeSection === 'extension' && (
+            <div className="pt-4 border-t">
+              <ExtensionRequestForm
+                actionId={action.id}
+                currentDueDate={action.dueDate}
                 onCancel={() => setActiveSection(null)}
                 onSubmitSuccess={onActionUpdated}
               />
