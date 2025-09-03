@@ -186,6 +186,11 @@ export const incidentAPI = {
     const res = await api.post<{ message: string; }>(`/incidents/${incidentId}/assign`, { userId });
     return res.data;
   },
+
+  requestExtension: async (actionId: string, data: { newDueDate: string; reason: string }) => {
+    const res = await api.post<{ message: string }>(`/corrective-actions/${actionId}/extension`, data);
+    return res.data;
+  },
 };
 
 export const useAuthorization = () => {
