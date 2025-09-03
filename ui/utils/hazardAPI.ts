@@ -1,15 +1,49 @@
 import axios from "axios";
 import { Hazard, CreateHazardRequest, UpdateHazardRequest, HazardFilterParams, HazardListResponse } from "@/interfaces/hazards";
-// import { apiClient } from './api-client'
+// import { getSession } from "next-auth/react";
+import { authOptions } from "@/app/api/auth/auth-options";
+import { getServerSession } from "next-auth";
 
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const API_BASE_URL = `${BASE_URL}/api/v1`;
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
+apiClient.interceptors.request.use(async (config) => {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    
+    if (session?.token) {
+      config.headers.Authorization = `Bearer ${session.token}`;
+    } else {
+      console.warn('No token found in session');
+    }
+    return config;
+  } catch (error) {
+    console.error('Error in request interceptor:', error);
+    return config;
+  }
+}, (error) => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
+});
+
+// Add response interceptor for better error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('401 Unauthorized - Token might be invalid or expired');
+      console.error('Response:', error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const hazardAPI = {
   // Create a new hazard
