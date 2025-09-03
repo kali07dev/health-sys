@@ -24,6 +24,7 @@ const (
 	InvestigationAssigned  NotificationType = "investigation_assigned"
 	InterviewStatusChanged NotificationType = "interview_status_changed"
 	VpcCreated             NotificationType = "vpc_created"
+	ExtensionRequested     NotificationType = "extension_requested" // New notification type
 )
 
 type NotificationService struct {
@@ -94,7 +95,7 @@ func (s *NotificationService) SendNotification(userID uuid.UUID, notificationTyp
 			break
 		}
 		emailErr = s.emailService.sendActionAssignedEmail([]string{user.Email}, &action)
-	
+
 	case VpcCreated:
 		var vpc models.VPC
 		if err := s.db.First(&vpc, "id = ?", referenceID).Error; err != nil {
@@ -356,5 +357,67 @@ func (s *NotificationService) NotifyInvestigationLeader(interview *models.Invest
 	if emailErr != nil {
 		log.Printf("Failed to send email notification: %v", emailErr)
 	}
+	return nil
+}
+
+// NotifyExtensionRequested sends notifications when a user requests an extension for a corrective action
+func (s *NotificationService) NotifyExtensionRequested(action *models.CorrectiveAction, requestor *models.Employee) error {
+	// Create notification for the action assignor/supervisor
+	notificationTitle := "Extension Requested for Corrective Action"
+	notificationMessage := fmt.Sprintf(
+		"Employee %s %s has requested an extension for corrective action '%s'. Reason: %s. New proposed due date: %s",
+		requestor.FirstName,
+		requestor.LastName,
+		action.Description,
+		action.ExtensionReason,
+		action.DueDate,
+	)
+
+	// Find the person who assigned the action (supervisor/manager)
+	var assignor models.Employee
+	if err := s.db.First(&assignor, "id = ?", action.AssignedBy).Error; err != nil {
+		log.Printf("Failed to fetch assignor: %v", err)
+		return fmt.Errorf("failed to fetch assignor: %w", err)
+	}
+
+	// Send notification to the assignor
+	if err := s.SendNotification(
+		assignor.UserID,
+		string(ExtensionRequested),
+		notificationTitle,
+		notificationMessage,
+		action.ID,
+		"corrective_action",
+	); err != nil {
+		log.Printf("Failed to send extension request notification: %v", err)
+		return err
+	}
+
+	// If we have an email service configured, send an email as well
+	if s.emailService != nil && assignor.User.Email != "" {
+		var user models.User
+		if err := s.db.First(&user, "id = ?", assignor.UserID).Error; err == nil && user.Email != "" {
+			// Send email notification
+			emailContent := fmt.Sprintf(`
+                <h3>Extension Request for Corrective Action</h3>
+                <p>Employee %s %s has requested an extension for a corrective action.</p>
+                <p><strong>Action:</strong> %s</p>
+                <p><strong>Current Due Date:</strong> %s</p>
+                <p><strong>Requested New Due Date:</strong> %s</p>
+                <p><strong>Reason:</strong> %s</p>
+                <p>Please review this request and take appropriate action.</p>
+            `,
+				requestor.FirstName,
+				requestor.LastName,
+				action.Description,
+				action.PreviousDueDate,
+				action.DueDate,
+				action.ExtensionReason,
+			)
+
+			s.emailService.SendEmail([]string{user.Email}, notificationTitle, template.HTML(emailContent))
+		}
+	}
+
 	return nil
 }
