@@ -21,6 +21,21 @@ func NewCorrectiveActionService(db *gorm.DB) *CorrectiveActionService {
 	return &CorrectiveActionService{db: db}
 }
 
+func (s *CorrectiveActionService) InternalGetByID(ctx context.Context, id uuid.UUID) (*models.CorrectiveAction, error) {
+	var action models.CorrectiveAction
+	err := s.db.WithContext(ctx).
+		Preload("Incident").
+		Preload("Assignee").
+		Preload("Assigner").
+		Preload("Verifier").
+		First(&action, "id = ?", id).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("record not found: %w", err)
+	}
+
+	return &action, nil
+}
 // Get corrective action by ID with evidence attachments
 func (s *CorrectiveActionService) GetByID(ctx context.Context, id uuid.UUID) (*schema.CorrectiveActionResponse, error) {
 	var action models.CorrectiveAction
@@ -239,7 +254,7 @@ func (s *CorrectiveActionService) AdminCompleteActionAndVerify(ctx context.Conte
 	// Update the corrective action status
 	action.Status = "completed"
 	action.CompletedAt = &now
-	
+
 	// if notes != nil {
 	// 	action.CompletionNotes = *notes
 	// }
@@ -499,5 +514,46 @@ func (s *CorrectiveActionService) LabelAsCompleted(id uuid.UUID, notes string) e
 		return fmt.Errorf("failed to close action: %w", err)
 	}
 
+	return nil
+}
+
+// RequestExtension processes a request to extend the due date of a corrective action
+func (s *CorrectiveActionService) RequestExtension(ctx context.Context, actionID uuid.UUID, req schema.ExtensionRequest) error {
+	action, err := s.InternalGetByID(ctx, actionID)
+	if err != nil {
+		return err
+	}
+
+	// Verify action is still open
+	if action.Status == "completed" || action.Status == "verified" {
+		return fmt.Errorf("cannot request extension for action that is already %s", action.Status)
+	}
+
+	// Parse and validate new due date
+	newDueDate, err := time.Parse(time.RFC3339, req.NewDueDate)
+	if err != nil {
+		return fmt.Errorf("invalid date format for new due date: %w", err)
+	}
+
+	// Ensure new due date is in the future
+	if newDueDate.Before(time.Now()) {
+		return fmt.Errorf("new due date must be in the future")
+	}
+
+	// Update the corrective action with extension request info
+	now := time.Now()
+
+	action.PreviousDueDate = &action.DueDate
+	action.DueDate = newDueDate
+	action.ExtensionReason = req.Reason
+	action.ExtensionRequestedAt = &now
+	action.ExtensionRequestedBy = &req.RequestedBy
+	action.ExtensionStatus = "pending"
+
+	if err := s.db.WithContext(ctx).Save(&action).Error; err != nil {
+		return  fmt.Errorf("update failed: %w", err)
+	}
+
+	// Save the updated action
 	return nil
 }
